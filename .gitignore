@@ -1,0 +1,8 @@
+logs
+*.elc
+*~
+GPATH
+GRTAGS
+GTAGS
+ID
+*.log

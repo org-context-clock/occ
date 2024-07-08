@@ -1,0 +1,22 @@
+
+* Test
+
+** MOM test <2023-07-24 Mon>
+<2023-07-24 Mon>
+
+Try M-x org-timer  <2023-07-24 Mon>
+
+
+
+
+0:10:53 afsdgffsg <2023-07-24 Mon>
+0:10:58 dfdsfgfdgfd
+0:11:02 afsddsgffdghfh
+0:00:00 sadfdsfgsdg <2023-07-24 Mon>
+0:00:04 asddsafdsg
+0:02:37 sdfsfdg <2023-07-24 Mon>
+- 0:04:13 :: afsdfgsg
+- 0:04:19 :: asdsafdsf <2023-07-24 Mon>
+  0:04:27
+  asfddsf0:04:33  <2023-07-24 Mon>
+  0:04:37 

@@ -1,0 +1,61 @@
+
+
+* Main
+
+** occ-mode
+
+** hooks
+
+** *occ-do-clock-in-curr-ctx-if-not-timer-function* (occ-obj-clock-method.el)
+
+** *occ-run-curr-ctx-chg-timer* (occ-obj-clock-method.el)
+
+** *occ-do-clock-in-curr-ctx-if-not* (occ-obj-clock-method.el)
+
+** *occ-do-clock-in-if-chg* (occ-obj-clock-method.el)
+
+** Timer will call *occ-do-clock-in-if-not* (occ-obj-clock-method.el)
+from file occ-obj-clock-method.el
+#+begin_src emacs-lisp
+(cl-defmethod occ-do-clock-in-if-not ((obj occ-ctx)
+                                      &key
+                                      filters
+                                      builder
+                                      ap-normal
+                                      ap-transf
+                                      auto-select-if-only
+                                      timeout)
+ ...
+ (if (occ-do-clock-in obj)
+     ...
+   ())
+ ...)
+#+end_src
+
+** After that *occ-do-clock-in* will be called (occ-clock.el)
+from file occ-clock.el
+#+begin_src emacs-lisp
+(cl-defmethod occ-do-clock-in ((obj occ-ctx)
+                               &key
+                               filters
+                               builder
+                               return-transform
+                               ap-normal
+                               ap-transf
+                               auto-select-if-only
+                               timeout)
+  "Clock-in selected CTXUAL-TSK for occ-ctx OBJ or open interface
+for adding properties to heading."
+  (unless builder (error "Builder can not be nil"))
+  (occ-debug "occ-do-clock-in(occ-ctx=%s)" obj)
+  (if (occ-obj-clockable-p obj)
+      (let ((returned-ctxual-tsk (occ-obj-select obj
+                                                 (occ-collections-all))))
+        [...]
+        (if (occ-obj-return-in-labels-p returned-ctxual-tsk
+                                        occ-return-select-label)
+            (let ((ctxual-tsk (occ-obj-obj returned-ctxual-tsk)))
+              (occ-do-clock-in ctxual-tsk))
+          (occ-obj-safe-ignore-quit-properties-window-editor obj)))
+    (occ-debug "ctx %s is not clockable." obj)))
+#+end_src

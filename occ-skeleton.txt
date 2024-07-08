@@ -1,0 +1,77 @@
+(cl-defmethod occ-obj-impl-occ-prop-p ((prop (eql PROPERTY)))
+  t)
+(cl-defmethod occ-obj-impl-prop= ((prop (eql PROPERTY))
+                                  prop-value
+                                  value)
+  (occ-pu-string= prop-value
+                  value))
+(cl-defmethod occ-obj-impl-get ((ctx occ-ctx)
+                                (prop (eql PROPERTY))
+                                (arg null))
+  "Return occ compatible value of property PROPERTY from OCC-CTX OBJ."
+  (ignore prop)
+  (occ-obj-get-property ctx
+                        prop))
+(cl-defmethod occ-obj-impl-get ((user occ-user-agent)
+                                (prop (eql PROPERTY))
+                                (obj occ-obj-ctx-tsk))
+  "Read value of list of elements if (occ-obj-list-p OBJ PROPERTY)
+    else element for property PROPERTY from user for OCC-TSK OBJ,
+    must return ORG compatible value."
+  (read-from-minibuffer (format "%s: " prop)))
+
+(cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
+                                    (prop (eql PROPERTY))
+                                    (vdirector number))
+  (require 'magit-git)
+  (let* ((tsk        (occ-obj-tsk obj))
+         (prop-value (occ-obj-pvalue tsk
+                                     prop
+                                     vdirector)))
+    (when prop-value
+      (find-file prop-value))))
+
+(cl-defmethod occ-obj-impl-rank ((tsk occ-obj-tsk)
+                                 (ctx occ-obj-ctx)
+                                 (prop (eql PROPERTY)))
+  "Return the RANK (number) for OCC-TSK based on the property PROPERTY"
+  (occ-aggregate-rank tsk-PROPERTY PROPERTY tsk #'max
+    (if (occ-obj-prop= PROPERTY
+                       tsk-PROPERTY
+                       (occ-obj-get ctx nil PROPERTY nil))
+        (occ-rank-percentage 100)
+      (occ-rank-percentage 0))))
+(cl-defmethod occ-obj-impl-propfmt ((obj occ-obj-tsk)
+                                    (prop (eql PROPERTY))
+                                    value)
+  "Return format printable value of property PROPERTY."
+  (format "%s" value))
+(cl-defmethod occ-obj-impl-list-p ((mrk marker)
+                                   (prop (eql PROPERTY)))
+  "Is the property PROPERTY has VALUES in list, Method tell
+     property represent list or not."
+  t)
+(cl-defmethod occ-obj-impl-to-org ((prop (eql PROPERTY))
+                                   value)
+  "Return string representation for property PROPERTY, Method
+  convert value VALUE of property PROPERTY from occ to org string
+  representation."
+  (format "%s" value))
+(cl-defmethod occ-obj-impl-from-org ((prop (eql PROPERTY)
+                                           value))
+  "Return the Actual Object representation for property
+  PROPERTY, Method convert value VALUE of property PROPERTY from
+  org string to occ representation."
+  (unless (string= value "")
+    value))
+(cl-defmethod occ-obj-impl-inheritable-p ((prop (eql PROPERTY)))
+  t)
+(cl-defmethod occ-obj-impl-require-p ((obj occ-obj-tsk)
+                                      (operation (eql _operation_))
+                                      (prop (eql PROPERTY))
+                                      values)
+  "Used by OCC-OBJ-GEN-EDIT-IF-REQUIRED to decide for this property
+  PROPERTY if CALLABLE (helm method) should be generated."
+  nil)
+
+

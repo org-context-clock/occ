@@ -1,0 +1,54 @@
+
+
+* Org Context Clock
+
+** Introduction
+
+For GTD or TODO management org-clock provide support for task clocking and tracking
+and for reminder also deadline/schedule timestamp helps.
+
+Here is how to remember to clock-in and to clock-in to correct clock when
+working on some projects where many time one need to hop between different
+project.
+
+Then a dynamic, contextual suggestion based clock management with minimum user
+attention might fill above scenario, org context clock try to address this, by
+
+
+- Frequently presenting tasks selection popup based on current context to clock-in
+- Also do clock in to unnamed task if no specific selected task for clocking in
+
+** Requirement
+
+To address is problem
+
+ How to remember to clock-in and to clock-in to correct clock according to context.
+
+As org-mode and org-clock task entries could be defined, can manually be clocked in
+
+For addressing problem
+
+- Need a system to remind when
+  + no task entry clocked in
+  + wrong task entry clock in according to context, including unnamed task
+- Some formalization of context for task with project
+- and a system to define context dynamically and further modify it.
+- System should operate with minimal intervention, attention of user, else it
+  will distract the work flow of user on current project or work.
+
+** Design
+
+** Implementation
+
+** Workflow
+
+
+** Example 1
+
+[[doc/eg1.gif]]
+
+
+
+
+
+

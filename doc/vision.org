@@ -1,0 +1,25 @@
+#+TITLE OCC - Org context clock
+#+PROPERTY: header-args :tangle no
+
+Yes Vision of GPL GNU FSF inherited here
+
+
+* (TAPP) Task or TODO application should be more proactive
+
+* TASK has their properties
+
+* Task has their CONTEXT information with them (as property)
+  
+* clocking TASK and CONTEXT should be in SYNC.
+
+** What is  
+*** TASK and CONTEXT being SYNC
+  
+  
+* Based on CONTEXT TAPP should do
+
+** offer to clockin/clocking matching task
+
+** or offer to change CONTEXT to match to current clocking task
+   
+** or checkout CONTEXT to current clocking task

@@ -1,0 +1,57 @@
+
+
+
+* read prop value from user
+(defun occ-intf-get ((u user) (prop symbol)
+* read prop value from ctx
+(defun occ-intf-get ((u ctx) (prop symbol)
+* read prop value from tsk
+(defun occ-intf-get ((t tsk) (prop symbol))
+* write prop value to tsk <2023-07-25 Tue>
+(defun occ-intf-set ((t tsk) (prop symbol))
+* write prop value to ctx error <2023-07-25 Tue>
+(defun occ-intf-set ((c ctx) (prop symbol))
+  (error))
+* write to user means print <2023-07-25 Tue>
+(defun occ-intf-set ((u user) (prop symbol))
+* checkout prop value from tsk
+;; (org-read-date) (org--deadline-or-schedule arg 'scheduled tim) <2023-07-25 Tue>
+(defun occ-intf-checkout ((t tsk) (prop symbol))
+* prop from org to occ <2023-07-25 Tue>
+(defun occ-intf-org-to-occ ())
+* prop from occ to org <2023-07-25 Tue>
+(defun occ-intf-occ-to-org ())
+* Is prop represent list <2023-07-25 Tue>
+(defun occ-intf-list-p (symbol))
+* Is prop can be window edited
+
+
+* General
+
+Planning to represent CURRENT CLOCK, SCHEDULE, DEADLINE also as properties
+
+Hello test 
+<2023-07-21 Fri>
+<2023-07-21 Fri>
+<2023-07-21 Fri>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<2023-07-21 Fri> Hello 
+<2023-07-21 Fri>
+dsfdsfg 
+<2023-07-21 Fri>

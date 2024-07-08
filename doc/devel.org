@@ -1,0 +1,53 @@
+
+
+* Code here may be the hell of [[https://en.wikipedia.org/wiki/Indirection][indirection]], but still helping in one way
+
+
+  
+* Naming convention
+** Naming generi function
+
+   for accessor or nouns
+
+   using prefix "occ-obj-"
+
+   for verb
+
+   using prefix "occ-do-"
+
+** Naming for ordinary function
+
+   for launcher or runner
+
+   could use prefix "occ-run-"
+
+   
+
+
+  
+  
+* To reduce number of params like (or this that else that)
+
+  using
+
+  #+begin_src elisp
+    (cl-defmethod OCC-OBJ-MARKER ((mrk marker))
+      mrk)
+    (cl-defmethod OCC-OBJ-MARKER ((obj OCC-TSK))
+      (OCC-TSK-MARKER obj)
+  #+end_src  
+
+
+  This will cover MARKER and OCC-TSK and its subclassed.
+
+  This is reducing code size by reducing number of parameters to functions like #'OR
+
+
+  Yes this requires number of accessors methods.
+  
+  
+* Not run ahead
+  Mean do not code base and advanced feature together
+  first complete base feature, when it is working then only
+  go for advanced feature.
+  

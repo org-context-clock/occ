@@ -1,0 +1,568 @@
+#+TITLE OCC Property Rank methods for task
+#+PROPERTY: header-args :tangle yes :padline yes :comments both :noweb yes
+
+* Property Rank methods for task
+** Preamble
+#+begin_src emacs-lisp :padline no :comments no :noweb no
+;;; occ-property-methods.el --- org capture plus         -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2012  Sharad Pratap
+
+;; Author:
+;; Keywords: convenience
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;; Code:
+
+#+end_src
+
+** Provide this file
+#+begin_src emacs-lisp
+(provide 'occ-property-methods)
+
+#+end_src
+
+** Required libraries
+#+begin_src emacs-lisp
+(require 'org)
+
+(require 'occ-print)
+(require 'occ-predicate)
+(require 'occ-obj-accessor)
+(eval-when-compile
+  (require 'occ-debug-method))
+(require 'occ-debug-method)
+(require 'occ-prop-intf)
+(require 'occ-intf)
+
+#+end_src
+
+** Sample Template Property methods
+*** Template property of task in short
+#+begin_src emacs-lisp :tangle no
+(cl-defmethod occ-obj-impl-rank ((obj occ-tsk)
+                                 (prop (eql _template1_)))
+  "Return the RANK (number) for OCC-TSK based on the property _TEMPLATE1_")
+(cl-defmethod occ-obj-impl-has-p ((obj occ-obj-tsk)
+                                  (prop symbol)
+                                  value)
+  "OBJ has property PROPERTY"
+  (let* ((tsk            (occ-obj-tsk obj))
+         (tsk-prop-value (occ-obj-get-property tsk prop)))
+    (if (occ-obj-intf-list-p prop)
+        (member value tsk-prop-value)
+      (equal value tsk-prop-value))))
+(cl-defmethod occ-obj-impl-get ((obj occ-ctx)
+                                (prop (eql _template1_)))
+  "Return occ compatible value of property PROPERTY from OCC-CTX OBJ.")
+
+(cl-defmethod occ-obj-impl-format ((obj occ-obj-tsk)
+                                   (property symbol)
+                                   value)
+  "Return format printable value of property PROPERTY."
+  value)
+(cl-defmethod occ-obj-impl-list-p ((prop (eql _template1_)))
+  "Is the property _TEMPLATE1_ has VALUES in list, Method tell
+         property represent list or not.")
+(cl-defmethod occ-obj-impl-to-org ((prop (eql _template1_))
+                                   value)
+  "Return string representation for property _TEMPLATE1_, Method
+      convert value VALUE of property PROPERTY from occ to org string
+      representation.")
+(cl-defmethod occ-obj-impl-from-org ((prop (eql _template1_))
+                                     value)
+  "Return the Actual Object representation for property
+      _TEMPLATE1_, Method convert value VALUE of property PROPERTY from
+      org string to occ representation.")
+(cl-defmethod occ-obj-impl-get ((user occ-user-agent)
+                                (prop (eql _template1_))
+                                (obj occ-tsk))
+  "Read value of list of elements if (occ-obj-intf-list-p PROPERTY)
+        else element for property PROPERTY from user for OCC-TSK OBJ,
+        must return ORG compatible value.")
+(cl-defmethod occ-obj-impl-require-p ((obj occ-obj-tsk)
+                                      (operation (eql _operation_))
+                                      (prop (eql _template1_))
+                                      values)
+  "Used by OCC-OBJ-GEN-EDIT-IF-REQUIRED to decide for this property
+      _TEMPLATE1_ if CALLABLE (helm method) should be generated.")
+(cl-defmethod occ-obj-impl-default ((obj occ-obj-tsk)
+                                    (prop (eql _template1_))
+                                    (operation (eql _operation_)))
+  "Return a default VALUE of property _TEMPLATE1_.")
+(cl-defmethod occ-do-impl-operation ((obj occ-obj-tsk)
+                                     (operation (eql _operation_))
+                                     (prop (eql _template1_))
+                                     values)
+  "Do the actual _OPERATION_.")
+(cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
+                                    (prop (eql _template1_)))
+  "Checkout property _TEMPLATE1_ in case of force clock-in.")
+#+end_src
+*** Template property of task
+#+begin_src emacs-lisp :tangle no
+
+(cl-defmethod occ-obj-impl-rank ((obj occ-tsk))
+                                (prop (eql _template2_))
+  "Return the RANK (number) for OCC-TSK based on the property _TEMPLATE2_"
+  (let ((tsk (occ-obj-tsk obj)))
+    (let ((_template2_ (occ-obj-get-property tsk
+                                         '_template2_)))
+      0)))
+(cl-defmethod occ-obj-impl-has-p ((obj occ-obj-tsk)
+                                  (prop (eql _template2_))
+                                  value)
+  "OBJ-has-property PROPERTY")
+(cl-defmethod occ-obj-impl-get ((obj occ-ctx
+                                                   (prop (eql _template2_))))
+  "Return occ compatible value of property PROPERTY from OCC-CTX OBJ.")
+
+(cl-defmethod occ-obj-impl-format ((obj occ-obj-tsk)
+                                   (property symbol)
+                                   value)
+  "Return format printable value of property PROPERTY."
+  value)
+(cl-defmethod occ-obj-impl-list-p ((prop (eql _template2_)))
+  "Is the property _TEMPLATE2_ has VALUES in list, Method tell
+         property represent list or not."
+  nil)
+
+(cl-defmethod occ-obj-impl-to-org ((prop (eql _template2_))
+                                   value)
+  "Return string representation for property _TEMPLATE2_, Method
+      convert value VALUE of property PROPERTY from occ to org string
+      representation."
+  nil)
+
+(cl-defmethod occ-obj-impl-from-org ((prop (eql _template2_))
+                                     value)
+  "Return the Actual Object representation for property
+      _TEMPLATE2_, Method convert value VALUE of property PROPERTY from
+      org string to occ representation."
+  nil)
+
+(cl-defmethod occ-obj-impl-get ((user occ-user-agent)
+                                (prop (eql _template2_))
+                                (obj occ-tsk))
+  "READ the value for property _TEMPLATE2_, Read value of element
+      of list for property PROPERTY from user for OCC-TSK OBJ, must
+      return ORG compatible value."
+  (let ((tsk (occ-obj-tsk obj)))
+    (let* ((prompt     (concat (symbol-name prop)
+                               ": ")))
+      (read-number (format "%s: " prompt)))))
+
+(cl-defmethod occ-obj-impl-require-p ((obj occ-obj-tsk)
+                                      (operation (eql _operation_))
+                                      (prop (eql _template2_))
+                                      values)
+  "Used by OCC-OBJ-GEN-EDIT-IF-REQUIRED to decide for this property
+      _TEMPLATE2_ if CALLABLE (helm method) should be generated."
+  (occ-obj-current-p obj))
+
+(cl-defmethod occ-obj-impl-default ((obj occ-obj-tsk)
+                                    (prop (eql _template2_))
+                                    (operation (eql _operation_)))
+  "Return a default VALUE of property _TEMPLATE2_."
+  (if (occ-obj-current-p obj)
+      10
+    0))
+
+(cl-defmethod occ-do-impl-operation ((obj occ-obj-tsk)
+                                     (operation (eql _operation_))
+                                     (prop (eql _template2_))
+                                     values)
+  "Do the actual _OPERATION_."
+  (let ((tsk (occ-obj-tsk obj)))
+    (if (occ-obj-intf-list-p prop)
+        (occ-error "Implement it.")
+      (occ-error "Implement it."))))
+
+(cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
+                                    (prop (eql _template2_)))
+  "Checkout property _TEMPLATE2_ in case of force clock-in.")
+
+
+#+end_src
+
+** Read Write properties of task
+*** Current File property of task
+#+begin_src emacs-lisp
+
+      ;;{{ currfile
+(cl-defmethod occ-obj-impl-rank ((obj occ-obj-ctx-tsk))
+                                (prop (eql currfile)) ;; do not use (prop (eql file)) that is another property which represent file in which task defined.
+  ;; file in which tsk aka org entry exists.
+  "Predicate funtion to check if ctx matches to tsk's file attribute."
+  (let ((tsk (occ-obj-tsk obj))
+        (ctx (occ-obj-ctx obj)))
+    (occ-debug "occ-obj-impl-rank-with: currfile begin")
+    (occ-aggregate-rank tsk-currfile (occ-obj-get-property tsk prop) #'+
+      (let* ((tsk-currfile (if tsk-currfile (file-truename tsk-currfile)))
+             (ctx-file     (occ-ctx-file ctx))
+             (ctx-file     (if ctx-file (file-truename ctx-file))))
+        (if tsk-currfile
+            (progn
+              (occ-nodisplay "tsk %s tsk-currfile %s" (occ-obj-format tsk 'capitalize) tsk-currfile)
+              (occ-nodisplay "tsk %s ctx-file %s"     (occ-obj-format tsk 'capitalize) ctx-file))
+          (occ-nodisplay "tsk %s tsk-currfile %s not present."
+                     (occ-obj-format tsk 'capitalize)
+                     tsk-currfile))
+        (if (and tsk-currfile ctx-file
+                 (string= tsk-currfile ctx-file))
+            (* 2 (length tsk-currfile))     ;as exact match to files giving double matching points.
+          0)))))
+
+(cl-defmethod occ-obj-impl-get ((ctx occ-ctx)
+                                (prop (eql currfile))
+                                (arg null))
+  "Return occ compatible value of property PROPERTY from OCC-CTX OBJ."
+  (ignore prop)
+  (occ-debug "calling occ-obj-impl-get(ctx occ-ctx)"
+    (let ((currfile (occ-ctx-file ctx)))
+      currfile)))
+
+(cl-defmethod occ-obj-impl-list-p ((prop (eql currfile)))
+  (ignore prop)
+  t)
+
+(cl-defmethod occ-obj-impl-to-org ((prop (eql currfile))
+                                   value)
+  (ignore prop)
+  value)
+
+(cl-defmethod occ-obj-impl-from-org ((prop (eql currfile))
+                                     value)
+  (ignore prop)
+  value)
+
+(cl-defmethod occ-obj-impl-get ((user occ-user-agent)
+                                (prop (eql currfile))
+                                (obj occ-obj-ctx-tsk))
+ "currfile property for tsk aka org entry"
+ (let ((tsk (occ-obj-tsk obj))
+       (ctx (occ-obj-ctx obj)))
+   (ignore tsk)
+   (let* ((ctx-currfile (if ctx (occ-ctx-file ctx)))
+          (ctx-dir      (when (stringp ctx-currfile)
+                          (file-name-directory ctx-currfile)))
+          (prompt       (concat (symbol-name prop) ": ")))
+     (ido-read-file-name prompt ctx-dir ctx-currfile))))
+
+(cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
+                                    (prop (eql currfile)))
+  (let* ((tsk        (occ-obj-tsk      obj))
+         (files      (occ-obj-get-property tsk prop))
+         (first-file (cl-first files)))
+       (if first-file
+           (find-file first-file)
+         (occ-debug "occ-do-impl-checkout: %s value ruturned for prop %s" first-file prop))))
+      ;;}}
+
+
+#+end_src
+
+*** Root dir property of task
+#+begin_src emacs-lisp
+
+      ;;{{ root
+(cl-defmethod occ-obj-impl-rank ((obj occ-obj-ctx-tsk))
+                                (prop (eql root))
+  "RANK Predicate funtion to check if ctx matches to tsk's ROOT attribute."
+  (let ((tsk (occ-obj-tsk obj))
+        (ctx (occ-obj-ctx obj)))
+    (occ-nodisplay "rankprop(%s, %s): begin"
+               (occ-obj-format tsk 'capitalize)
+               (occ-obj-format ctx 'capitalize)
+               prop)
+    (occ-aggregate-rank tsk-root (occ-obj-get-property tsk prop) #'+
+      (let* ((tsk-root (cl-first (occ-obj-get-property tsk prop)))
+             (tsk-root (when tsk-root (file-truename tsk-root)))
+             (ctx-file (occ-ctx-file ctx))
+             ;; (ctx-file (when ctx-file (file-truename ctx-file)))
+             (ctx-dir  (when (stringp ctx-file) (file-name-directory ctx-file)))
+             (ctx-dir  (when (stringp ctx-file) (file-truename ctx-dir))))
+        (if tsk-root
+            (progn
+              (occ-nodisplay "tsk %s tsk-root: %s" (occ-obj-format tsk 'capitalize) tsk-root)
+              (occ-nodisplay "tsk %s ctx-dir:  %s" (occ-obj-format tsk 'capitalize) ctx-dir))
+          (occ-nodisplay "tsk %s tsk-root %s not present."
+                     (occ-obj-format tsk 'capitalize) tsk-root))
+        (if (and tsk-root ctx-dir
+                 (string-match tsk-root ctx-dir))
+            (length tsk-root)
+          0)))))
+
+(cl-defmethod occ-obj-impl-get ((ctx occ-ctx)
+                                (prop (eql root))
+                                (arg null))
+  "Return occ compatible value of property PROPERTY from OCC-CTX OBJ."
+  (ignore prop)
+  (let ((file (occ-ctx-file ctx)))
+      (when file (dirname-of-file file))))
+
+(cl-defmethod occ-obj-impl-list-p ((prop (eql root)))
+  (ignore prop)
+  t)
+
+(cl-defmethod occ-obj-impl-to-org ((prop (eql root))
+                                   value)
+  (ignore prop)
+  value)
+
+(cl-defmethod occ-obj-impl-from-org ((prop (eql root))
+                                     value)
+  (ignore prop)
+  value)
+
+(cl-defmethod occ-obj-impl-get ((user occ-user-agent)
+                                (prop (eql root))
+                                (obj occ-obj-ctx-tsk))
+ "READ"
+ (let ((tsk (occ-obj-tsk obj))
+       (ctx (occ-obj-ctx obj)))
+   (ignore tsk)
+   (let* ((ctx-file   (when ctx (occ-ctx-file ctx)))
+          (ctx-dir    (when (stringp ctx-file) (file-name-directory ctx-file)))
+          (prompt     (concat (symbol-name prop) ": ")))
+     (ido-read-directory-name prompt ctx-dir ctx-dir))))
+
+(cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
+                                    (prop (eql root)))
+  (let* ((tsk       (occ-obj-tsk      obj))
+         (dirs      (occ-obj-get-property tsk prop))
+         (first-dir (cl-first dirs)))
+    (if first-dir
+        (find-file first-dir)
+      (occ-debug "occ-do-impl-checkout: %s value ruturned for prop %s" first-dir prop))))
+      ;;}}
+
+#+end_src
+
+*** Timebeing property of task (not fully implemented) will use for keeping a task clocked in for given time
+#+begin_src emacs-lisp
+
+(cl-defmethod occ-obj-impl-rank ((obj occ-tsk))
+                                (prop (eql timebeing))
+  (ignore prop)
+  (let ((tsk (occ-obj-tsk obj)))
+      (let ((timebeing (occ-obj-get-property tsk
+                                         'timebeing)))
+        (let ((timebeing-time (if timebeing
+                                  (org-duration-to-minutes timebeing)
+                                0))
+              (clocked-time   (occ-obj-get-property tsk
+                                                'clock-sum)))
+          (if (and (numberp clocked-time)
+                   (numberp timebeing-time)
+                   (> timebeing-time clocked-time))
+              (- timebeing-time
+                 clocked-time)
+            0)))))
+
+(cl-defmethod occ-obj-impl-list-p ((prop (eql timebeing)))
+  (ignore prop)
+  nil)
+
+(cl-defmethod occ-obj-impl-to-org ((prop (eql timebeing))
+                                   value)
+  (ignore prop)
+  (if (numberp value)
+      (number-to-string value)
+    ""))
+
+(cl-defmethod occ-obj-impl-from-org ((prop (eql timebeing))
+                                     value)
+  (ignore prop)
+  (if (stringp value)
+      (or (string-to-number value)
+          0)
+    0))
+
+(cl-defmethod occ-obj-impl-get ((user occ-user-agent)
+                                (prop (eql timebeing))
+                                (obj occ-tsk))
+  "READ"
+  (let ((tsk (occ-obj-tsk obj)))
+    (ignore tsk)
+    (let* ((prompt     (concat (symbol-name prop)
+                               ": ")))
+      (ignore prompt)
+      (read-number "Timebeing mins: "))))
+
+(cl-defmethod occ-obj-impl-require-p ((obj occ-obj-tsk)
+                                      (operation (eql increment))
+                                      (prop (eql timebeing))
+                                      values)
+  (ignore operation)
+  (ignore prop)
+  (ignore values)
+  (occ-obj-current-p obj))
+
+(cl-defmethod occ-obj-impl-default ((obj occ-obj-tsk)
+                                    (prop (eql timebeing))
+                                    (operation (eql increment)))
+  (ignore prop)
+  (ignore operation)
+  (when (occ-obj-current-p obj)
+    10))
+
+(cl-defmethod occ-do-impl-operation ((obj occ-obj-tsk)
+                                     (operation (eql increment))
+                                     (prop (eql timebeing))
+                                     values)
+  (ignore operation)
+  (ignore values)
+  (let ((tsk    (occ-obj-tsk obj)))
+    (ignore tsk)
+    (if (occ-obj-intf-list-p prop)
+        (occ-error "Implement it.")
+      (occ-error "Implement it."))))
+
+(cl-defmethod occ-do-org-operation ((obj occ-obj-tsk)
+                                    (operation (eql increment))
+                                    (prop (eql timebeing))
+                                    values)
+  (ignore obj)
+  (ignore operation)
+  (ignore values)
+  (let ((prop-string (symbol-name prop)))
+    (ignore prop-string)
+    (if (occ-obj-intf-list-p prop
+            (occ-error "Implement it.")
+          (occ-error "Implement it.")))))
+
+
+(cl-defmethod occ-obj-valid-p ((prop      (eql timebeing))
+                               (operation (eql increment)))
+  (ignore prop)
+  (ignore operation)
+  t)
+
+
+#+end_src
+
+** Read only properties
+*** Git branch property of task
+#+begin_src emacs-lisp
+
+      ;;{{ git-branch
+(cl-defmethod occ-obj-impl-get ((ctx occ-ctx)
+                                (prop (eql git-branch))
+                                (arg null))
+  "Return occ compatible value of property PROPERTY from OCC-CTX OBJ."
+  (ignore prop)
+  (let ((file (occ-ctx-file ctx)))
+      file))
+
+#+end_src
+
+*** STATUS property of task
+#+begin_src emacs-lisp
+
+(cl-defmethod occ-obj-impl-rank ((obj  occ-tsk))
+                                (prop (eql status))
+  "Predicate funtion to check if ctx matches to tsk's status attribute."
+  (ignore prop)
+  (let ((todo-type (occ-obj-get-property obj 'todo-type))
+        (closed    (occ-obj-get-property obj 'closed))
+        (status    (occ-obj-get-property obj 'todo-keyword)))
+    (if (or closed
+            (eql todo-type 'done)
+            (string= status "HOLD"))
+        -30 0)))
+
+#+end_src
+
+*** Key property of task for setting arbitrary rank
+#+begin_src emacs-lisp
+
+(cl-defmethod occ-obj-impl-rank ((obj  occ-tsk))
+                                (prop (eql key))
+  "Predicate funtion to check if ctx matches to tsk's file attribute."
+  (ignore prop)
+  (let* ((key (occ-obj-get-property obj 'KEY)))
+      (if key (string-to-number key) 0)))
+
+#+end_src
+
+*** COMMENT Heading level property of task
+#+begin_src emacs-lisp
+
+(cl-defmethod occ-obj-impl-rank ((obj  occ-tsk))
+                                (prop (eql heading-level))
+  "Predicate funtion to check if ctx matches to tsk's file attribute."
+  (ignore prop)
+  (let* ((level (occ-obj-get-property obj 'level)))
+      (if level level 0)))
+
+#+end_src
+
+*** Current clock status property of task (will rank based on task is currently clocking-in or not)
+    #+begin_src emacs-lisp
+      (cl-defmethod occ-obj-impl-rank ((obj  occ-tsk))
+                                      (prop (eql current-clock))
+        (ignore prop)
+        (let* ((tsk-marker (occ-obj-get-property obj 'marker)))
+          (ignore tsk-marker)
+          (if (occ-obj-marker= obj org-clock-marker)
+              100
+            0)))
+      
+   #+end_src
+
+** Special properties
+*** SubtreeFile property of task
+    #+begin_src emacs-lisp
+
+      ;;{{ sub-tree
+      (cl-defmethod occ-obj-readprop ((obj occ-obj-ctx-tsk)
+                                      (prop (eql subtree)))
+        (let ((tsk (occ-obj-tsk obj))
+              (ctx (occ-obj-ctx obj)))
+          (ignore tsk)
+          (ignore ctx)
+          (let* ((prompt (concat (symbol-name prop) ": "))
+                 ;; org-iread-file-name
+                 (filename (ido-read-file-name prompt
+                                               default-directory ;DIR
+                                               nil               ;DEFAULT-FILENAME
+                                               t                 ;MUSTMATCH
+                                               nil               ;PREDICATE
+                                               #'(lambda (f)     ;INITIAL
+                                                   (string-match "\.\+.org" f)))))
+            (file-relative-name filename
+                                default-directory))))
+      ;;}}
+      
+    #+end_src
+
+** TODO: obj-tsk
+
+*** clock time
+
+*** scheduled deadline
+
+*** lastest clock
+
+*** status
+
+
+** File Ends Here
+   #+begin_src emacs-lisp
+;;; occ-property-methods.el ends here
+   #+end_src
