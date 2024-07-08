@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2019  s
 
-;; Author: s <sh4r4d@gmail.com>
+;; Author: s <sh4r4d _At_ G-mail>
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify

@@ -2,7 +2,7 @@
 
 ;; copyright (c) 2019  sharad
 
-;; author: sharad <sh4r4d@gmail.com>
+;; author: sharad <sh4r4d _At_ G-mail>
 ;; keywords: convenience
 
 ;; this program is free software; you can redistribute it and/or modify
