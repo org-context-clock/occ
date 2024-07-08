@@ -1,0 +1,20 @@
+
+(source gnu)
+(source melpa)
+(source marmalade)
+(source org)
+(source local "~/.xemacs/elpa/upload")
+
+
+(package "lotus-helm" "20191027.2325" "lotus-helm")
+
+
+(files
+ "lotus-helm-pkg.el"
+ "lotus-helm.el")
+
+(development
+ (depends-on "f")
+ (depends-on "ecukes")
+ (depends-on "ert-runner")
+ (depends-on "el-mock"))

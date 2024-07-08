@@ -1,0 +1,26 @@
+
+(source gnu)
+(source melpa)
+(source marmalade)
+(source org)
+(source local "~/.xemacs/elpa/upload")
+
+
+(package "org-clock-resolve-advanced" "20191027.2325" "org-clock-resolve-advanced")
+
+
+(files
+ "org-clock-resolve-advanced-pkg.el"
+ "org-clock-resolve-advanced.el"
+ "org-rl-clock.el"
+ "org-rl-intf.el"
+ "org-rl-obj-cps.el"
+ "org-rl-obj.el"
+ "org-rl-utils.el")
+
+(development
+ (depends-on "f")
+ (depends-on "ecukes")
+ (depends-on "ert-runner")
+ (depends-on "el-mock")
+ (depends-on "lotus-utils"))
