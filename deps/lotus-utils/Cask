@@ -1,0 +1,26 @@
+
+(source gnu)
+(source melpa)
+(source marmalade)
+(source org)
+(source local "~/.xemacs/elpa/upload")
+
+
+(package "lotus-utils" "20191027.2325" "lotus-utils")
+
+
+(files
+ "lotus-idle-utils.el"
+ "lotus-misc-utils.el"
+ "lotus-utils-debug.el"
+ "lotus-utils-pkg.el"
+ "lotus-utils.el"
+ "org-clock-utils-lotus.el"
+ "org-misc-utils-lotus.el"
+ "timer-utils-lotus.el")
+
+(development
+ (depends-on "f")
+ (depends-on "ecukes")
+ (depends-on "ert-runner")
+ (depends-on "el-mock"))

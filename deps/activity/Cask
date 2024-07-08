@@ -1,0 +1,32 @@
+
+(source gnu)
+(source melpa)
+(source marmalade)
+(source org)
+(source local "~/.xemacs/elpa/upload")
+
+
+(package "activity" "20191027.2325" "Activity.")
+
+
+(files
+ "activity-base.el"
+ "activity-pkg.el"
+ "activity.el"
+ "buff-tans-plain.el"
+ "buff-trans.el"
+ "change-activity.el"
+ "clock-activity.el"
+ "mail-event.el"
+ "org-capture-note.el"
+ "org-clock-trans.el"
+ "org-log-note.el"
+ "org-uninteractive-log-note.el")
+
+(development
+ (depends-on "f")
+ (depends-on "ecukes")
+ (depends-on "ert-runner")
+ (depends-on "el-mock")
+ (depends-on "@")
+ (depends-on "switch-buffer-functions"))

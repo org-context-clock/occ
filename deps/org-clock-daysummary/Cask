@@ -1,0 +1,22 @@
+
+(source gnu)
+(source melpa)
+(source marmalade)
+(source org)
+(source local "~/.xemacs/elpa/upload")
+
+
+(package "org-clock-daysummary" "20191027.2325" "Org clock day summary")
+
+
+(files
+ "org-clock-daysummary-pkg.el"
+ "org-clock-daysummary.el")
+
+(development
+ (depends-on "f")
+ (depends-on "ecukes")
+ (depends-on "ert-runner")
+ (depends-on "el-mock")
+ (depends-on "spaceline")
+ (depends-on "lotus-utils"))
