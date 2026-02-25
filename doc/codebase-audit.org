@@ -1,0 +1,47 @@
+#+TITLE: OCC Codebase Audit Notes
+#+PROPERTY: header-args :tangle no
+
+* Audit scope
+- Reviewed all top-level Emacs Lisp source files (~63 .el files~).
+- Reviewed existing docs under ~doc/~ and README.
+- Cross-checked TODO/BUG/Implement-it markers for backlog extraction.
+
+* High-level module map
+** Core bootstrap
+- ~occ.el~, ~occ-main.el~, ~occ-config.el~, ~occ-mode.el~, ~occ-version.el~
+
+** Selection + interaction
+- ~occ-select.el~, ~occ-helm.el~, ~occ-helm-method.el~, ~occ-helm-actions-config.el~
+
+** Clock orchestration
+- ~occ-clock.el~, ~occ-obj-clock-method.el~, ~occ-resolve-clock.el~, ~occ-unnamed.el~
+
+** Object model
+- ~occ-obj.el~, ~occ-obj-ctor.el~, ~occ-obj-accessor.el~, ~occ-obj-common.el~,
+  ~occ-obj-method.el~, ~occ-obj-simple.el~, ~occ-obj-utils.el~
+
+** Property subsystem
+- ~occ-prop-base.el~, ~occ-property-methods.el~, ~occ-property-editor.el~,
+  ~occ-prop-org.el~, ~occ-prop-intf.el~, ~occ-prop-utils.el~,
+  ops/generators under ~occ-prop-op-*.el~, ~occ-prop-gen-*.el~
+
+** Ranking + filtering
+- ~occ-rank.el~, ~occ-filter-base.el~, ~occ-filter-config.el~, ~occ-filter-op.el~
+
+** Task collections and trees
+- ~occ-tree.el~, ~occ-tree-tsk.el~, ~occ-list-tsk.el~, ~occ-tsk.el~
+
+** Utility/test/support
+- ~occ-util-common.el~, ~occ-util-method.el~, ~occ-print.el~, ~occ-debug-method.el~,
+  ~occ-statistics.el~, ~occ-test.el~, ~occ-scratch-space.el~
+
+* Audit conclusions
+1. The architecture is modular and extension-friendly (CLOS-style generic methods).
+2. Key user experience paths are implemented and usable (selection/clocking/property edits).
+3. There is significant backlog in command completion and documentation of edge cases.
+4. Existing docs are fragmented; this audit accompanies normalized docs in:
+   - ~doc/api-reference.org~
+   - ~doc/design-full.org~
+   - ~doc/usage.org~
+   - ~doc/installation.org~
+   - ~doc/pending.org~

@@ -1,0 +1,72 @@
+#+TITLE: OCC Pending Issues and Features
+#+PROPERTY: header-args :tangle no
+
+* Pending issues (current codebase)
+This section captures unresolved implementation and stability items observed in
+code TODO/BUG markers and explicit ~occ-error "Implement it."~ placeholders.
+
+** 1) Unimplemented commands (user-facing)
+In ~occ-commands.el~, several interactive flows are placeholders:
+- ~occ-curr-tsk-continue-for~
+- ~occ-start-day~, ~occ-show-up~, ~occ-stop-day~, ~occ-pack-up~
+- ~occ-do-log-note~, ~occ-do-curr-tsk-log-note~
+- ~occ-do-clock-in-force~, ~occ-interrupt-clock-in~, ~occ-continue-prev~
+- ~occ-show-priority-ineql~
+
+** 2) Selection and Helm rough edges
+- TODO notes in ~occ-select.el~ indicate missing/partial documentation and edge behavior.
+- TODO/BUG notes in ~occ-helm-method.el~ mention undefined or incomplete source behavior and list editing work.
+- TODO in ~occ-util-method.el~ indicates action wiring inconsistencies in debug/launch paths.
+
+** 3) Property/editing debt
+- ~occ-prop-utils.el~ has explicit unimplemented read-property path.
+- ~occ-prop-base.el~ has TODO/BUG notes for multi-value property handling and legacy method-chain concerns.
+- ~occ-property-editor.el~ contains notes around recursive invocation and helm conditionality.
+
+** 4) Tree/collection and hierarchy concerns
+- ~occ-tree-tsk.el~ TODO for non-existing file/buffer cases and breadth limiting.
+- ~occ-obj-simple.el~ BUG notes around child insertion/order and list-select return behavior.
+
+** 5) Clocking/timer stability
+- ~occ-obj-clock-method.el~ has TODO/BUG notes around recursion, memory usage, and better prompts/flow explanations.
+- ~occ-util-common.el~ has TODO/BUG notes on buffer setup and unnamed clocking edge cases.
+
+** 6) Old backlog still present in docs
+~doc/todo.org~ includes long-lived items around:
+- helm stuck key states,
+- window configuration safety,
+- richer task/action workflows.
+
+* Pending features (recommended roadmap)
+
+** Feature group A: Browse mode for large hierarchies
+1. Add explicit *browse mode* distinct from selection mode.
+2. Show top-level/parent nodes by default; lazy-expand child lists.
+3. Provide subtree drill-down action with breadcrumb path.
+4. Keep parent non-selectable or provide "clock best child" action.
+
+** Feature group B: Ranking evolution
+1. Graded ranking by property priority bands.
+2. Separate rank strategies for display vs selection as first-class profile.
+3. Better visualization of why rank was assigned (per-property contributions).
+
+** Feature group C: Property ecosystem
+1. Complete and document built-in properties with examples.
+2. Add more project/workflow properties (schedule/deadline/repetition variants).
+3. Support robust multi-value property normalization and editing UI.
+
+** Feature group D: Reliability and UX
+1. Harden recursive-edit/minibuffer handling in timer paths.
+2. Improve helm source resilience and fallback behavior.
+3. Add consistent error classes/messages and recovery actions.
+
+** Feature group E: Testing and quality
+1. Expand ERT coverage for ranking, filters, and property comparators.
+2. Add regression tests for timer-triggered context changes.
+3. Add integration tests for selection + action + clock-in transitions.
+
+* Prioritization proposal
+1. Browse mode (high impact for large task trees).
+2. Timer/helm stability improvements.
+3. Property system cleanup + docs.
+4. Ranking explainability and test expansion.

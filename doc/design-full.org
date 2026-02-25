@@ -1,0 +1,147 @@
+#+TITLE: OCC Design Document (Complete)
+#+PROPERTY: header-args :tangle no
+
+* 1. Problem statement
+OCC (Org Context Clock) attempts to keep org-clock aligned with the user’s
+*current working context* with minimal interruption. It addresses:
+- forgetting to clock in,
+- clocking into the wrong task after context switches,
+- reducing friction when many candidate tasks exist.
+
+* 2. System goals
+- Context-aware task ranking and selection.
+- Low-disruption prompting and optional automation.
+- Extensible property/matching model.
+- Safe fallback paths (unnamed tasks, property editor, resolve-clock integration).
+
+* 3. Architecture overview
+OCC has six major subsystems:
+
+1) Collection + task object model
+   - Builds task objects from org files (tree/list collections).
+   - Preserves parent/child relationships and subtree metadata.
+
+2) Context model
+   - Captures current buffer/file/VC state into ~occ-ctx~ objects.
+
+3) Property and ranking engine
+   - Property-specific predicates and ranking functions.
+   - Aggregates into overall rank with inherited/non-inherited components.
+
+4) Filtering pipeline
+   - Static filters converted into dynamic runtime filters.
+   - Separate display vs selectable closures.
+
+5) Interaction layer (Helm)
+   - Builds candidate sources, actions, keymaps.
+   - Enforces candidate selectability on final selection.
+
+6) Clocking orchestration
+   - Entry commands, timers, and event-driven clock switch logic.
+
+* 4. End-to-end data flow
+** 4.1 Initialization
+- ~occ-mode~ (or direct init) calls OCC setup.
+- Collector key selects the active spec and root org files.
+- Collections are built into task object structures.
+
+** 4.2 Trigger
+- User command (~occ-run~, ~occ-helm-match-select~, etc.) or timer callback
+  (~occ-do-clock-in-curr-ctx-if-not-timer-function~).
+
+** 4.3 Context capture
+- OCC constructs ~occ-ctx~ from current point/buffer state.
+
+** 4.4 Candidate construction
+- Context + collection + builder produce candidate task objects
+  (e.g. ~occ-ctxual-tsk~, ~occ-ctsk~).
+
+** 4.5 Rank + filter
+- Property ranks are computed and cached in rank tables.
+- Dynamic filters set both:
+  - display set (what is shown)
+  - selectable set (what can be accepted)
+
+** 4.6 Interaction
+- Helm renders candidates and actions.
+- RET respects ~selectable~; actions may still perform child/checkout/edit behavior.
+
+** 4.7 Clock transition
+- Selected task is clocked in via ~occ-do-clock-in~ polymorphic methods.
+- Hooks, history, and optional unnamed-task fallback are handled.
+
+* 5. Object model
+Main classes/structures (in ~occ-obj.el~ and constructors/accessors):
+- ~occ-ctx~: current user context.
+- ~occ-tsk~ family: task abstractions (marker-backed org headings).
+- ~occ-ctsk~, ~occ-ctxual-tsk~: task + context composite views.
+- ~occ-ranktbl~: rank cache and components.
+- Collection objects: tree and list forms.
+
+* 6. Ranking model
+Total rank uses:
+- inheritable property contribution,
+- non-inheritable contribution,
+- ancestor influence scaled by descendant weight.
+
+Additionally ~occ-obj-rank-max-decendent-with~ computes a subtree maximum useful
+for display-oriented strategies (e.g. top-level browsing without exploding list size).
+
+* 7. Property subsystem design
+A property in OCC typically defines:
+- detection (~occ-obj-impl-occ-prop-p~),
+- retrieval from context/user/object (~occ-obj-impl-get~),
+- comparison (~occ-obj-impl-prop=~),
+- ranking (~occ-obj-impl-rank~),
+- serialization (~to-org/from-org~),
+- list semantics (~list-p~),
+- checkout behavior (~occ-do-impl-checkout~),
+- inheritance semantics (~occ-obj-impl-inheritable-p~).
+
+This makes properties first-class extension points.
+
+* 8. Filtering subsystem design
+Static filters define:
+- points generation,
+- comparator,
+- default pivot,
+- optional rank functions for display/select.
+
+Dynamic filters keep closures for:
+- init/reset,
+- selectable filtering,
+- display filtering,
+- pivot increment/decrement.
+
+This design enables incremental narrowing and different display/select behaviors.
+
+* 9. Interaction design
+Helm integration includes:
+- custom source classes,
+- custom keymap,
+- configurable action packs.
+
+A key design behavior is read-only candidates: non-selectable items can be
+visible but cannot be accepted by RET.
+
+* 10. Timer/event design
+OCC uses context-change and idle timers to reduce manual clocking:
+- switches and editor events can trigger reevaluation,
+- quiet mode suppresses interruptions,
+- ignore lists prevent noisy/minibuffer/internal buffers from triggering transitions.
+
+* 11. Error handling and safety
+- Many operations check buffer live/read-only state and marker validity.
+- Some pathways intentionally return fallbacks (e.g., property editor,
+  unnamed task behavior) when direct association is not possible.
+
+* 12. Known design debt
+- Several placeholder commands still throw ~occ-error "Implement it."~.
+- Some TODO/BUG notes indicate rough edges in interactive flow,
+  source building, and recursion/window handling.
+
+* 13. Suggested next design increments
+1. Explicit browse mode with hierarchical collapse/expand actions.
+2. Split rank functions for browse vs clock-selection.
+3. Improve property docs and examples per built-in property.
+4. Formalize test matrix for filters/ranks/timers.

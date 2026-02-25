@@ -1,0 +1,86 @@
+#+TITLE: OCC API Reference
+#+PROPERTY: header-args :tangle no
+
+* Scope
+This file documents the most relevant user-facing and extension-facing
+functions, generic methods, and variables in OCC.
+
+* Entry points (commands)
+- ~occ-run~: Main entry command from ~occ-obj-clock-method.el~, used by keybindings and timers.
+- ~occ-helm-match-select~: Contextual matching selection UI. Uses match-oriented filters and builder.
+- ~occ-helm-list-select~: List/browse selection UI of task candidates.
+- ~occ-helm-list-debug-select~: Selection and action-debug flow.
+- ~occ-helm-list-launch~: Select candidate and then launch action chooser.
+- ~occ-property-edit~: Opens property editor workflow for current context.
+- ~occ-clock-out~: Explicit clock-out wrapper command.
+- ~occ-register-resolve-clock~, ~occ-unregister-resolve-clock~: integration hooks for resolve-clock support.
+
+* Core initialization lifecycle
+- ~occ-initialize~, ~occ-uninitialize~: Bootstraps OCC internals, hooks, and configuration.
+- ~occ-insinuate~, ~occ-uninsinuate~ (used by mode): enable/disable runtime integration.
+- ~occ-collector-default-key~, ~occ-collections-default~: select and resolve active task collection.
+
+* Selection and Helm flow
+- ~occ-obj-select~: Generic entry for interactive candidate selection.
+- ~occ-obj-list-select~: Main selection machinery with configurable filters, actions, prompt, timeout.
+- ~occ-obj-helm-act~ / source-building helpers: Build helm sources from candidates and actions.
+- ~occ-helm-maybe-exit-minibuffer~: Enforces ~selectable~ candidate behavior.
+
+* Ranking and filtering
+- ~occ-obj-calculate-rank~, ~occ-obj-rank-with~: Composite ranking for a task under context.
+- ~occ-obj-rank-inheritable-with~, ~occ-obj-rank-nonheritable-with~: split rank into inherited/non-inherited parts.
+- ~occ-obj-rank-max-decendent-with~: recursive best-descendant ranking; useful for browse display.
+- ~occ-filter-config-initialize~: registers built-in static filters.
+- ~occ-match-filters~, ~occ-list-filters~: default filter pipelines.
+- ~occ-obj-static-to-dyn-filter~: converts static filters to runtime filters with separate display/select closures.
+
+* Property system
+- Property generic interface is centered on ~occ-prop-base.el~ and ~occ-intf.el~.
+- ~occ-obj-impl-get~, ~occ-obj-impl-set~, ~occ-obj-impl-rank~, ~occ-obj-impl-prop=~ are implemented
+  per property symbol in ~occ-property-methods.el~.
+- Built-in context properties include ~currfile~, ~root~, ~git-branch~, and ~subtree~ style logic.
+- Property action generation is handled by:
+  - ~occ-prop-gen-edit-actions.el~
+  - ~occ-prop-gen-checkout-actions.el~
+  - ~occ-prop-gen-misc-actions.el~
+
+* Clocking flow primitives
+- ~occ-do-clock-in~ is polymorphic over ~marker~, ~occ-tsk~, ~occ-ctsk~, ~occ-ctxual-tsk~, ~occ-ctx~.
+- ~occ-do-clock-in-if-not~, ~occ-do-clock-in-if-chg~, and timer wrappers coordinate context-aware clocking.
+- ~occ-do-clock-in-curr-ctx-if-not-timer-function~ is the idle/event timer callback.
+
+* Context and task collections
+- Collection builders:
+  - ~occ-tree-tsk-build~ (hierarchical)
+  - ~occ-obj-build-tsks~ (collection-level)
+- Tree helpers:
+  - ~tree-mapcar-nodes~, ~tree-mapc-nodes~, ~tree-remove-if-not-nodes~
+  - wrappers in ~occ-tree-tsk.el~.
+
+* Mode and keybinding configuration
+- ~occ-mode~: global minor mode.
+- ~occ-set-bindings~, ~occ-enable-mode-map~, ~occ-disable-mode-map~.
+- Prefix is configured by ~occ-prefix-key~.
+
+* Important variables and customizations
+- User customizations (~defcustom~):
+  - ~occ-prefix-key~
+  - ~occ-unnamed~
+  - ~occ-clockout-unassociable-to-unnamed~
+  - ~occ-completing-read-function~
+  - ~occ-clock-in-ctx-auto-select-if-only~
+  - ~occ-config-ineq-const-value~
+- Runtime and flow control:
+  - ~occ-idle-timeout~ (from utility/config paths)
+  - ~occ-config-clock-in~
+  - ~occ-list-select-ap-normal-keys~, ~occ-list-select-ap-transf-keys~
+  - ~occ-ignore-buffer-names~, ~occ-ignore-buffer-regexps~
+- Context history:
+  - ~*occ-clocked-ctxual-tsk-ctx-history*~
+  - ~*occ-tsk-current-ctx*~, ~*occ-tsk-previous-ctx*~
+
+* Extension points
+- Add a new context property: implement methods in ~occ-property-methods.el~ and add to ranking/edit/checkouts.
+- Add a new filter strategy: register static filter in ~occ-filter-config-initialize~.
+- Add new Helm actions: extend ~occ-helm-actions-config.el~ and action generators.
+- Add new collection types/specs: use collector APIs and collection constructors in ~occ.el~/~occ-obj-ctor.el~.

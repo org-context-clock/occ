@@ -1,0 +1,67 @@
+#+TITLE: OCC Installation Guide
+#+PROPERTY: header-args :tangle no
+
+* 1. Requirements
+From package metadata:
+- Emacs with Org (~org >= 9.6.9~ in package definition)
+- ~dash~
+- ~lotus-utils~, ~lotus-helm~
+- ~org-clock-unnamed-task~
+- ~org-clock-resolve-advanced~
+- ~org-clock-hooks~
+- ~org-clock-wrapper~
+- ~org-capture+~
+- ~activity~
+- ~org-clock-table-misc-lotus~
+- ~switch-buffer-functions~
+
+* 2. Installation methods
+** A) Via package.el / MELPA-style flow
+1. Ensure dependency repositories are available.
+2. Install ~occ~ package.
+3. Require ~occ-mode~ and enable OCC mode.
+
+** B) Via Cask for development
+1. Clone repository.
+2. Run Cask dependency install.
+3. Load files in Emacs and run tests/checks.
+
+Cask file defines package files and development dependencies.
+
+* 3. Minimal Emacs configuration example
+#+begin_src emacs-lisp
+(require 'occ)
+(require 'occ-mode)
+
+(setq occ-prefix-key "M-n")
+(occ-mode-global-allow)
+(occ-mode 1)
+
+;; Optional: automatically initialize default collector key
+(occ-insinuate (occ-collector-default-key))
+#+end_src
+
+* 4. Initial collection setup after install
+Run these commands:
+- ~occ-obj-build-spec~ (create a collector spec)
+- ~occ-add-org-file~ (add one or more org files)
+- ~occ-switch-default-key~ (if using multiple specs)
+
+Then test with:
+- ~occ-helm-match-select~
+- ~occ-run~
+
+* 5. Optional integrations
+- Resolve clock integration:
+  - ~occ-register-resolve-clock~
+- Unnamed task behavior:
+  - controlled via ~occ-unnamed~ and unnamed task subsystem
+
+* 6. Development/test dependencies
+From Cask development stanza:
+- ~f~, ~ecukes~, ~ert-runner~, ~el-mock~
+- plus runtime dependencies above.
+
+* 7. Notes
+- Some dependencies are from custom ecosystem packages (lotus/* org-clock-*).
+- For private/local package indexes, mirror corresponding recipes or source repos.
