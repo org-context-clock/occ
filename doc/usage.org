@@ -1,0 +1,92 @@
+#+TITLE: OCC Usage Guide
+#+PROPERTY: header-args :tangle no
+
+* Overview
+OCC provides context-aware clock-in suggestions for Org headings and integrates
+with Helm for selection and task actions.
+
+* 1. Basic setup
+1. Load OCC and enable global allowance.
+2. Enable ~occ-mode~.
+3. Build/choose a collector spec and add org files.
+
+Example workflow (interactive commands):
+- ~M-x occ-mode-global-allow~
+- ~M-x occ-mode~
+- ~M-x occ-obj-build-spec~
+- ~M-x occ-add-org-file~
+
+* 2. Core command usage
+** Task selection commands
+- ~M-x occ-helm-match-select~
+  - Match-oriented list (good for immediate context-based clocking).
+- ~M-x occ-helm-list-select~
+  - General candidate list selection.
+- ~M-x occ-helm-list-debug-select~
+  - Inspect/experiment with actions.
+- ~M-x occ-helm-list-launch~
+  - Select candidate first, then launch chosen action.
+
+** Clock control commands
+- ~M-x occ-run~
+  - Normal OCC entry path (context-aware clocking flow).
+- ~M-x occ-clock-out~
+  - Clock out of current task.
+- ~M-x occ-curr-create-child~ / ~occ-curr-create-child-clock-in~
+  - Create child tasks from current task and optionally clock in.
+
+** Property editing
+- ~M-x occ-property-edit~
+  - Open property editor for current context/task relation.
+
+* 3. Keybindings in ~occ-mode~
+Default prefix key is ~M-n~ (customizable via ~occ-prefix-key~).
+Important bindings include:
+- ~M-n m s~: match select
+- ~M-n l s~: list select
+- ~M-n l e~: property edit
+- ~M-n t o~: clock out
+- ~M-n q~: keep quiet
+- ~M-n s ...~: collector/spec operations
+
+* 4. Collector/spec management
+Collectors define *which org files/tasks OCC works with*.
+Use:
+- ~occ-switch-default-key~
+- ~occ-reset-spec~
+- ~occ-obj-make-spec~
+- ~occ-add-to-spec~
+- ~occ-add-org-file~
+- ~occ-obj-build-spec~
+
+* 5. Typical daily workflow
+1. Start editor, ensure ~occ-mode~ is active.
+2. Run ~occ-run~ or ~occ-helm-match-select~ when switching work contexts.
+3. Accept recommended task (or child action for parent entries).
+4. Use ~occ-property-edit~ to improve context matching over time.
+5. Clock out at end with ~occ-clock-out~.
+
+* 6. Property-driven matching usage
+Built-in context methods include file/path/git-root style matching.
+Improve suggestions by setting these properties on headings:
+- ~currfile~
+- ~root~
+- ~git-branch~
+
+Use edit actions from selection UI or ~occ-property-edit~.
+
+* 7. Helm interaction behavior
+- Some candidates are visible but *not selectable*.
+- RET on non-selectable candidates shows readonly message.
+- Use alternate actions (e.g. child-clock-in) when available.
+
+* 8. Quiet mode and interruption control
+- ~occ-keep-quiet~: quick temporary quiet period.
+- ~occ-keep-quiet-for~: choose duration in minutes.
+During quiet mode, timer-triggered prompts are reduced.
+
+* 9. Troubleshooting quick checks
+- Verify collector/spec points to intended org files.
+- Verify current buffer is not in ignore list regexes.
+- Verify heading properties for context are present and normalized.
+- Use list-debug select to inspect available actions and candidate behavior.

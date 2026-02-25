@@ -43,6 +43,15 @@ For addressing problem
 ** Workflow
 
 
+** Documentation
+
+- API reference: [[file:doc/api-reference.org]]
+- Complete design doc: [[file:doc/design-full.org]]
+- Usage guide: [[file:doc/usage.org]]
+- Installation guide: [[file:doc/installation.org]]
+- Pending issues and features: [[file:doc/pending.org]]
+- Codebase audit notes: [[file:doc/codebase-audit.org]]
+
 ** Example 1
 
 [[doc/eg1.gif]]
