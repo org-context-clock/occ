@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2019  Sharad
 
-;; Author: Sharad <sh4r4d _At_ G-mail>
+;; Author: Sharad <sh4r4d@gmail.com>
 ;; Keywords: convenience, abbrev
 
 ;; This program is free software; you can redistribute it and/or modify

@@ -1,7 +1,7 @@
 ;;; occ.el --- occ               -*- lexical-binding: t; -*-
 ;; Copyright (C) 2016  sharad
 
-;; Author: sharad <>
+;; Author: s <>
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify

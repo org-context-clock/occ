@@ -1,8 +1,8 @@
 ;;; occ-capture.el --- occ capture                   -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023  Music Player Daemon (MPD) user
+;; Copyright (C) 2023  s
 
-;; Author: Music Player Daemon (MPD) user <spratap@merunetworks.com>
+;; Author: s <>
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or modify

@@ -1,6 +1,6 @@
 ;;; occ-impl-utils.el --- impl utils                 -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023  Music Player Daemon (MPD) user
+;; Copyright (C) 2023  s
 
 ;; Author: Sharad <>
 ;; Keywords: convenience

@@ -51,7 +51,7 @@
 
 ;; (progn
 ;;   (with-helm-buffer
-;;     (let* ((posn (elt event 1)) 
+;;     (let* ((posn (elt event 1))
 ;;            (cursor (line-number-at-pos (point)))
 ;;            (pointer (line-number-at-pos (posn-point posn))))
 ;;       (helm--next-or-previous-line (if (> pointer cursor)
@@ -149,7 +149,7 @@
                         helm-ff-auto-update-flag)
                   (helm-set-local-variable 'bookmark-make-record-function
                                            #'helm-ff-make-bookmark-record)
-                 (require 'helm-external)))
+                  (require 'helm-external)))
    (candidates :initform 'helm-find-files-get-candidates)
    (update :initform #'(lambda ()))
    (match-on-real :initform nil)
@@ -265,17 +265,17 @@
 
 (cl-defmethod occ-obj-build-helm-map ((combined-dyn-filter occ-combined-dyn-filter))
   (let ((filter-manage-fn  #'(lambda ()
-                              (interactive)
-                              (with-helm-buffer
-                                (progn ;; code to manager filters
-                                  ;; TODO: check https://github.com/emacsmirror/edit-list/blob/master/edit-list.el
-                                  ;; TODO: implement list editor
-                                  ;; TODO: search emacs elisp interactively modify list
-                                  (occ-debug "Manage filters here.")
-                                  ;; (setf filters default-filters)
-                                  (read-from-minibuffer "Test: ")))
-                              ;; (funcall gen-candidates)
-                              (helm-refresh))))
+                               (interactive)
+                               (with-helm-buffer
+                                 (progn ;; code to manager filters
+                                   ;; TODO: check https://github.com/emacsmirror/edit-list/blob/master/edit-list.el
+                                   ;; TODO: implement list editor
+                                   ;; TODO: search emacs elisp interactively modify list
+                                   (occ-debug "Manage filters here.")
+                                   ;; (setf filters default-filters)
+                                   (read-from-minibuffer "Test: ")))
+                               ;; (funcall gen-candidates)
+                               (helm-refresh))))
     (let ((map (make-sparse-keymap)))
       (set-keymap-parent map occ-helm-map)
       ;; (define-key map (kbd "M-<up>")     filter-manage-fn)
@@ -317,7 +317,7 @@
                                                                              :prompt prompt))
               (gen-candidate-lambda (occ-obj-dyn-filter-display-filter-closure-fn combined-dyn-filter))
               (h-map            (occ-obj-build-helm-map combined-dyn-filter)))
-              ;; (helm-get-current-source)
+          ;; (helm-get-current-source)
           (let ((helm-actions (occ-obj-ap-helm-item ap-normal obj))
                 (helm-transfm (occ-obj-ap-helm-item ap-transf obj)))
             ;; * Dynamic Match based templates
@@ -335,14 +335,14 @@
 
 (cl-defmethod occ-obj-helmify ((combined-dyn-filter occ-combined-dyn-filter))
   (cl-flet ((occ-obj-build-helm-command-closure-fn (closure-fn)
-                                                   #'(lambda ()
-                                                       (interactive)
-                                                       (funcall closure-fn)
-                                                       (helm-refresh)))
+              #'(lambda ()
+                  (interactive)
+                  (funcall closure-fn)
+                  (helm-refresh)))
             (occ-obj-build-helm-candidate-closure-fn (closure-fn)
-                                                     #'(lambda ()
-                                                         (mapcar #'occ-obj-candidate
-                                                                 (funcall closure-fn)))))
+              #'(lambda ()
+                  (mapcar #'occ-obj-candidate
+                          (funcall closure-fn)))))
     (occ-obj-build-combined-dyn-filter (occ-obj-name combined-dyn-filter)
                                        :curr-closure-fn      (occ-combined-dyn-filter-curr-closure-fn combined-dyn-filter)
                                        :prev-closure-fn      (occ-obj-build-helm-command-closure-fn (occ-combined-dyn-filter-prev-closure-fn combined-dyn-filter))
@@ -516,8 +516,8 @@ select candidate from it."
                                                       (apn occ-ap-normal)
                                                       (apt occ-ap-transf))
   (let ((act (cl-first (occ-obj-ap-helm-get-actions obj
-                                                 apn
-                                                 apt))))
+                                                    apn
+                                                    apt))))
     (cl-rest act)))
 
 
@@ -561,8 +561,8 @@ select candidate from it."
   ;; prefer non-optional level
   (let ((s1-level (if (eq (occ-obj-level s1) :optional) 0 1))
         (s2-level (if (eq (occ-obj-level s2) :optional) 0 1)))
-      (and (> (occ-obj-rank s1) (occ-obj-rank s2))
-           (> s1-level s2-level))))
+    (and (> (occ-obj-rank s1) (occ-obj-rank s2))
+         (> s1-level s2-level))))
 
 (cl-defmethod occ-obj-helm-act-on-multiple ((obj         occ-ctx)
                                             (collections list) ;; (occ-collections-default)
@@ -613,16 +613,20 @@ select candidate from it."
                          helm-sources)
             (occ-debug "len helm-sources %d" (length helm-sources))
             (let* ((in-occ-helm t)
-                   (timer (run-with-timer 0.08 nil #'(lambda ()
-                                                       (if in-occ-helm
-                                                           (helm-refresh)
-                                                         (occ-debug "Running occ-list-select-internal helm is gone"))))))
+                   ;; (timer (run-with-timer 0.08 nil #'(lambda ()
+                   ;;                                     (if in-occ-helm
+                   ;;                                         (helm-refresh)
+                   ;;                                       (occ-debug "Running occ-list-select-internal helm is gone")))))
+                   (timer (run-at-time 0.08 nil #'(lambda ()
+                                                    (if in-occ-helm
+                                                        (helm-refresh)
+                                                      (occ-debug "Running occ-list-select-internal helm is gone"))))))
               (unwind-protect ; (error "No buffer named *helm: occ select*") ; (error "Selecting deleted buffer")
                   (when (occ-obj-obj (cl-first helm-sources))
                     (occ-mac-condition-case-control err
-                        (helm :sources (mapcar #'occ-obj-obj helm-sources)
-                              :buffer  (occ-obj-helm-select-buffer)
-                              :resume  'noresume)
+                      (helm :sources (mapcar #'occ-obj-obj helm-sources)
+                            :buffer  (occ-obj-helm-select-buffer)
+                            :resume  'noresume)
                       ((quit error)
                        (when (string= (format "No buffer named %s" (occ-obj-helm-select-buffer))
                                       (cadr err))

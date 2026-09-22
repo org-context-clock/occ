@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2022  sharad
 
-;; Author: sharad <>
+;; Author: s <>
 ;; Keywords: convenience, abbrev
 
 ;; This program is free software; you can redistribute it and/or modify

@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2019  Sharad
 
-;; Author: Sharad Pratap <sh4r4d _at_ _G-mail_>
+;; Author: Sharad Pratap <>
 ;; Keywords:
 
 ;; This program is free software; you can redistribute it and/or modify

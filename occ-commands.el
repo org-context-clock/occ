@@ -121,9 +121,10 @@
   (occ-error "Implement it."))
 
 
+;;;###autoload
 (defun occ-do-clock-in-force ()
   (occ-error "Implement it, open context ctx if not present, then occ-do-clock-in-if-associable else show error."))
-
+;;;###autoload
 (defun occ-interrupt-clock-in (mins)
   (ignore mins)
   (occ-error "Implement it."))
@@ -135,11 +136,12 @@
   (occ-run-do-clock-out switch-to-state
                         fail-quietly
                         at-time))
-
+;;;###autoload
 (defun occ-continue-prev ()
   (occ-error "Implement it."))
-
-(defun occ-obj-make-anonymous ())
+;;;###autoload
+(defun occ-obj-make-anonymous ()
+  (occ-error "Implement it."))
 
 ;; TODO: direct prop edit/add/replace/remove etc from helm menu
 
@@ -151,10 +153,12 @@
 
 (defvar occ-keep-quiet-timer nil)
 
+;;;###autoload
 (defun occ-keep-quiet ()
   (interactive)
   (occ-keep-quiet-for 7))
 
+;;;###autoload
 (defun occ-keep-quiet-for (mins)
   (interactive "Nmins: ")
   (when occ-keep-quiet-timer
@@ -197,7 +201,7 @@
                      (read-from-minibuffer "Desc: ")))
   (if (occ-collector-spec key)
       (occ-debug "spec: %s already present, first reset it with occ-reset-spec"
-                   (occ-collector-spec key))
+                 (occ-collector-spec key))
     (let ((spec (completing-read "Spec: " (occ-specs))))
       (when spec
         (occ-collector-get-create key desc (intern spec) nil)
@@ -213,20 +217,20 @@
   (unless (occ-collector-spec key)
     (occ-obj-make-spec key (symbol-name key)))
   (if (occ-collector-spec key)
-    (unless (memq file
-                  (cl-rest (occ-collector-spec key)))
-      (let ((spec       (cl-first (occ-collector-spec key)))
-            (spec-files (cl-rest (occ-collector-spec key))))
-        (setq spec-files
-             (if current-prefix-arg
-                 (nconc (list file)
-                        spec-files)
-               (nconc spec-files
-                      (list file))))
-        (setf (occ-collection-spec (occ-collector-get key)) (cons spec spec-files)))
-      (prog1
-          (occ-collector-spec key)
-        (occ-reset-collection-object key)))))
+      (unless (memq file
+                    (cl-rest (occ-collector-spec key)))
+        (let ((spec       (cl-first (occ-collector-spec key)))
+              (spec-files (cl-rest (occ-collector-spec key))))
+          (setq spec-files
+                (if current-prefix-arg
+                    (nconc (list file)
+                           spec-files)
+                  (nconc spec-files
+                         (list file))))
+          (setf (occ-collection-spec (occ-collector-get key)) (cons spec spec-files)))
+        (prog1
+            (occ-collector-spec key)
+          (occ-reset-collection-object key)))))
 
 ;;;###autoload
 (defun occ-add-org-file (key buffer)
@@ -240,13 +244,14 @@
   (interactive (list (occ-collector-read-key "key for spec: ")))
   (occ-obj-make-spec key (symbol-name key))
   (when (cl-first (occ-collector-spec key))
-        (occ-add-to-spec key (read-file-name "Spec file: ")))
+    (occ-add-to-spec key (read-file-name "Spec file: ")))
   (prog1
       (occ-collector-spec key)
     (occ-reset-collection-object key)))
 
 
 ;; testing verification
+;;;###autoload
 (defun occ-files-with-null-regex ()
   (interactive)
   (let ((files (cl-remove-if #'(lambda (f)
@@ -256,6 +261,7 @@
     (occ-debug "files with null regex %s" files)))
 
 ;; testing verification
+;;;###autoload
 (defun occ-files-not-in-org-mode ()
   (interactive)
   (let ((files (cl-remove-if #'(lambda (f)
@@ -271,6 +277,7 @@
   (occ-error "Implement it."))
 
 
+;;;###autoload
 (defun occ-show-priority-ineql (prop)
   (interactive (list (occ-util-select-from-sym-list "Select property: "
                                                     (cons nil (occ-obj-properties-for-rank)))))
@@ -283,18 +290,20 @@
                                                         occ-property-priority-inequalities)))
                                       1)))
 
+;;;###autoload
 (defun occ-add-priority-ineql (prop)
   (interactive (list (occ-util-select-from-sym-list "Select property: "
                                                     (occ-obj-properties-for-rank))))
   (require 'calc)
   (let ((prompt (format "prop %s: %s: "
-                      prop
-                      (math-format-flat-expr `(vec ,@(occ-obj-ineq-internal prop))
-                                             1))))
+                        prop
+                        (math-format-flat-expr `(vec ,@(occ-obj-ineq-internal prop))
+                                               1))))
     (when (occ-do-add-ineq prop
                            (read-from-minibuffer prompt))
       (occ-do-set-prop-priorities)
       (occ-show-priorities))))
+;;;###autoload
 (defun occ-show-priorities ()
   (interactive)
   (message "%s" occ-property-priorities))
@@ -330,7 +339,7 @@
   (when occ-reload
     (let ((occ-reload nil))
       (occ-reload-lib uncompiled))))
-
+;;;###autoload
 (defun occ-version (&optional here full message)
   "Show the Occ version.
 Interactively, or when MESSAGE is non-nil, show it in echo area.
@@ -341,21 +350,21 @@ FULL is given."
                      t
                      (not current-prefix-arg)))
   (occ-debug (occ-get-version here
-                                full
-                                message)))
+                              full
+                              message)))
 
-
+;;;###autoload
 (defun occ-run ()
   (interactive)
   (helm :prompt "Run Actions"
         :sources (list (helm-build-sync-source "Actions"
-                           :candidates (list (cons "occ clock-in current context (force)"
-                                                   #'(lambda () (occ-do-clock-in-curr-ctx t)))
-                                             (cons "occ clock-in current context"
-                                                   #'(lambda () (occ-do-clock-in-curr-ctx nil))))
-                           :action     (list (cons "run"
-                                                   #'(lambda (candidate-fun)
-                                                       (funcall candidate-fun)))))
+                         :candidates (list (cons "occ clock-in current context (force)"
+                                                 #'(lambda () (occ-do-clock-in-curr-ctx t)))
+                                           (cons "occ clock-in current context"
+                                                 #'(lambda () (occ-do-clock-in-curr-ctx nil))))
+                         :action     (list (cons "run"
+                                                 #'(lambda (candidate-fun)
+                                                     (funcall candidate-fun)))))
                        (occ-obj-obj (occ-helm-build-extra-actions-ctx-buffer-source)))))
 
 ;;; occ-commands.el ends here

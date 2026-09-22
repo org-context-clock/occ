@@ -106,7 +106,7 @@
           (cl--struct-get-class (aref inst 0))))
     (if (eq inst nil)
         'null
-        (type-of inst))))
+      (type-of inst))))
 
 (defun occ-cl-classname (class)
   (if (cl-struct-p class) ;; t ;; (eql 'cl-structure-class (occ-cl-class class))
@@ -123,7 +123,7 @@
   (type-of (make-marker))
 
   (occ-cl-inst-classname (occ-get-debug-obj))
-  (occ-cl-inst-classname (cl-struct-p (occ-get-debug-obj))) 
+  (occ-cl-inst-classname (cl-struct-p (occ-get-debug-obj)))
   (occ-cl-inst-classname (make-marker))
 
   (cl-struct-p (occ-get-debug-obj))
@@ -140,12 +140,37 @@
                           'parents
                           class)))
 
+(defun occ-cl-cl-struct-root-class-p (class)
+  (unless class
+    (error "class %s is NULL" class))
+  (eq (cl-struct-slot-value 'cl-structure-class
+                            'name
+                            class)
+      'cl-structure-object))
+
+(defun occ-cl-occ-root-class-p (class)
+  (unless class
+    (error "class %s is NULL" class))
+  (eq (cl-struct-slot-value 'cl-structure-class
+                            'name
+                            class)
+      'occ-obj))
+
 (defun occ-cl-class-parent-names (class)
   (mapcar #'(lambda (parent)
               (cons (cl-struct-slot-value 'cl-structure-class
                                           'name
                                           parent)
-                    (when parent (occ-cl-class-parent-names parent))))
+                    (when (and parent
+                               ;; (not (occ-cl-cl-struct-root-class-p parent))
+                               (not (occ-cl-occ-root-class-p parent))
+                               (not (eq (cl-struct-slot-value 'cl-structure-class
+                                                              'name
+                                                              parent)
+                                        'occ-obj)))
+                      ;; (message "P: %s" parent)
+                      ;; (setq __xx parent)
+                      (occ-cl-class-parent-names parent))))
           (occ-cl-class-parents class)))
 
 

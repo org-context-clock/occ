@@ -1,6 +1,6 @@
 ;;; occ-impl-builtin.el --- OCC implementation generics and general default methods  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023  Music Player Daemon (MPD) user
+;; Copyright (C) 2023  s
 
 ;; Author: s <>
 ;; Keywords: convenience
