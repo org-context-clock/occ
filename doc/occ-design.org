@@ -1,0 +1,698 @@
+#+TITLE: OCC — Org Context Clock : Design Document
+#+AUTHOR: ECA (reconstructed from source)
+#+DATE: <2025-01-01>
+#+PROPERTY: header-args :tangle no
+
+This document describes the design of OCC as reconstructed from the source
+code.  It is intended as living documentation for the project; discrepancies
+with the code should be corrected here rather than in code comments only.
+
+* Introduction
+
+OCC ("Org Context Clock") is a proactive task and clock manager for GNU Emacs
+org-mode.  It solves two related problems:
+
+1. **Remembering to clock in** — instead of the user having to remember when to
+   start a clock, OCC watches the user's current environment (buffer, file, git
+   branch), derives a *context*, and proactively offers to clock into the task
+   that best matches that context.
+2. **Clocking into the right task** — OCC scores known tasks against the current
+   context and presents the best matches, so the user picks from a short,
+   ranked list rather than an unstructured task tree.
+
+Beyond matching, OCC enforces a *task ⇄ context sync*: a task can declare its
+contextual requirements as org drawer properties (file, project root, git
+branch, ...).  OCC can then either
+
+- *match* — pick a task whose properties fit the current context, or
+- *checkout* — change the environment (open a file/directory, switch git
+  branch) so that the environment fits a task the user wants to clock into.
+
+If nothing matches, OCC will clock into an automatically created *unnamed task*
+so that the user is never left unclocked.
+
+The system is designed to operate with minimal user attention; all interactive
+surfaces are timed, non-blocking where possible, and can be silenced.
+
+* Design Goals
+
+- **Proactive**: the task application should offer actions rather than only
+  react (see [[file:vision.org]]).
+- **Context as a property**: tasks carry their context information with them as
+  properties; clocking a task and its context must stay in sync.
+- **Context-driven actions**: based on the current context, the system should
+  either offer to clock into a matching task, offer to change the context to
+  match the currently clocked task, or checkout the context to the current
+  clocking task.
+- **Minimal intervention**: the system must not distract the user's
+  work-flow; prompts are timed, quiet mode exists, and the whole selection UI
+  is designed for fast, keyboard-driven use.
+- **Generated, not hand-written, UI actions**: almost every menu action
+  (edit/checkout per property and operation) is *generated* from the property
+  protocol at runtime.
+
+* Architecture Overview
+
+OCC is a layered, polymorphic Emacs Lisp system built on two core mechanisms:
+
+1. **`cl-defstruct` structs with `:include` inheritance** — the object model
+   (tasks, collections, contexts).
+2. **`cl-generic` / `cl-defmethod` dispatch** — all behavior.  Methods dispatch
+   on struct types as well as on builtin types (`marker`, `buffer`, `null`,
+   `symbol`, `list`, `(eql ...)`, `(head ...)`) and, crucially, on *property
+   symbols* via `(eql prop)` specializers.
+
+The module layers, from outermost to innermost:
+
+| Layer                    | Files                                                        | Responsibility                                    |
+|--------------------------+--------------------------------------------------------------+---------------------------------------------------|
+| Entry / collector        | =occ.el=, =occ-main.el=                                      | Group setup, collector registry, global state     |
+| UI / commands            | =occ-mode.el=, =occ-commands.el=, =occ-helm*.el=, =occ-util-method.el= | Minor mode, user commands, helm integration |
+| Clock engine             | =occ-obj-clock-method.el=, =occ-clock.el=, =occ-unnamed.el=  | Clock-in/out pipeline, context change detection   |
+| Selection & filters      | =occ-select.el=, =occ-filter*.el=, =occ-rank.el=, =occ-normalize-ineqs.el= | Rank, threshold filters, helm candidates |
+| Object model             | =occ-obj*.el=, =occ-tsk.el=, =occ-tree*.el=, =occ-list-tsk.el= | Structs, constructors, accessors, tree/list builders |
+| Property / context       | =occ-prop*.el=, =occ-property-methods.el=, =occ-property-editor.el= | Property protocol, environment capture, editors  |
+| Interface / impl split   | =occ-intf.el= → =occ-impl.el= → =occ-impl-builtin.el=, =occ-property-methods.el= | Stable generics vs. per-property implementations |
+| Support                  | =occ-cl-utils.el= (reflection), =occ-macros.el=, =occ-assert.el=, =occ-predicate.el=, =occ-print.el=, =occ-debug-method.el= | Reflection over cl-generic, macros, predicates, printing |
+
+* Object Model
+
+All model objects are `cl-defstruct`s deriving from `occ-obj` (single slot
+=name=).  The hierarchy (as documented in =occ-obj.el=):
+
+#+begin_src text
+occ-obj
+ ├── occ-obj-tsk ── occ-obj-ctx-tsk ── occ-ctsk ── occ-ctxual-tsk
+ │       └── occ-tsk ── occ-tree-tsk / occ-list-tsk
+ ├── occ-obj-ctx ── occ-obj-collection ── occ-collection
+ │       └── occ-ctx ── occ-list-collection ── occ-tree-collection
+ ├── occ-stat
+ ├── occ-ranktbl
+ ├── occ-return
+ ├── occ-callable ── occ-callable-normal / occ-callable-generator
+ ├── occ-static-filter / occ-obj-dyn-filter / occ-combined-dyn-filter
+ ├── occ-ap ── occ-ap-normal / occ-ap-transf
+ ├── occ-hsrc ── occ-hsrc-null / occ-hsrc-candidate / occ-hsrc-source
+ └── occ-obj-agent ── occ-user-agent / occ-org-agent / occ-emacs-agent
+#+end_src
+
+** Task objects
+
+- =occ-tsk= — a snapshot of one org heading at collection time:
+  =collection= (back-pointer), =parent=, =heading=, =heading-prop=, =marker=,
+  =file=, =point=, =clock-sum=, =level=, =subtree-level=, =file-level=, =cat=,
+  =format-file=, =format-string=, =sibling-count=, =children-count=,
+  =descendant-count=, =descendant-weight=, org properties as an upcased =plist=,
+  and a default =occ-ranktbl=.
+- =occ-tree-tsk= — a task in a hierarchical (tree) collection; =subtree= holds
+  children.  Built by =occ-tree-tsk-build=, which may also splice in tasks from
+  a =:SUBTREEFILE= org property.
+- =occ-list-tsk= — a task in a flat (list) collection.
+- =occ-ctsk= / =occ-ctxual-tsk= — a task viewed in a context (a `(tsk . ctx)`
+  pair).  =occ-ctsk= deliberately avoids computing ranks; =occ-ctxual-tsk= is
+  the ranked form used by ranking, filtering and selection.
+
+** Context objects
+
+- =occ-ctx= — *where the user is now*: =buffer=, =file=, and
+  =tsk-ranktbl-list= (per-task rank tables *in that context*).  Built from a
+  marker/buffer/point, resolved to =org-base-buffer= and its file, and then
+  *interned* in =occ-ctx-hash= keyed by =( :name :file :buffer )= so equal
+  contexts share cached rank state.  The window participates only as a
+  fallback for the buffer; there is no frame/window slot.
+- Contexts are **read-only**: writing a property through a context signals an
+  error.
+
+** Collection objects
+
+- =occ-collection= (and list/tree variants) — a named, lazily-scanned set of
+  org files registered under a collector key.  Slots: =desc=, =spec= (=:tree= or
+  =:list=), =roots= (configured files), =files= (derived), =depth=, =limit=,
+  =rank=, =level=, =file-lcp= (longest common prefix of files, for display).
+- Note that =occ-obj-collection= *derives from =occ-obj-ctx=*: a collection is
+  itself a kind of context, which is why rank logic can treat collections and
+  contexts uniformly.
+
+** Supporting objects
+
+- =occ-ranktbl= — per-(task, context) cached rank decomposition: =plist=,
+  =value=, =inheritable=, =nonheritable=, =max-decendent=.
+- =occ-return= — the tagged return protocol used by interactive selection:
+  =( label value )= with labels ~:occ-selected~, ~:occ-quitted~,
+  ~:occ-nocandidate~, ~:occ-timeout~, ~:occ-true~.
+- =occ-callable= — an action entry: =keyword= + =fun= (normal or generator).
+- =occ-static-filter= / =occ-obj-dyn-filter= / =occ-combined-dyn-filter= —
+  filter machinery, see [[*Filters]].
+- =occ-ap= / =occ-ap-normal= / =occ-ap-transf= — "action packs" (keyword trees
+  resolved into callables); the transformer pack *supersedes* the normal one.
+- =occ-hsrc= and variants — helm-source wrappers distinguishing null / single
+  candidate (auto-select) / real source.
+- =occ-obj-agent= and =occ-user-agent=, =occ-org-agent=, =occ-emacs-agent= —
+  value suppliers: the user (prompts), org-mode (structured reads), Emacs
+  (environment).
+
+** Constructors and accessors
+
+Convention:
+
+- =occ-obj-make-*= — allocate a fresh object.
+- =occ-obj-build-*= — build or coerce/reuse (e.g. =occ-obj-build-ctsk= returns
+  its argument unchanged when already a =occ-ctsk=).
+
+The main construction chain =occ-obj-ctor.el=:
+
+- =occ-obj-tsk-builder= — selects the concrete `make-occ-*` function from the
+  collection's spec.
+- =occ-make-tsk-at-point (collection file)= — headline → task snapshot via
+  =org-element-at-point=, =org-get-heading=, =org-clock-sum-current-item=, and
+  a `move-marker` into the base buffer.  Entries matching =[NONTSK]= are
+  rejected as non-tasks.
+- =occ-obj-make-tsk= — dispatching on `number` (position), `marker`, `null`
+  (point-marker), and `occ-tsk` (identity).
+- =occ-obj-make-ctx-at-point= / =occ-obj-make-ctx= — context construction and
+  internment (see above).
+- =occ-obj-make-ctsk-with / occ-obj-make-ctxual-tsk-with= and the `build-`
+  variants — pair a task with a context (needlessly recomputing nothing; the
+  `build` form reuses already-paired objects).
+
+Generic *accessors* (in =occ-obj-accessor.el=) are defined for every wrapper
+type so callers never unwrap manually: =occ-obj-tsk=, =occ-obj-ctx=,
+=occ-obj-marker=, =occ-obj-buffer=, =occ-obj-file=, =occ-obj-collection=,
+=occ-obj-candidate=, =occ-obj-rank=, =occ-obj-level=, =occ-name=, and so on.
+Many are `setf`-able and memoize (e.g. =occ-obj-format-string=).
+
+* Collections and Specs
+
+- **Collector registry** — global alist =*occ-collector*= keyed by symbol
+  (default key =default=, unnamed key =unnamed=).  API:
+  =occ-collector-get/get-create/remove/set/spec/roots/files=.
+- **Spec** — (a) the collection *kind*, only ~:tree~ or ~:list~ are valid
+  (=occ-valid-spec-p=); and (b) the persisted `(SPEC-KEY . FILES)`
+  configuration stored in the collection's =spec= slot.
+- **Task building** — =occ-obj-collect-tsks= / =occ-obj-tsks= build and cache.
+  For tree collections, =occ-tree-tsk-build= recursively maps org subheadings,
+  then =occ-tree-trim= prunes to =limit=.  For list collections,
+  =occ-list-tsk-build= maps =org-map-entries= over the roots.
+- **Files** — =roots= are the configured files; =files= are *derived*
+  (=occ-obj-collect-files=): for a tree collection, the set of files
+  discovered while walking tasks (this discovers =:SUBTREEFILE= splices); for a
+  list collection, =files = roots=.
+- **Runtime discovery** — when the user visits an org file not in any
+  collection, OCC asks (with a timeout) whether to add it to the current spec
+  (=occ-do-add-org-buffer= → =occ-add-to-spec=).
+
+* The Property Protocol
+
+The heart of OCC.  A *property* is a symbol (=currfile=, =root=, =git-branch=,
+=timebeing=, =status=, =key=, =current-clock=, =subtree=, =deadline=,
+=scheduled=) whose entire behavior is defined by `cl-defmethod`s specialized on
+`(eql prop)` over a fixed set of generic functions.  Properties are therefore
+**open, method-defined virtual objects** — there is no class per property.
+
+** Two worlds
+
+- *Org world* — each OCC property is stored in the org drawer under an
+  =occ-=prefixed name (=currfile= → ~OCC_CURR_FILE~), accessed through
+  :own wrappers and multi-valued (space-split) variants.
+- *Occ world* — typed Lisp values, converted per property by
+  =occ-obj-impl-to-org= / =occ-obj-impl-from-org=.
+
+** The protocol generics (impl layer)
+
+| Generic                                                       | Purpose                                                 |
+|---------------------------------------------------------------+---------------------------------------------------------|
+| =occ-obj-impl-occ-prop-p (prop)=                              | is this an OCC-introduced property (gets the =occ-= prefix)? |
+| =occ-obj-impl-get ((ctx occ-ctx) prop …)=                     | **capture**: read the value from the environment        |
+| =occ-obj-impl-get ((user occ-user-agent) prop …)=             | **prompt**: read a value from the user                  |
+| =occ-obj-impl-list-p (obj prop)=                              | is the property multi-valued?                           |
+| =occ-obj-impl-prop= (prop a b)=                               | semantic equality (file=, file-in-dir, branch compare)  |
+| =occ-obj-impl-rank (tsk ctx prop)=                            | 0/100 match score (aggregated for list props)           |
+| =occ-do-impl-operation (obj operation prop values)=           | apply get/put/add/remove/increment to the org entry     |
+| =occ-obj-impl-checkout-p= / =occ-do-impl-checkout (obj prop vdirector)= | is checkout supported / apply value to the environment |
+| =occ-obj-impl-require-p=                                      | should an edit/checkout action be generated?            |
+| =occ-obj-impl-default (obj prop op)=                          | default value for an edit operation                     |
+| =occ-obj-impl-propfmt (obj prop value)=                       | printable form                                          |
+| =occ-obj-impl-inheritable-p (prop)=                           | does the rank propagate to ancestor tasks?              |
+
+The template for defining a new property is documented in
+=doc/occ-property-methods.org= and in the ~_template_~ blocks of
+=occ-property-methods.el=.
+
+** Call chain
+
+The value flows through four generic layers:
+
+#+begin_src text
+public op layer (occ-do-op-props-{edit,checkout,misc})
+  → occ-do-op-prop-* (obj prop operation value)
+      → occ-do-operation (obj operation prop value)
+          → occ-do-intf-operation (intf layer, occ-intf.el)
+              → occ-do-impl-operation (impl layer, per-property)
+#+end_src
+
+Reading a property: =occ-obj-get-property (obj prop)= checks struct *slots*
+first, then the org-property plist; on a =occ-ctx= it delegates to the
+environment capture impl (so context values are computed live).
+
+** Properties implemented
+
+- =currfile= — rank 100 iff =occ-pu-file== matches the context file; user
+  reads with =ido-read-file-name=; *checkout* = `find-file`.
+- =root= — project root directory; =prop== is directory containment
+  (=occ-pu-file-in-dir-p=); *checkout* = `find-file` the directory.
+- =git-branch= — value =="vc-root::branch"==; captures through
+  =vc-root-dir= + =magit-get-current-branch=; user reads via
+  =magit-read-branch=; *checkout* = `magit-checkout`.
+- =timebeing= — "keep a task clocked in for a given time"; rank compares the
+  remaining =timebeing= with =clock-sum=; operation =increment=.
+- =status= — penalty for closed/HOLD/done tasks.
+- =key= — arbitrary numeric rank (capped at 100).
+- =current-clock= — rank 100 iff the task is currently clocking.
+- =subtree= — a subtree file picker.
+- =deadline= / =scheduled= — stub rank methods mirroring =status=.
+
+** Operations
+
+Operations are classified: =get=, =member= (read-only); =put=, =add=,
+=remove=, =delete=, =increment= (write).  List properties support add/remove;
+the *operation set* available for a property is derived at runtime from the
+method signatures of =occ-do-impl-operation=.
+
+** Runtime introspection
+
+Because properties are just methods, the *supported property set* per class is
+computed at runtime by reflecting over generic function signatures:
+
+- =occ-obj-properties-to-edit= / -for-ranking= / -to-calculate-rank= /
+  -to-checkout= — collect the ~(eql PROPL)~ specializers of the relevant
+  generics (via =occ-cl-method-param-values= / =occ-cl-collect-on-classes=),
+  filtering placeholder symbols (regex ~^_.+_$~) and signalling if no concrete
+  method exists.
+- =occ-obj-operations-for-prop= — allowed operations per property.
+
+This is what =occ-cl-utils.el= exists for: `cl-struct` classes are not first
+class like EIEIO classes, so the code reaches into =cl--struct-get-class=,
+=cl--struct-class-slots= and the `cl-structure-class` =parents= slot to emulate
+class introspection, and into `cl-generic` method storage to read signatures.
+
+* Context Capture
+
+=occ-obj-make-ctx-at-point= (interned in =occ-ctx-hash=):
+
+#+begin_src elisp
+(marker | buffer | nil) → base buffer (org-base-buffer) → file
+→ make-occ-ctx :name <buffer-name> :file <file> :buffer <buffer>
+#+end_src
+
+There is deliberately no frame/window slot; the window is used only as a
+buffer fallback.  Context-derived property values (file, project root, git
+branch) are obtained by the =occ-obj-impl-get= methods on `occ-ctx`.
+
+* Ranking
+
+The core scoring function (in =occ-rank.el=), cached per (task, context) in an
+=occ-ranktbl=:
+
+#+begin_src elisp
+rank(tsk, ctx) = acquired(tsk, ctx)
+               + ancestor-inheritable(tsk, ctx) / descendant-weight(tsk)
+
+acquired(tsk, ctx) = inheritable-sum(tsk, ctx) / descendant-weight(tsk)
+                   + nonheritable-sum(tsk, ctx)
+per-property: priority(prop) × (100 if task-prop matches ctx-prop else 0)
+#+end_src
+
+- **Inheritable** properties (=currfile=, =root=, =git-branch=, =status=,
+  =deadline=, =scheduled=) propagate *up* the task tree: a match on a child
+  boosts its ancestors, damped by each node's =descendant-weight= (≈1.2 ×
+  sum of children weights, =1= for leaves).  Thus one file/branch hit can light
+  up a whole subtree.
+- **Non-inheritable** properties (=timebeing=, =key=, =current-clock=) stay
+  local to the task.
+- =occ-obj-rank-max-decendent= (max over the subtree) is the default *display*
+  rank — a parent shows at least as well as its best child.
+- **Invalidation**: any write to a task property resets the property rank, the
+  inheritable/nonheritable aggregates, ancestors and descendants
+  (=occ-obj-reset-prop-rank-with= etc.).
+
+** Priority inequalities (calc-based solver)
+
+Rank *weights* (priorities) are not hard-coded.  =occ-normalize-ineqs.el=
+parses inequality declarations such as:
+
+#+begin_src elisp
+(occ-do-add-ineq 'root "nil > (key + 20)")
+(occ-do-add-ineq 'key  "nil > 10")
+(occ-do-add-ineq 'status "nil > 2 * root")
+(occ-do-add-ineq 'currfile "nil > status")
+(occ-do-add-ineq 'timebeing "nil > currfile")
+(occ-do-add-ineq 'current-clock "nil > timebeing")
+(occ-do-add-ineq 'git-branch "this > root")
+#+end_src
+
+The inequalities are converted to equations with generated slack constants,
+solved with **GNU calc** (=calcFunc-solve=, =calc-normalize=), and the free
+constants are instantiated (configurable — default =random 99=), yielding a
+consistent numeric priority per property.  The installed default order is:
+
+#+begin_src text
+git-branch > current-clock > timebeing > currfile > status > root > key
+#+end_src
+
+* Filters
+
+A filter is **not a boolean predicate on tasks**.  It is a *rank threshold
+mechanism* over ranked candidates, and it is *interactive* — the user moves the
+threshold while the candidate list is open.
+
+** Static filters (registered specs)
+
+=occ-static-filter= struct: =keyword=, =points-gen-fn= (what threshold values
+exist), =compare-fn= (=>=, >, < …=), =default-pivot-fn= (initial threshold),
+=rank-select-fn= / =rank-display-fn=.  Registered set
+(=occ-filter-config.el=):
+
+| Keyword        | keeps                          |
+|----------------+--------------------------------|
+| ~:incremental~ | rank ≥ pivot; pivot walks the sorted distinct rank values, starting at the middle |
+| ~:positive~    | rank > 0                       |
+| ~:non-negative~| rank ≥ 0                       |
+| ~:negative~    | rank < 0                       |
+| ~:identity~    | everything                     |
+
+The default clock-in filter set:
+#+begin_src elisp
+(defun occ-match-filters ()
+  (list t :incremental (list :positive #'occ-obj-rank) :non-negative :identity))
+#+end_src
+
+** Dynamic filters (per-session closures)
+
+A static filter is *compiled* by =occ-obj-static-to-dyn-filter= into an
+=occ-obj-dyn-filter= bundle of closures (init/seq/selectable/display/
+increment/decrement/reset) instantiated over the candidate sequence.  Filters
+are *chained* (each `prev` slot is the previous filter) and wrapped in an
+=occ-combined-dyn-filter= with a stack, so the user can navigate between
+filter sets at runtime.
+
+In helm: ~M-<up>/<down>~ tighten/loosen the pivot live, ~M-<return>~ resets,
+~s-<up>/<down>~ switches filter sets.
+
+** Relation between properties, ranks and filters
+
+#+begin_src text
+context props (ctx)  ── per-property impl-rank ──┐
+task props (tsk)     ────────────────────────────┴─► property rank × priority
+                                                        │
+                                              aggregations (inheritable/non-/max-descendant)
+                                                        ▼
+                                                     task rank ──► filters threshold it
+#+end_src
+
+Filters never inspect properties directly; they threshold the numeric rank.
+
+* Selection (occ-obj-select) and Helm UI
+
+** Entry generic
+
+#+begin_src elisp
+(cl-defgeneric occ-obj-select (obj collections
+                               &key filters builder ap-normal ap-transf
+                                    return-transform auto-select-if-only
+                                    timeout obtrusive prompt)
+  "return interactively selected TSK or NIL")
+#+end_src
+
+Method on =occ-ctx= requires =builder= (=occ-obj-build-ctxual-tsk-with= by
+default) and delegates to =occ-obj-list-select=, which runs a **timed helm
+session** =helm-timed= over =occ-obj-helm-act= in buffer ~ *helm: occ select*~;
+the timeout defaults to =occ-idle-timeout= (7 seconds).  With
+=return-transform=, a nil selection is wrapped in an =occ-return= carrying
+~:occ-quitted~ / ~:occ-nocandidate~ / ~:occ-timeout~ labels.
+
+** Helm sources
+
+- Real collection source (=occ-obj-helm-build-real-collection-source=): a
+  =helm-source-sync= subclass (=occ-helm-source-sync=) with =:candidates= =
+  display-filter closure, =:action= / =:persistent-action= = action pack,
+  =:action-transformer= = transformer pack, =:history= = org-refile-history.
+  The prompt shows =Select matching %s(%d/%d)…= (unfiltered/filtered counts).
+- Null source (=occ-hsrc-null=) when no candidates pass; single-candidate
+  source (=occ-hsrc-candidate=) with auto-select when =auto-select-if-only=.
+- Dummy sources for quick task creation ("Create fast child task", "Create
+  Anonymous task").
+- Extra-actions sources ("Add current buffer to ignore list", unnamed-task
+  creation).
+
+** Action packs
+
+- =occ-ap-normal= — the *actions* plan: a keyword tree such as
+  ='(t actions general edit)= resolved into =occ-callable=s via the global
+  registry =occ-helm-callables= (=occ-helm-actions-config-initialize= builds
+  it).  Registered normal callables: Ignore, Select, Clock-in, Try-clock-in,
+  Try-fast-clock-in, Create child (clock-in), Cut/Paste/Archive/Delete/Report,
+  Goto/Set-to, Property window edit, Property edit combined, Call-with-obj,
+  Set-debug-obj, Get Rank, Get Task, Describe, Checkout, Close,
+  Force-clock-in.  Registered *generators*: Fast Edits, Clock Operations,
+  Simple Edit, Simple Checkout, Fast Checkouts, Misc.
+- =occ-ap-transf= — the *superseding* transformer: helm's
+  =:action-transformer= swaps the action set depending on the selected
+  candidate.
+- The generated per-property actions are produced by
+  =occ-prop-gen-{edit,checkout,misc}-actions.el=: for each editable property ×
+  operation × value, a callable "Edit property =currfile=: <value> of <task>"
+  or "Checkout property =currfile=: <value> of <task>" is generated when
+  =occ-obj-require-p= approves; multi-valued list properties get one checkout
+  action per element (via =occ-obj-vdirectors=).
+
+** Helm keymap highlights
+
+~RET~ exits only on *selectable* tasks (others message "ReadOnly"); ~S-RET~
+runs child clock-in; plus the filter-map (~M-<up>/<down>~ etc. described
+above).
+
+* The Clock Engine
+
+** Triggering
+
+The user's environment is watched through buffer switching and idle time:
+
+1. =post-command-hook= runs =switch-buffer-functions-run= (from the vendored
+   =switch-buffer-functions= package).
+2. =switch-buffer-functions= → =occ-switch-buffer-run-curr-ctx-timer-function=
+   → schedules a timer (via =occ-do-try-clock-schedule-next-timeout= using
+   =run-with-idle-plus-timer=, a lotus-utils timer offset by current idle
+   time).
+3. The timer runs =occ-do-clock-in-curr-ctx-if-not-timer-function=, guarded by
+   quiet mode, no-active-minibuffer and no-recursive-edit checks.
+4. Timeouts adapt to state: 3 s if no clock is running, 17 s if clocked into
+   an unnamed task, 30 s if clocked into a named task.
+
+Command-driven entry points: =occ-do-clock-in-curr-ctx= and
+=occ-do-clock-in-curr-ctx-if-not= (the eager/force variants).
+
+** The gated pipeline
+
+#+begin_src text
+trigger
+  → occ-do-clock-in-if-chg             ; change gate
+  → occ-do-clock-in-if-not             ; association gate (wrong-task check)
+  → occ-do-clock-in (occ-ctx)          ; selector
+      → occ-obj-select (timed helm)    ; choose ctxual-tsk
+  → occ-do-clock-in (ctxual-tsk) → (ctsk) → (tsk) → (marker)
+  → org-clock-clock-in
+#+end_src
+
+Each step is a `cl-defmethod`:
+
+- =(obj null)= — error "Can not clock in NIL".
+- =(obj marker)= — the real org trigger: =occ-straight-org-clock-clock-in=
+  (wraps =org-clock-clock-in=) with read-only safety and
+  =org-log-note-clock-out= disabled.
+- =(obj occ-tsk)= — consults the global =occ-config-clock-in= switch, then
+  forwards to the marker.
+- =(obj occ-ctsk)= — only proceeds if the task is *unnamed* or *associable*
+  (rank > 0), else refuses.
+- =(obj occ-ctxual-tsk)= — the orchestration pass: records
+  =*occ-clocked-ctxual-tsk-ctx-history*=, inserts cross-referencing
+  =org-insert-log-note= entries in both old and new headings, runs
+  =occ-do-clock-in-hooks= with (old-marker, new-marker), asserts the clock
+  marker moved, then verifies via =occ-current-tsk=.
+- =(obj occ-ctx)= — the selector (see above); on no-selection it falls back to
+  the property window editor so the user can make a task associable
+  (=occ-obj-safe-ignore-quit-properties-window-editor=).
+
+** Change gate
+
+- =occ-obj-try-to-clock-in-p (curr prev)= — true iff contexts differ (:prev
+  null= → true).
+- =occ-obj-consider-for-clockin-in-p= — at least =*occ-tsk-current-ctx-time-interval*=
+  (7 s) since the last buffer selection.
+- =occ-do-describe-try-to-clock-in= — explains (when asked) why no clock-in
+  happened: unchangeable context, dead/minibuffer/ignored buffer, unchanged
+  context, or unknown.
+
+** Wrong-task detection (association gate)
+
+If the *currently clocked* task is not associable with the *new* context
+(=occ-obj-current-unassociated-p= / =occ-obj-try-current-if-unassociated-p=),
+OCC:
+
+1. Tries (up to 3 times) to make it associable by opening the property editor
+   (=occ-obj-try-until-associable-p=), so the user can add the property that
+   would associate it (e.g. set =ROOT=).
+2. If the user skips, or the clock-in selector times out with no selection,
+   and no unnamed clock is running: create and clock into an *unnamed task*.
+
+** Quiet mode
+
+=occ-keep-quiet= / =occ-keep-quiet-for= set a timer that makes the engine
+skip prompts for N minutes; =occ-config-enable-quiet= is the switch.
+
+* Unnamed Tasks
+
+The user should never be left without a running clock.  When no task
+associates with the current context:
+
+- =occ-can-create-unnamed-tsk-p= — allowed only after
+  =*occ-swapen-unnamed-threashold-interval*= (2 minutes) of unassociation.
+- =occ-maybe-create-unnamed-tsk= — creates a heading in a dedicated file
+  (vendored =deps/org-clock-unnamed-task=: default ~~/Unnamed.org~ under a
+  ~"Unnamed tasks"~ parent, headings ~"Unnamed task <n>"~), then clocks in.
+- Unnamed tasks are recognized *by buffer identity*
+  (=occ-clock-marker-unnamed-p= checks the marker's buffer against the unnamed
+  file), gathered into a dedicated collector key ~unnamed~
+  (=occ-build-unnamed-collection=).
+
+This means OCC can always guarantee known bookkeeping: named task ↔ context,
+or unnamed task (to be merged later — the merge command
+=occ-merge-unamed-task= is still a stub).
+
+* Capture Integration
+
+- **Low-level capture buffer** (=occ-capture.el=): ~*Occ Capture*~ buffer minor
+  mode with keys (∗ insert template, =C-c C-c= finalize, =C-c C-k= kill,
+  =C-c C-w= refile, =C-c C-r= replace template), store backends for
+  entry/plain/note.
+- **Task capture** =occ-do-capture= (defined in =occ-obj-simple.el=, generic on
+  =marker= / =occ-tsk= / =occ-obj-ctx-tsk=): runs org-capture+ templates
+  (token trees like =(t occ tsk clockable todo)=), then *inducts the new entry
+  as a child* of the target task (=occ-do-induct-child=); with ~:clock-in~ it
+  builds a ctxual-tsk for the child and calls =occ-do-try-clock-in=, which
+  *refuses* to clock in if the new task is not associable (so the user is
+  prompted to set its properties first).
+- Template registration lives in =occ-helm-actions-config-initialize= via
+  =org-capture+-add-heading-template= for ~(occ tsk clockable
+  todo|meeting)~ and ~(occ tsk unclockable note|info|event)~.
+
+* The Property Editor
+
+A timed, non-destructive buffer editor used both for manual editing and as the
+fallback when no task matches:
+
+1. =occ-do-properties-window-editor (obj occ-obj-ctx-tsk)= — opens a temporary
+   window with =lotus-with-timed-new-win= (auto-close on =occ-idle-timeout=).
+2. Operates on a **cloned org buffer** (=org-with-cloned-marker=) so the
+   user's real position is untouched; expands the =:PROPERTIES:= drawer.
+3. Loop: =occ-do-select-propetry= (completing-read over
+   =occ-obj-properties-to-edit= plus =edit/done=) → =occ-do-op-prop-edit=
+   fills in operation (add/remove/put for list props, put otherwise) and value
+   (via the =occ-user-agent= prompts), applies through =occ-do-operation= and
+   resets cached ranks.
+4. Response handling: ~:done~ closes, ~:edit~ keeps the window, timeout
+   cleans up.
+
+Entry points: =occ-property-edit= command, =occ-obj-safe-ignore-quit-properties-window-editor=
+(idle-timer-safe wrapper used by the clock-in fallback), and the checkouts
+offered by the helm action packs.
+
+* Checkout
+
+The inverse of context capture — make the *environment* match a task before a
+forced clock-in:
+
+- =occ-do-checkout (obj occ-obj-tsk)= → =occ-do-op-props-checkout= →
+  per-property =occ-do-impl-checkout= (=find-file= for =currfile= / =root=,
+  =magit-checkout= for =git-branch=).
+- Only properties for which =occ-obj-impl-checkout-p= is true participate; the
+  set is derived from method signatures
+  (=occ-obj-properties-to-checkout=).
+
+* Interface / Implementation Split
+
+=occ-intf.el= defines the *interface* generics (stable, public):
+=occ-obj-intf-rank=, =occ-obj-intf-prop==, =occ-obj-intf-has-p=,
+=occ-obj-intf-require-p=, =occ-obj-intf-get= (=ctx= / =user-agent= variants),
+=occ-obj-intf-propfmt=, =occ-obj-intf-list-p=, =occ-obj-intf-to-org=,
+=occ-obj-intf-from-org=, =occ-obj-intf-values=, =occ-do-intf-operation=,
+=occ-obj-intf-checkout-p=, =occ-do-intf-checkout=, =occ-obj-intf-inheritable-p=.
+
+=occ-impl.el= + =occ-impl-builtin.el= + =occ-property-methods.el= define the
+*implementation* generics (defaulted =0=/=nil=/=equal=) and the per-property
+~(=eql prop)~ methods.  Each =intf= method is a thin delegator to its =impl=
+twin.
+
+* User-visible Commands and Configuration
+
+** Minor mode
+
+=occ-mode= is a *global* minor mode, disabled unless
+=occ-mode-global-allowed= (=occ-mode-global-allow/disable=).  Enabling it
+runs =occ-insinuate= (collector + hooks + timers + bindings);
+=occ-uninsinuate= tears it down.  Key binding: prefix =occ-prefix-key= =
+~M-n~.
+
+** Main interactive commands (=occ-commands.el=)
+
+| Command                        | Purpose                                                     |
+|--------------------------------+-------------------------------------------------------------|
+| =occ-run=                      | helm panel: run actions                                    |
+| =occ-helm-match-select=        | match-select tasks for current context                     |
+| =occ-helm-list-select=         | plain list select                                          |
+| =occ-helm-list-debug-select=   | select + run an action-plan key (debug)                    |
+| =occ-helm-list-launch=         | select + run a chosen action                               |
+| =occ-property-edit=            | property editor                                            |
+| =occ-clock-out=                | clock out                                                  |
+| =occ-do-clock-in-curr-ctx(-if-not)= | clock in now / only when changed                      |
+| =occ-keep-quiet(-for)=         | silence prompts for N minutes                              |
+| =occ-register/unregister-resolve-clock= | wire into org-clock-resolve-advanced                |
+| =occ-insinuate= / =occ-uninsinuate= | setup / teardown                                      |
+| =occ-obj-make-spec= / =occ-add-to-spec= / =occ-add-org-file= / =occ-obj-build-spec= / =occ-reset-spec= | collection management |
+| =occ-show-priority-ineql= / =occ-add-priority-ineql= / =occ-show-priorities= | rank inequality management |
+| =occ-version= / =occ-run-timer= / =occ-reload= | utility                          |
+
+Day-workflow commands (=occ-start-day=, =occ-show-up=, =occ-stop-day=,
+=occ-pack-up=), =occ-curr-tsk-continue-for=, =occ-continue-prev=,
+=occ-interrupt-clock-in=, =occ-merge-unamed-task=, =occ-do-clock-in-force=,
+=occ-do-log-note= are **declared stubs** (=occ-error "Implement it."=).
+
+** Defcustoms (=occ-config.el=)
+
+- =occ-prefix-key= (~M-n~), =occ-unnamed= (t), =occ-clockout-unassociable-to-unnamed=
+  (~ask~), =occ-completing-read-function=, =occ-clock-in-ctx-auto-select-if-only=,
+  =occ-config-ineq-const-value=.
+
+* Known Design Quirks and Unfinished Areas
+
+- =occ-resolve-clock.el= is currently an **interface-registration stub** (all
+  bodies ~ignore~) that ties into the vendored
+  =org-clock-resolve-advanced= via =org-rl-intf=; intended behavior beyond
+  registration is not implemented.
+- Several structural oddities in the code (duplicated generic definitions,
+  stale slot references such as =occ-ctx-avgrank=, the ~provide~-before-require
+  cycle break in =occ.el=, dev deps =ert=/=el-mock= loaded unconditionally by
+  =occ-test.el=) are implementation debt rather than design.
+- The code intentionally "does not run ahead": base features are implemented
+  before advanced features (see =doc/devel.org=); several advanced features
+  are therefore visible as stubs.
+
+* Naming Conventions (from doc/devel.org)
+
+- =occ-obj-*= — accessors / generics (nouns).
+- =occ-do-*= — actions / verbs.
+- =occ-run-*= — launchers.
+- =occ-make-*= / =occ-build-*= — constructors (fresh allocation vs. reuse).
+- =occ-var= vs =*occ-var*= — plain variables vs. global runtime state
+  (earmuffs).
+- Property symbols are lowercase; org drawer keys are upcased with an =occ-=
+  prefix.
