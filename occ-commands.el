@@ -52,27 +52,32 @@
 
 ;;;###autoload
 (defun occ-helm-match-select (ctx)
+  "Select a matching task for context CTX using helm."
   (interactive
    (list (occ-obj-make-ctx-at-point)))
   (occ-do-run-match-select ctx))
 ;;;###autoload
 (defun occ-helm-list-select (ctx)
+  "Select a task for context CTX from a helm list."
   (interactive
    (list (occ-obj-make-ctx-at-point)))
   (occ-do-run-list-select ctx))
 ;;;###autoload
 (defun occ-helm-list-debug-select (ctx)
+  "Select a task for context CTX from a debug helm list."
   (interactive
    (list (occ-obj-make-ctx-at-point)))
   (occ-do-run-list-debug-select ctx))
 ;;;###autoload
 (defun occ-helm-list-launch (ctx)
+  "Launch a task for context CTX from a helm list."
   (interactive
    (list (occ-obj-make-ctx-at-point)))
   (occ-do-run-list-launch ctx))
 
 ;;;###autoload
 (defun occ-property-edit ()
+  "Open the property editor for the context at point."
   (interactive)
   (let ((ctx (occ-obj-make-ctx-at-point)))
     (occ-do-properties-window-editor ctx
@@ -82,6 +87,7 @@
 
 ;;;###autoload
 (defun occ-curr-create-child ()
+  "Create a child task under the current clocked task."
   (interactive)
   (let ((ctxual-tsk (occ-current-ctxual-tsk)))
     (if ctxual-tsk
@@ -90,6 +96,7 @@
 
 ;;;###autoload
 (defun occ-curr-create-child-clock-in ()
+  "Create and clock in a child task under the current task."
   (interactive)
   (let ((ctxual-tsk (occ-current-ctxual-tsk)))
     (if ctxual-tsk
@@ -97,27 +104,32 @@
       (occ-debug "No current task clocking-in"))))
 ;;;###autoload
 (defun occ-curr-tsk-continue-for (mins)
+  "Stub: not yet implemented (signals occ-error)."
   (ignore mins)
   (occ-error "Implement it."))
 
 
 ;;;###autoload
 (defun occ-start-day ()
+  "Stub: not yet implemented (signals occ-error)."
   (interactive)
   ;; also detect if day is started.
   (occ-error "Implement it."))
 ;;;###autoload
 (defun occ-show-up (mins)
+  "Stub: not yet implemented (signals occ-error)."
   (interactive)
   (ignore mins)
   ;; https://www.merriam-webster.com/thesaurus/pack%20(up%20or%20off)
   (occ-error "Implement it."))
 ;;;###autoload
 (defun occ-stop-day ()
+  "Stub: not yet implemented (signals occ-error)."
   (interactive)
   (occ-error "Implement it."))
 ;;;###autoload
 (defun occ-pack-up (mins)
+  "Stub: not yet implemented (signals occ-error)."
   (interactive)
   (ignore mins)
   ;; https://www.merriam-webster.com/thesaurus/pack%20(up%20or%20off)
@@ -126,32 +138,40 @@
 
 ;; action
 (cl-defmethod occ-do-log-note ()
+  "Stub: not yet implemented (signals occ-error)."
   (occ-error "Implement it."))
 
 (cl-defmethod occ-do-curr-tsk-log-note ()
+  "Stub: not yet implemented (signals occ-error)."
   (occ-error "Implement it."))
 
 
 ;;;###autoload
 (defun occ-do-clock-in-force ()
+  "Stub: not yet implemented (signals occ-error)."
   (occ-error "Implement it, open context ctx if not present, then occ-do-clock-in-if-associable else show error."))
 ;;;###autoload
 (defun occ-interrupt-clock-in (mins)
+  "Stub: not yet implemented (signals occ-error)."
   (ignore mins)
   (occ-error "Implement it."))
 ;;;###autoload
 (defun occ-clock-out (&optional switch-to-state
                                 fail-quietly
                                 at-time)
+  "Clock out of the current task.
+Honor optional SWITCH-TO-STATE, FAIL-QUIETLY and AT-TIME."
   (interactive)
   (occ-run-do-clock-out switch-to-state
                         fail-quietly
                         at-time))
 ;;;###autoload
 (defun occ-continue-prev ()
+  "Stub: not yet implemented (signals occ-error)."
   (occ-error "Implement it."))
 ;;;###autoload
 (defun occ-obj-make-anonymous ()
+  "Stub: not yet implemented (signals occ-error)."
   (occ-error "Implement it."))
 
 ;; TODO: direct prop edit/add/replace/remove etc from helm menu
@@ -166,11 +186,13 @@
 
 ;;;###autoload
 (defun occ-keep-quiet ()
+  "Keep OCC quiet for the default number of minutes."
   (interactive)
   (occ-keep-quiet-for 7))
 
 ;;;###autoload
 (defun occ-keep-quiet-for (mins)
+  "Keep OCC quiet for MINS minutes."
   (interactive "Nmins: ")
   (when occ-keep-quiet-timer
     (cancel-timer occ-keep-quiet-timer)
@@ -187,27 +209,32 @@
 
 ;;;###autoload
 (defun occ-register-resolve-clock ()
+  "Register the resolve-clock advice integration."
   (interactive)
   (occ-rl-register-resolve-clock))
 
 ;;;###autoload
 (defun occ-unregister-resolve-clock ()
+  "Unregister the resolve-clock advice integration."
   (interactive)
   (occ-rl-unregister-resolve-clock))
 
 ;;;###autoload
 (defun occ-switch-default-key (key)
+  "Set the default collector key to KEY."
   (interactive (list (occ-collector-read-key "key for spec: ")))
   (occ-collector-default-key key))
 
 ;;;###autoload
 (defun occ-reset-spec (key)
+  "Reset the collection spec and object associated with KEY."
   (interactive  (list (occ-collector-read-key "key for spec: ")))
   (occ-reset-collection-object key)
   (occ-collector-remove key))
 
 ;;;###autoload
 (defun occ-obj-make-spec (key desc)
+  "Create and store a collection spec named KEY with description DESC."
   (interactive (list (occ-collector-read-key "key for spec: ")
                      (read-from-minibuffer "Desc: ")))
   (if (occ-collector-spec key)
@@ -222,6 +249,7 @@
 
 ;;;###autoload
 (defun occ-add-to-spec (key file)
+  "Add FILE to the collection spec identified by KEY."
   (interactive (list (occ-collector-read-key "key for spec: ")
                      (read-file-name "org file:")))
   ;; TODO: Improve to create direct tree from here rather than resetting whole occ-global-tsk-collection
@@ -245,6 +273,7 @@
 
 ;;;###autoload
 (defun occ-add-org-file (key buffer)
+  "Add org BUFFER contents to the collection spec identified by KEY."
   (interactive (list (occ-collector-read-key "key for spec: ")
                      (current-buffer)))
   (occ-do-add-org-buffer key
@@ -252,6 +281,7 @@
 
 ;;;###autoload
 (defun occ-obj-build-spec (key)
+  "Interactively build and store the collection spec for KEY."
   (interactive (list (occ-collector-read-key "key for spec: ")))
   (occ-obj-make-spec key (symbol-name key))
   (when (cl-first (occ-collector-spec key))
@@ -264,6 +294,7 @@
 ;; testing verification
 ;;;###autoload
 (defun occ-files-with-null-regex ()
+  "Report collection files lacking a valid org heading regexp."
   (interactive)
   (let ((files (cl-remove-if #'(lambda (f)
                                  (with-current-buffer (occ-find-file-noselect f)
@@ -274,6 +305,7 @@
 ;; testing verification
 ;;;###autoload
 (defun occ-files-not-in-org-mode ()
+  "Report collection files that are not in org-mode."
   (interactive)
   (let ((files (cl-remove-if #'(lambda (f)
                                  (with-current-buffer (occ-find-file-noselect f)
@@ -284,12 +316,14 @@
 
 ;;;###autoload
 (defun occ-merge-unamed-task ()
+  "Stub: not yet implemented (signals occ-error)."
   (interactive)
   (occ-error "Implement it."))
 
 
 ;;;###autoload
 (defun occ-show-priority-ineql (prop)
+  "Display the priority inequalities declared for PROP."
   (interactive (list (occ-util-select-from-sym-list "Select property: "
                                                     (cons nil (occ-obj-properties-for-rank)))))
   (require 'calc)
@@ -303,6 +337,7 @@
 
 ;;;###autoload
 (defun occ-add-priority-ineql (prop)
+  "Prompt for and add a priority inequality for PROP."
   (interactive (list (occ-util-select-from-sym-list "Select property: "
                                                     (occ-obj-properties-for-rank))))
   (require 'calc)
@@ -316,12 +351,14 @@
       (occ-show-priorities))))
 ;;;###autoload
 (defun occ-show-priorities ()
+  "Display the computed property priorities."
   (interactive)
   (message "%s" occ-property-priorities))
 
 
 ;;;###autoload
 (defun occ-insinuate (&optional key)
+  "Set up OCC and wire its hooks for the spec under KEY."
   (interactive (list (occ-collector-read-key "key for spec: ")))
   (occ-debug "occ-insinuate: begin")
   (prog1
@@ -331,6 +368,7 @@
 
 ;;;###autoload
 (defun occ-uninsinuate ()
+  "Tear down OCC and remove its hooks."
   (interactive)
   (occ-debug "occ-uninsinuate: begin")
   (prog1
@@ -340,12 +378,14 @@
 
 ;;;###autoload
 (defun occ-run-timer ()
+  "Start the current context timer."
   (interactive)
   (occ-run-curr-ctx-timer))
 
 (defvar occ-reload t)
 ;;;###autoload
 (defun occ-reload (&optional uncompiled)
+  "Reload all OCC libraries, optionally as UNCOMPILED sources."
   (interactive "P")
   (when occ-reload
     (let ((occ-reload nil))
@@ -366,6 +406,7 @@ FULL is given."
 
 ;;;###autoload
 (defun occ-run ()
+  "Run the OCC helm action panel."
   (interactive)
   (helm :prompt "Run Actions"
         :sources (list (helm-build-sync-source "Actions"

@@ -48,27 +48,37 @@
 ;; https://www150.statcan.gc.ca/n1/edu/power-pouvoir/ch12/5214891-eng.htm
 
 (defun occ-stats-max (&rest nums)
+  "Return the maximum of the numbers NUMS."
   (apply #'max nums))
 
 (defun occ-stats-min (&rest nums)
+  "Return the minimum of the numbers NUMS."
   (apply #'min nums))
 
 (defun occ-stats-range (&rest nums)
+  "Return the difference between the maximum and minimum of NUMS."
   (- (apply #'occ-stats-max nums)
      (apply #'occ-stats-min nums)))
 
 (defun occ-stats-aggregate (&rest nums)
+  "Return the sum of the numbers NUMS."
   (apply #'+ nums))
 
 (defun occ-stats-mean (&rest nums)
+  "Return the sum of the numbers NUMS divided by their count.
+Returns 0 when NUMS is empty."
   (if (> (length nums) 0)
       (/ (apply #'occ-stats-aggregate nums)
          (length nums))
     0))
 (defun occ-stats-average (&rest nums)
+  "Return the mean of the numbers NUMS by calling occ-stats-mean."
   (apply #'occ-stats-mean nums))
 
 (defun occ-stats-median (&rest nums)
+  "Return the median of the numbers NUMS.
+For an even count returns the mean of the two middle values after
+sorting NUMS."
   (let ((nums   (sort nums #'<))
         (length (length nums)))
     (if (cl-evenp length)
@@ -78,6 +88,9 @@
       (nth (/ (1- length) 2) nums))))
 
 (defun occ-stats-mode (&rest nums)
+  "Return the most frequent values of the numbers NUMS.
+Returns every value sharing the highest count with the most frequent
+first."
   ;; https://stackoverflow.com/questions/6050033/elegant-way-to-count-items
   (let ((num-pairs
          (cl-reduce #'(lambda (r e)
@@ -101,6 +114,9 @@
                                 num-pairs)))))
 
 (defun occ-stats-variance-internal (average &rest nums)
+  "Return the square root of the mean squared deviation of NUMS.
+NUMS is measured around the given AVERAGE; returns 0 when NUMS is
+empty."
   (if (> (length nums) 0)
       (sqrt (/ (apply #'occ-stats-aggregate
                       (mapcar #'(lambda (rank) (expt (- rank average) 2))
@@ -109,12 +125,16 @@
     0))
 
 (defun occ-stats-variance (&rest nums)
+  "Return occ-stats-variance-internal of NUMS around their average."
   (apply #'occ-stats-variance-internal
          (apply #'occ-stats-average
                 nums)
          nums))
 
 (defun occ-stats-stddev-internal (average &rest nums)
+  "Return the standard deviation of NUMS around the given AVERAGE.
+Body matches occ-stats-variance-internal; returns 0 when NUMS is
+empty."
   (if (> (length nums) 0)
       (sqrt (/ (apply #'occ-stats-aggregate
                       (mapcar #'(lambda (rank)
@@ -125,10 +145,12 @@
     0))
 
 (defun occ-stats-stddev (&rest nums)
+  "Return occ-stats-stddev-internal of NUMS around their average."
   (apply #'occ-stats-stddev-internal (apply #'occ-stats-average nums) nums))
 
 
 (ert-deftest occ-test-stats-mode ()
+  "Check that occ-stats-mode returns the most frequent values first."
   (should (equal
            '(3 5)
            (occ-stats-mode 3 5 5 3 3 3 3 4 5 5 5 5 1 1 2 3)))

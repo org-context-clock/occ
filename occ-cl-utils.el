@@ -106,6 +106,9 @@
 
 (defun occ-cl-class (inst)
   ;; BUG: TODO: Improve it.
+  "Return the cl-struct class of INST, or its type symbol.
+For a non-struct INST return null for nil and its type symbol
+otherwise."
   (if (cl-struct-p inst);; t ;; (arrayp inst)
       (let* ((class-sym (aref inst 0))
              (class-sym (if (boundp class-sym)
@@ -119,6 +122,7 @@
       (type-of inst))))
 
 (defun occ-cl-classname (class)
+  "Return the name symbol of cl-struct CLASS, or CLASS itself."
   (if (cl-struct-p class) ;; t ;; (eql 'cl-structure-class (occ-cl-class class))
       (cl-struct-slot-value 'cl-structure-class
                             'name
@@ -145,12 +149,14 @@
 
 
 (defun occ-cl-class-parents (class)
+  "Return the list of parent class objects of cl-struct CLASS."
   (when (cl-struct-p class) ;; (symbolp (occ-cl-class class))
     (cl-struct-slot-value 'cl-structure-class
                           'parents
                           class)))
 
 (defun occ-cl-cl-struct-root-class-p (class)
+  "Return non-nil when CLASS is the cl-structure-object root."
   (unless class
     (error "class %s is NULL" class))
   (eq (cl-struct-slot-value 'cl-structure-class
@@ -159,6 +165,7 @@
       'cl-structure-object))
 
 (defun occ-cl-occ-root-class-p (class)
+  "Return non-nil when CLASS is the occ-obj root class."
   (unless class
     (error "class %s is NULL" class))
   (eq (cl-struct-slot-value 'cl-structure-class
@@ -167,6 +174,9 @@
       'occ-obj))
 
 (defun occ-cl-class-parent-names (class)
+  "Return a nested alist of CLASS parent names and their ancestors.
+Each entry is a cons of a parent name symbol and its own parent
+list, stopping at the cl-struct and occ root classes."
   (mapcar #'(lambda (parent)
               (cons (cl-struct-slot-value 'cl-structure-class
                                           'name
@@ -185,38 +195,48 @@
 
 
 (defun occ-cl-inst-classname (inst)
+  "Return the class name symbol of instance INST."
   (occ-cl-classname (occ-cl-class inst)))
 
 (defun occ-cl-inst-class-parent-names (inst)
+  "Return a flat list of parent class name symbols of INST."
   (occ-flatten (occ-cl-class-parent-names (occ-cl-class inst))))
 
 (defun occ-cl-inst-class-names (inst)
+  "Return INST class name followed by its parent class names."
   (cons (occ-cl-inst-classname inst)
         (occ-flatten (occ-cl-class-parent-names (occ-cl-class inst)))))
 
 
 (defun occ-cl-get-field (object field)
+  "Return the value of FIELD slot of cl-struct OBJECT."
   (cl-struct-slot-value (occ-cl-inst-classname object) field object))
 (defun occ-cl-set-field (object field value)
+  "Set the FIELD slot of cl-struct OBJECT to VALUE."
   (setf (cl-struct-slot-value (occ-cl-inst-classname object) field object) value))
 (defun occ-cl-get-fields (object fields)
+  "Return an alist of field symbols and their values in OBJECT."
   (mapcar #'(lambda (field)
               (cons field
                     (occ-cl-get-field object field)))
           fields))
 (defun occ-cl-class-slots (class)
+  "Return the list of slot name symbols defined on cl-struct CLASS."
   (mapcar #'(lambda (slot) (aref slot 1))
           (cl--struct-class-slots (cl--struct-get-class class))))
 ;; (defun cl-class-slot-value (obj slot)
 ;;   (when (member slot (occ-cl-class-slots (occ-cl-inst-classname obj)))
 ;;     (cl-struct-slot-value (occ-cl-inst-classname obj) slot obj)))
 (defun occ-cl-class-obj-slot-value (class slot obj)
+  "Return the value of SLOT in cl-struct OBJ when CLASS defines it."
   (when (member slot (occ-cl-class-slots class))
     (cl-struct-slot-value class slot
                           obj)))
 (defun occ-cl-obj-slot-value (obj slot)
+  "Return the value of SLOT in cl-struct OBJ when its class defines it."
   (occ-cl-class-obj-slot-value (occ-cl-inst-classname obj) slot obj))
 (defun occ-cl-obj-plist-value (obj)
+  "Return the plist slot value of cl-struct OBJ."
   (occ-cl-obj-slot-value obj 'plist))
 
 
@@ -282,13 +302,19 @@
 ;;                  (list ,z))))))
 
 (defun occ-cl-method-arg-get (method fn)
+  "Return FN applied to each parameter signature of METHOD."
   (mapcar fn
           (occ-cl-method-param-signs method)))
 
 (defun occ-cl-method-first-arg (method)
+  "Return the first argument of each parameter signature of METHOD."
   (occ-cl-method-arg-get method #'cadar))
 
 (defun occ-cl-method-first-arg-with-value (method obj)
+  "Return first args of METHOD signatures whose call with OBJ is non-nil.
+For each parameter signature prepend its first argument to OBJ and
+call METHOD, keeping the first argument when the call returns
+non-nil."
   (mapcar #'(lambda (fspec)
               (let ((first-arg (cadar fspec)))
                 (when (funcall method (cons first-arg obj))
@@ -297,10 +323,14 @@
 
 
 (defun occ-cl-method-param-values (method param-exp val)
+  "Return matched PARAM-EXP values across METHOD signatures using VAL."
   (funcall `(lambda ()
               (occ-cl-method-param-case '(,method (,param-exp ,val))))))
 
 (defun occ-cl-collect-on-classes (fn &rest insts)
+  "Apply FN to each class name combination derived from INSTS.
+Combines the class and parent names of every instance in INSTS and
+passes each resulting combination as arguments to FN."
   (mapcan #'(lambda (class)
               (apply fn class))
           (apply #'occ-util-combine

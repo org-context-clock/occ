@@ -138,6 +138,11 @@ only argument required for some other further processing"
                                 (operation symbol)
                                 value
                                 &key param-only)
+  "Build an edit helm callable for the occ-obj-tsk OBJ.
+Combines a prompt from occ-obj-gen-edit-prompt and a callback from
+occ-obj-gen-edit-fun into an occ-callable-normal keyed by a fresh
+keyword.  PARAM-ONLY makes the callback return the parameter list
+instead of calling occ-do-op-prop-edit."
   (occ-debug "occ-obj-gen-edit: checking prop %s operation %s" prop operation)
   (let ((prompt  (occ-obj-gen-edit-prompt obj
                                           prop
@@ -160,6 +165,10 @@ only argument required for some other further processing"
                                             (operation symbol)
                                             value
                                             &key param-only)
+  "Build an edit callable for PROP on the occ-obj-tsk OBJ when required.
+Delegates to occ-obj-gen-edit only when occ-obj-require-p approves
+OPERATION for VALUE and returns nil otherwise.  PARAM-ONLY passes
+through."
   (if (occ-obj-require-p obj
                          operation
                          prop
@@ -177,6 +186,11 @@ only argument required for some other further processing"
                                              (prop      symbol)
                                              (operation null)
                                              &key param-only)
+  "Generate edit callables for every operation and value of PROP on OBJ.
+Expands occ-obj-operations-for-prop over PROP and occ-obj-values per
+operation filtering each candidate through occ-obj-gen-edit-if-required.
+OPERATION is nil.  PARAM-ONLY passes through and nil results are
+removed."
   (ignore operation)
   (let* ((ops      (occ-obj-operations-for-prop obj
                                                 prop))
@@ -203,6 +217,10 @@ only argument required for some other further processing"
                                              (prop      null)
                                              (operation symbol)
                                              &key param-only)
+  "Generate edit callables for OPERATION on every editable property.
+Expands occ-obj-properties-to-edit over the occ-obj-tsk OBJ collecting
+per-property results.  PROP is nil.  PARAM-ONLY passes through and nil
+results are removed."
   ;; NOTE: occ-obj-properties-to-edit will handle (obj occ-obj-ctx-tsk)
   (ignore prop)
   (let* ((props    (occ-obj-properties-to-edit obj))
@@ -220,6 +238,10 @@ only argument required for some other further processing"
                                              (prop      null)
                                              (operation null)
                                              &key param-only)
+  "Generate edit callables for every operation of every editable property.
+PROP and OPERATION are nil.  Recurses per property over
+occ-obj-properties-to-edit and appends the per-property results.
+PARAM-ONLY passes through."
   (ignore prop)
   (let* ((props (occ-obj-properties-to-edit obj))
          ;; NOTE:
@@ -237,12 +259,17 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-each-prop-edits ((obj null)
                                            &key param-only)
+  "Return no edit callables when OBJ is null.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
 
 (cl-defmethod occ-obj-gen-each-prop-edits ((obj occ-obj-tsk) ;cover OCC-OBJ-CTX-TSK also
                                            &key param-only)
+  "Generate edit callables for all editable properties of the OBJ task.
+Delegates to occ-obj-gen-edits-if-required with PROP and OPERATION nil.
+PARAM-ONLY passes through."
   ;; NOTE:
   ;; will call (OCC-OBJ-GEN-EDITS-IF-REQUIRED ((OBJ OCC-OBJ-TSK) (PROP NULL) (OPERATION NULL) &KEY PARAM-ONLY)
   ;; function as number of arguments are different.
@@ -253,12 +280,18 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-each-prop-edits ((obj occ-obj-ctx)
                                            &key param-only)
+  "Return no edit callables for a plain occ-obj-ctx OBJ.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
 
 
 (cl-defun occ-obj-gen-each-prop-fast-edits (obj &key param-only)
+  "Generate fast edit callables for OBJ and its task part.
+Appends the edit callables generated for OBJ itself with those
+generated for its task from occ-obj-gen-each-prop-edits.  PARAM-ONLY
+passes through."
   (append (occ-obj-gen-each-prop-edits obj
                                        :param-only param-only)
           (occ-obj-gen-each-prop-edits (occ-obj-tsk obj)
@@ -267,12 +300,18 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-simple-edits ((obj null)
                                         &key param-only)
+  "Return no simple edit callables when OBJ is null.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
 
 (cl-defmethod occ-obj-gen-simple-edits ((obj occ-obj-tsk) ;cover OCC-OBJ-CTX-TSK also
                                         &key param-only)
+  "Generate the single simple edit callable for the occ-obj-tsk OBJ.
+Returns one occ-callable-normal with an Edit prompt whose callback runs
+occ-do-op-props-edit to edit all properties in the timed window.
+PARAM-ONLY is ignored."
   (ignore param-only)
   (list (occ-obj-make-callable-normal :edit
                                       (format "Edit %s" (occ-obj-Format obj))
@@ -281,6 +320,8 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-simple-edits ((obj occ-obj-ctx)
                                         &key param-only)
+  "Return no simple edit callables for a plain occ-obj-ctx OBJ.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
@@ -288,12 +329,18 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-clock-operations ((obj null)
                                             &key param-only)
+  "Return no clock operation callables when OBJ is null.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
 
 (cl-defmethod occ-obj-gen-clock-operations ((obj occ-obj-tsk) ;cover OCC-OBJ-CTX-TSK also
                                             &key param-only)
+  "Generate the clock out callable for the clocking occ-obj-tsk OBJ.
+Returns one occ-callable-normal with a Clock out prompt whose callback
+runs occ-do-clock-out on the task when OBJ is currently clocking in
+and nil otherwise.  PARAM-ONLY is ignored."
   (ignore param-only)
   (if (occ-obj-clocking-in-p obj)
       (list (occ-obj-make-callable-normal :clock-out
@@ -303,6 +350,8 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-clock-operations ((obj occ-obj-ctx)
                                             &key param-only)
+  "Return no clock operation callables for a plain occ-obj-ctx OBJ.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)

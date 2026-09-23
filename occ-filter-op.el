@@ -46,6 +46,10 @@
 (cl-defmethod occ-obj-filter-mutual-deviation-points ((obj occ-ctx)
                                                       sequence
                                                       &key rank) ;TODO: make it after method
+  "Method of occ-obj-filter-mutual-deviation-points for OCC-CTX OBJ.
+Return the mutual deviation threshold points over SEQUENCE.
+RANK defaults to occ-obj-rank.  Computes the rank average and
+variance and returns the deduplicated candidate ranks."
   (ignore obj)
   (ignore sequence)
   (ignore rank)
@@ -59,6 +63,9 @@
 (cl-defmethod occ-obj-filter-mutual-deviation-points ((obj occ-ctx)
                                                       sequence
                                                       &key rank) ;TODO: make it after method
+  "Second method of occ-obj-filter-mutual-deviation-points for OBJ.
+Duplicate specializer that overrides the earlier method: returns the
+deduplicated RANK values of SEQUENCE as the threshold points."
   (ignore obj)
   (ignore sequence)
   (ignore rank)
@@ -88,6 +95,8 @@
 (cl-defmethod occ-obj-filter-positive ((obj occ-ctx)
                                        sequence
                                        &key rank)
+  "Method of occ-obj-filter-positive for OCC-CTX OBJ.
+Return the tasks of SEQUENCE whose RANK is greater than zero."
   (ignore obj)
   (cl-remove-if-not #'(lambda (tsk)
                         (> (funcall rank tsk)
@@ -98,6 +107,8 @@
 (cl-defmethod occ-obj-filter-nonnegative ((obj occ-ctx)
                                           sequence
                                           &key rank)
+  "Method of occ-obj-filter-nonnegative for OCC-CTX OBJ.
+Return the tasks of SEQUENCE whose RANK is zero or positive."
   (ignore obj)
   (cl-remove-if-not #'(lambda (tsk)
                         (>= (funcall rank tsk)
@@ -108,6 +119,8 @@
 (cl-defmethod occ-obj-filter-identity ((obj occ-ctx)
                                        sequence
                                        &key rank)
+  "Method of occ-obj-filter-identity for OCC-CTX OBJ.
+Return SEQUENCE unchanged so every candidate is kept."
   (ignore obj)
   sequence)
 
@@ -116,6 +129,8 @@
 (cl-defmethod occ-obj-filter-min ((obj occ-ctx)
                                   sequence
                                   &key rank)
+  "Method of occ-obj-filter-min for OCC-CTX OBJ.
+Return the tasks of SEQUENCE whose RANK is at least occ-filter-min."
   (ignore obj)
   (cl-remove-if-not #'(lambda (tsk)
                         (>= (funcall rank tsk)
@@ -127,6 +142,9 @@
 (cl-defmethod occ-obj-filter-max ((obj occ-ctx)
                                   sequence
                                   &key rank)
+  "Method of occ-obj-filter-max for OCC-CTX OBJ.
+Return the tasks of SEQUENCE whose RANK is at least occ-filter-max.
+Despite the name the bound acts as a lower threshold."
   (ignore obj)
   (cl-remove-if-not #'(lambda (tsk)
                         (>= (funcall rank tsk)

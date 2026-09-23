@@ -122,6 +122,7 @@
 
 
 (cl-defstruct occ-obj
+  "Root object of the OCC model hierarchy; carries only NAME."
   (name "occ-obj"))
 (cl-defstruct (occ-obj-tsk (:include occ-obj))
   "Object to hold tsk ctx obj-ctx-tsk"
@@ -173,6 +174,10 @@
 
 
 (cl-defstruct (occ-ranktbl (:include occ-obj))
+  "Per-task and context cached rank decomposition.
+PLIST is the property rank plist.  VALUE is the total rank.
+INHERITABLE and NONHERITABLE are the aggregated rank parts.
+MAX-DECENDENT is the maximum rank over the subtree."
   plist
   value
   inheritable
@@ -238,7 +243,10 @@
   ;; Reason to have one more occ-ctsk along with occ-ctxual-tsk to avoid calculating rank.
   ctx
   tsk)
-(cl-defstruct (occ-ctxual-tsk (:include occ-ctsk)))
+(cl-defstruct (occ-ctxual-tsk (:include occ-ctsk))
+  "Ranked view of a task paired with a context.
+This is the form used by ranking and selection; plain occ-ctsk
+avoids computing ranks.")
 
   ;; rank-inheritable
   ;; rank-nonheritable

@@ -266,6 +266,8 @@ return ORG compatible value."
                                    (ctx occ-obj-ctx)
                                    (property symbol)
                                    (operation symbol))
+  "Impl-values default method for CTX: always returns nil with no
+candidate values for PROPERTY and OPERATION."
   (let ((tsk   (occ-obj-tsk tsk))
         (ctx   (occ-obj-ctx ctx))
         (value (occ-obj-get-property ctx
@@ -279,6 +281,8 @@ return ORG compatible value."
                                    (ctx null)
                                    (property symbol)
                                    (operation symbol))
+  "Impl-values default method for a null CTX: always returns nil
+with no candidate values for PROPERTY and OPERATION."
   (let ((tsk   (occ-obj-tsk tsk))
         (ctx   (occ-obj-ctx ctx)))
     ;; (occ-error "Define for op %s and prop %s"
@@ -314,6 +318,8 @@ return ORG compatible value."
 (cl-defmethod occ-obj-impl-checkout-p ((obj occ-obj-ctx)
                                        (prop symbol)
                                        value)
+  "Impl-checkout-p default method: checkout of PROP with VALUE
+from CTX is always supported."
   t)
 
 
@@ -336,6 +342,8 @@ return ORG compatible value."
 
 
 (cl-defmethod occ-obj-impl-inheritable-p ((property symbol))
+  "Stub: not yet implemented (signals occ-error). Default method
+of occ-obj-impl-inheritable-p for an unlisted PROP would return t."
   (occ-error "Define (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql %s))) ... t or nil ...)")
   t)
 

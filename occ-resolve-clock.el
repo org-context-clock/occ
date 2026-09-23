@@ -44,29 +44,47 @@
 
 
 (defun occ-rl-clock-p (clock-marker)
+  "Placeholder org-rl-intf clock predicate for CLOCK-MARKER.
+Stub: ignores its argument and returns nil."
   (ignore clock-marker))
 (defun occ-rl-clock-clock-in (clock-marker &optional resume start-time)
+  "Placeholder org-rl-intf clock-in for CLOCK-MARKER.
+Stub: ignores CLOCK-MARKER, RESUME and START-TIME and does nothing."
   (ignore clock-marker)
   (ignore resume)
   (ignore start-time))
 
 (defun occ-rl-clock-out (&optional switch-to-state fail-quietly at-time)
+  "Placeholder org-rl-intf clock-out hook.
+Stub: ignores SWITCH-TO-STATE, FAIL-QUIETLY and AT-TIME and does
+nothing."
   (ignore switch-to-state)
   (ignore fail-quietly)
   (ignore at-time))
 (defun occ-rl-clock-clock-out (clock-marker &optional fail-quietly at-time)
+  "Placeholder org-rl-intf clock-out for CLOCK-MARKER.
+Stub: ignores CLOCK-MARKER, FAIL-QUIETLY and AT-TIME and does
+nothing."
   (ignore clock-marker)
   (ignore fail-quietly)
   (ignore at-time))
 (defun occ-rl-select-other-clock (clock-marker &optional target)
+  "Placeholder org-rl-intf other clock selection for CLOCK-MARKER.
+Stub: ignores CLOCK-MARKER and TARGET and does nothing."
   (ignore clock-marker)
   (ignore target))
 (defun occ-rl-capture+-helm-templates-alist (clock-marker)
+  "Placeholder org-capture+ helm template list for CLOCK-MARKER.
+Stub: ignores its argument and returns nil."
   (ignore clock-marker))
 
 
 ;;;###autoload
 (defun occ-rl-register-resolve-clock ()
+  "Register the occ clock backend in the org-rl-intf registry.
+Registration-only stub: stores the placeholder occ-rl-* functions
+under the occ backend name when the org-rl-intf feature is loaded.
+No clock-resolve behavior is implemented yet."
   (when (featurep 'org-rl-intf)
     (org-rl-intf-register 'occ (list
                                 :org-rl-clock-p                       #'occ-rl-clock-p
@@ -77,6 +95,8 @@
 
 ;;;###autoload
 (defun occ-rl-unregister-resolve-clock ()
+  "Unregister the occ clock backend from the org-rl-intf registry.
+Does nothing when the org-rl-intf feature is not loaded."
   (when (featurep 'org-rl-intf)
     (org-rl-intf-unregister 'occ)))
 

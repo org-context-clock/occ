@@ -74,6 +74,11 @@ if node return nil for PREDICATE"
 
 
 (defun occ-tree-trim (limit subtree)
+  "Trim the heading SUBTREE so that at most LIMIT entries remain.
+Recursively trims each entry subtree with a per entry limit
+proportional to its children count and then drops leading
+entries when SUBTREE exceeds LIMIT. Returns SUBTREE unchanged
+when LIMIT is not positive."
   (if (> limit 0)
       (let ((count (length subtree)))
         (occ-debug "occ-tree-trim: limit %s, count %d" limit count)
@@ -234,12 +239,18 @@ TSK-BUILDER-AT-POINT function e.g. occ-collect-tsk"
 (cl-defmethod occ-obj-drived-tsk-builder ((collection occ-tree-collection)
                                           &optional
                                           subtree-level)
+  "Return the derived tsk builder for occ-tree-collection.
+The returned function builds the recursive task tree of FILE
+with occ-tree-tsk-build at the optional SUBTREE-LEVEL."
   #'(lambda (file)
       (occ-tree-tsk-build file
                           collection
                           subtree-level)))
 
 (cl-defmethod occ-obj-build-tsks ((collection occ-tree-collection))
+  "Build the task list of the occ-tree-collection COLLECTION.
+Maps the derived builder over the collection roots and trims the
+result with occ-tree-trim to the collection limit."
   (let ((depth (occ-obj-collection-depth collection))
         (limit (occ-obj-collection-limit collection))
                ;; TODO: use collection-limit to limit childs it can be null pr 0

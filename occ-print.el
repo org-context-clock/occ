@@ -54,6 +54,7 @@
 
 
 (cl-defmethod occ-obj-uniquify-file ((tsk occ-tsk))
+  "Placeholder method for occ-tsk TSK; simply returns T."
   (let* ((filename (occ-obj-get-property tsk 'file))
          (basename (file-name-nondirectory filename))
          (files (occ-obj-files)))
@@ -102,6 +103,10 @@ pointing to it."
            org-heading))))))
 
 (cl-defmethod occ-obj-fontify-like-in-org-mode ((obj occ-tsk) &optional no-propterties)
+  "Return the org heading line for occ-tsk OBJ.
+Builds the level stars prefix and the file bullet heading and fontifies
+with org-fontify-like-in-org-mode unless optional NO-PROPTERITIES is
+non-nil."
   ;; (occ-message "occ-obj-fontify-like-in-org-mode: heading = %s, level = %s, subtree-level = %s"
   ;;              (occ-obj-get-property obj 'heading-prop)
   ;;              (occ-obj-get-property obj 'level)
@@ -126,10 +131,13 @@ pointing to it."
     display-org-heading))
 
 (cl-defmethod occ-obj-build-format-string ((obj occ-tsk) &optional no-propterties)
+  "Return the fontified org heading string for occ-tsk OBJ.
+Delegates to occ-obj-fontify-like-in-org-mode with NO-PROPTERITIES."
   (occ-obj-fontify-like-in-org-mode obj no-propterties))
 
 
 (cl-defmethod occ-obj-build-format-file ((obj occ-tsk))
+  "Return the FILE of occ-tsk OBJ minus the common collection prefix."
   (let ((filename (occ-obj-get-property obj 'file))
         (lcp      (apply #'s-lcp (occ-obj-collect-files (occ-tsk-collection obj)))))
     (s-chop-prefix lcp filename)))
@@ -141,6 +149,7 @@ pointing to it."
 
 
 (defun occ-case (case title)
+  "Apply CASE to TITLE when CASE is bound and otherwise return TITLE."
   (if (fboundp case)
       (funcall case title)
     title))
@@ -151,30 +160,36 @@ pointing to it."
 
 (cl-defmethod occ-obj-title (obj
                              case)
+  "Return the class name title of OBJ passed through occ-case CASE."
   (occ-case case
             (occ-obj-class-name obj)))
 
 (cl-defmethod occ-obj-title ((obj null)
                              case)
+  "Return the class name title of nil OBJ passed through occ-case CASE."
   (occ-case case
             (occ-obj-class-name obj)))
 
 (cl-defmethod occ-obj-title ((obj  marker)
                              (case symbol))
+  "Return the class name title of marker OBJ via occ-case CASE."
   (occ-case case
             (occ-obj-class-name obj)))
 
 (cl-defmethod occ-obj-title ((obj  occ-obj)
                              (case symbol))
+  "Return the class name title of occ-obj OBJ via occ-case CASE."
   (occ-case case
             (occ-obj-class-name obj)))
 
 (defun occ-obj-Title (obj)
+  "Return the capitalized class name of OBJ."
   (occ-case 'capitalize
             (occ-obj-class-name obj)))
 
 
 (defun occ-obj-TITLE (obj)
+  "Return the uppercased class name of OBJ."
   (occ-case 'upcase
             (occ-obj-class-name obj)))
 
@@ -195,6 +210,8 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the display string for string OBJ with a CASE title prefix.
+Ignores RANK and NO-CURR-CLOCK and NO-PROPTERITIES."
   (ignore rank
           no-curr-clock
           no-propterties)
@@ -209,6 +226,8 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the display string for nil OBJ with a CASE title prefix.
+Ignores RANK and NO-CURR-CLOCK and NO-PROPTERITIES."
   (ignore case
           rank
           no-curr-clock
@@ -224,6 +243,9 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the fontified org heading line for marker OBJ.
+Prepends a CASE title prefix and passes NO-PROPTERITIES to
+occ-obj-fontify-like-in-org-mode. Ignores RANK and NO-CURR-CLOCK."
   (ignore rank)
   (ignore no-curr-clock)
   ;; TODO: BUG - only in org-mode buffer
@@ -238,6 +260,10 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the tag aligned display line for occ-tsk OBJ.
+Prepends the CASE title and an optional RANK prefix and pads the heading
+so TAGS align at occ-obj-format-tsk-tag-alignment. Passes
+NO-PROPTERITIES to the heading builder and ignores NO-CURR-CLOCK."
   (ignore no-curr-clock)
   (let* ((align      occ-obj-format-tsk-tag-alignment)
          (heading    (occ-obj-format-string obj no-propterties))
@@ -259,6 +285,7 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the plain name string for occ-ctx OBJ ignoring optional args."
   (ignore case)
   (ignore rank)
   (ignore no-curr-clock)
@@ -271,6 +298,9 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the display line for occ-obj-ctx-tsk OBJ with CASE and RANK.
+Delegates to the TSK format of OBJ and prepends the CASE title and an
+optional RANK prefix."
   (let ((tsk (occ-ctsk-tsk obj)))
     (concat (when case (concat (occ-obj-title obj case) ": "))
             (when rank (format "[%5d] " (or (occ-obj-rank obj) -128)))
@@ -284,6 +314,9 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the display line for occ-ctxual-tsk OBJ with CASE and RANK.
+Selectable tasks render like their TSK; unselectable ones get a bold gray
+face on the heading."
   (let ((tsk        (occ-ctxual-tsk-tsk obj))
         (selectable (occ-obj-tsk-selectable obj)))
     (let ((tsk-str (format "%s" (occ-obj-format tsk case rank no-curr-clock no-propterties))))
@@ -317,6 +350,7 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the LABEL and formatted value of occ-return OBJ as one string."
   (ignore case rank no-curr-clock no-propterties)
   (let ((label     (and obj (occ-return-label obj)))
         (value-obj (occ-obj-obj obj)))
@@ -330,6 +364,7 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the print representation of buffer OBJ ignoring optional args."
   (format "%s" obj))
 
 (cl-defmethod occ-obj-format (obj
@@ -338,13 +373,16 @@ pointing to it."
                               rank
                               no-curr-clock
                               no-propterties)
+  "Return the print representation of any OBJ ignoring optional args."
   (format "%s" obj))
 
 
 (cl-defmethod occ-obj-nonocc-format (obj)
+  "Return OBJ unchanged as the default non-occ format value."
   obj)
 
 (cl-defmethod occ-obj-nonocc-format ((obj occ-obj-tsk))
+  "Return the type symbol of occ-obj-tsk OBJ for non-occ formatting."
   (type-of obj))
 
 
@@ -353,6 +391,8 @@ pointing to it."
                        rank
                        no-curr-clock
                        no-propterties)
+  "Return the occ-obj-format of OBJ with a capitalize CASE.
+Passes RANK and NO-CURR-CLOCK and NO-PROPTERITIES through unchanged."
   (occ-obj-format obj 'capitalize
                   rank
                   no-curr-clock
@@ -363,6 +403,8 @@ pointing to it."
                        rank
                        no-curr-clock
                        no-propterties)
+  "Return the occ-obj-format of OBJ with an upcase CASE.
+Passes RANK and NO-CURR-CLOCK and NO-PROPTERITIES through unchanged."
   (occ-obj-format obj 'upcase
                   rank
                   no-curr-clock
@@ -371,18 +413,22 @@ pointing to it."
 
 (cl-defmethod cl-print-object ((obj occ-ctx)
                                stream)
+  "Print occ-ctx OBJ to STREAM as a compact <CTX name> tag."
   (princ (format "<CTX %s>" (occ-name obj)) stream))
 
 (cl-defmethod cl-print-object ((obj occ-ctsk)
                                stream)
+  "Print occ-ctsk OBJ to STREAM as a compact <CTSK name> tag."
   (princ (format "<CTSK %s>" (occ-name obj)) stream))
 
 (cl-defmethod cl-print-object ((obj occ-ranktbl)
                                stream)
+  "Print occ-ranktbl OBJ to STREAM as a compact <RANKTBL name> tag."
   (princ (format "<RANKTBL %s>" (occ-name obj)) stream))
 
 (cl-defmethod cl-print-object ((obj occ-tree-tsk)
                                stream)
+  "Print occ-tree-tsk OBJ to STREAM as a compact <TSK-TREE name> tag."
   (princ (format "<TSK-TREE %s>" (occ-name obj)) stream))
 
 ;; (type-of (occ-get-debug-obj))
@@ -398,6 +444,7 @@ pointing to it."
   "Neatly Output OBJ with its properties")
 
 (cl-defmethod occ-obj-display ((obj occ-obj-tsk))
+  "Stub: not yet implemented (signals occ-error)."
   (ignore obj)
   (occ-error "Implement it: neatly output OBJ with its properties"))
 

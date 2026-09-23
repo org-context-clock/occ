@@ -67,6 +67,9 @@
                                ap-normal
                                ap-transf
                                timeout)
+  "Clock-in method on null objects.
+Signals the error Can not clock in NIL because there is no
+object to clock in."
   (ignore obj)
   (ignore filters)
   (ignore builder)
@@ -82,6 +85,10 @@
                                ap-normal
                                ap-transf
                                timeout)
+  "Clock-in method on marker objects: the real org trigger.
+Clocks in at MARKER OBJ via occ-straight-org-clock-clock-in with
+buffer-read-only disabled in the marker buffer and
+org-log-note-clock-out let-bound to nil."
   (ignore filters)
   (ignore builder)
   (ignore ap-normal)
@@ -106,6 +113,10 @@
                                ap-normal
                                ap-transf
                                timeout)
+  "Clock-in method on occ-tsk objects.
+Forwards to the marker method when the global switch
+occ-config-clock-in allows clocking in and only logs when it
+does not."
   (ignore filters)
   (ignore builder)
   (ignore ap-normal)
@@ -123,6 +134,9 @@
                                ap-normal
                                ap-transf
                                timeout)
+  "Clock-in method on occ-ctsk objects.
+Proceeds only when the task is unnamed or associable and then
+forwards to its tsk part while refusing to clock in otherwise."
   ;; (occ-debug "occ-do-clock-in(occ-ctsk=%s)" obj)
   (if (or (occ-obj-unnamed-p    obj)
           (occ-obj-associable-p obj))
@@ -215,10 +229,18 @@
 
 
 (cl-defmethod occ-obj-ignore-p ((buff buffer))
+  "Ignore predicate method on buffer objects.
+Always returns nil so no individual buffer is ignored by this
+predicate alone."
   (ignore buff)
   nil)
 
 (cl-defmethod occ-obj-ignore-p ((obj occ-ctx))
+  "Ignore predicate method on ctx objects.
+Returns non-nil when OBJ is currently acceptable for clocking
+in: the clock state is changeable and the context buffer exists
+and is live and is not a minibuffer and is not an ignored
+buffer."
   (let ((buff (occ-ctx-buffer obj)))
     (and (occ-chgable-p)
          buff
@@ -228,6 +250,10 @@
 
 
 (cl-defmethod occ-obj-clockable-p ((obj occ-ctx))
+  "Clockable predicate method on ctx objects.
+Returns t when OBJ can be clocked into now: the clock state is
+changeable and the context buffer exists and is live and is not
+a minibuffer and is not an ignored buffer."
   (let ((buff (occ-ctx-buffer obj)))
     (and (occ-chgable-p)
          buff
@@ -312,6 +338,9 @@ for adding properties to heading."
                                              ap-normal
                                              ap-transf
                                              timeout)
+  "Clock-in-if-associable method on occ-obj-ctx-tsk objects.
+Builds a ctxual-tsk from OBJ and clocks it in only when the
+build succeeded."
   (let ((ctxtual-tsk (occ-obj-build-ctxual-tsk obj)))
     (when ctxtual-tsk
       (occ-do-clock-in ctxtual-tsk
@@ -329,6 +358,9 @@ for adding properties to heading."
                                    ap-normal
                                    ap-transf
                                    timeout)
+  "Try-clock-in method on marker objects.
+Forwards directly to occ-do-clock-in since a marker needs no
+association check."
   (occ-do-clock-in obj
                    :filters   filters
                    :builder   builder
@@ -343,6 +375,9 @@ for adding properties to heading."
                                    ap-normal
                                    ap-transf
                                    timeout)
+  "Try-clock-in method on occ-obj-tsk objects.
+Forwards directly to occ-do-clock-in without an association
+check."
   (occ-do-clock-in obj
                    :filters   filters
                    :builder   builder
@@ -357,6 +392,10 @@ for adding properties to heading."
                                    ap-normal
                                    ap-transf
                                    timeout)
+  "Try-clock-in method on occ-ctsk objects.
+Applies the association gate occ-obj-try-if-unassociated-p and
+then clocks OBJ in via occ-do-clock-in-if-associable and logs
+when no clock-in happened."
   (let ((tsk         (occ-obj-tsk obj))
         (ctx         (occ-obj-ctx obj))
         (ctxtual-tsk (occ-obj-build-ctxual-tsk obj)))
@@ -380,6 +419,9 @@ for adding properties to heading."
                                    ap-normal
                                    ap-transf
                                    timeout)
+  "Try-clock-in method on null objects.
+Forwards to occ-do-clock-in which signals an error for null
+objects."
   (occ-do-clock-in obj
                    :filters   filters
                    :builder   builder
@@ -395,6 +437,9 @@ for adding properties to heading."
                                         ap-normal
                                         ap-transf
                                         timeout)
+  "Try-fast-clock-in method on marker objects.
+Forwards directly to occ-do-clock-in without an association
+check."
   (occ-do-clock-in obj
                    :filters   filters
                    :builder   builder
@@ -409,6 +454,10 @@ for adding properties to heading."
                                         ap-normal
                                         ap-transf
                                         timeout)
+  "Try-fast-clock-in method on occ-ctsk objects.
+Uses the same gate as the occ-ctsk method of occ-do-try-clock-in:
+checks occ-obj-try-if-unassociated-p and clocks OBJ in only when
+it is associable."
   (let ((tsk         (occ-obj-tsk obj))
         (ctx         (occ-obj-ctx obj))
         (ctxtual-tsk (occ-obj-build-ctxual-tsk obj)))

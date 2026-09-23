@@ -46,6 +46,10 @@
 
 
 (defun occ-clock-plain-report-tree (marker)
+  "Insert a plain clock report tree at MARKER.
+Picks the block range interactively with occ-util-select-from-sym-list
+and inserts the report through org-clock-plain-report-tree with the
+* headline character and both content and notes enabled."
   (let ((range '(today ;check org-clock-special-range
                  thisweek
                  thismonth

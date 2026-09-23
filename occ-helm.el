@@ -60,6 +60,9 @@
 
 
 (defun occ-obj-capture+-helm-select-template ()
+  "Select an org-capture+ heading template through helm.
+The template selector is generated for the keyword branch
+t occ tsk clockable todo."
   (let ((selector (helm-template-gen-selector #'org-capture+-tree-predicate
                                               '(t occ tsk clockable todo)
                                               0)))
@@ -68,9 +71,11 @@
 
 (defvar occ-helm-callables)
 (defun occ-helm-callable-add (callable)
+  "Add CALLABLE to the global occ-helm-callables registry."
   (cl-pushnew callable
               occ-helm-callables))
 (defun occ-helm-callables-get (keylist)
+  "Return the registered callables whose keyword is in KEYLIST."
   (mapcan #'(lambda (key)
               (cl-remove-if-not #'(lambda (callable)
                                     (eq key
@@ -81,6 +86,9 @@
 
 (cl-defmethod occ-obj-get-callables ((obj occ-obj-tsk)
                                      keylist)
+  "Return the callables applicable to the occ-obj-tsk OBJ.
+Resolves every callable returned by occ-helm-callables-get for
+KEYLIST through occ-obj-callables."
   ;; TODO: do we require (apply #'append ...)
   (occ-debug "(OCC-OBJ-GET-CALLABLES OCC-OBJ-TSK): called")
   (mapcan #'(lambda (callable)
@@ -90,6 +98,9 @@
 
 (cl-defmethod occ-obj-get-callables ((obj occ-obj)
                                      keylist)
+  "Return the callables applicable to the occ-obj OBJ specialization.
+Resolves every callable returned by occ-helm-callables-get for
+KEYLIST through occ-obj-callables."
   ;; TODO: do we require (apply #'append ...)
   (occ-debug "(OCC-OBJ-GET-CALLABLES OCC-OBJ): called")
   (mapcan #'(lambda (callable)
@@ -101,6 +112,7 @@
 (defvar occ-helm-actions-tree '(t))
 
 (defun occ-add-helm-actions (tree-keybranch class &rest actions)
+  "Add ACTIONS of CLASS to occ-helm-actions-tree under TREE-KEYBRANCH."
   (apply #'tree-add-class-item
          occ-helm-actions-tree
          tree-keybranch
@@ -109,6 +121,7 @@
 
 
 (defun occ-get-keywords-list-from-tree (tree-keybranch)
+  "Collect the keywords of occ-helm-actions-tree under TREE-KEYBRANCH."
   (tree-collect-items occ-helm-actions-tree ;tree
                       nil                   ;predicate
                       tree-keybranch      ;arg
@@ -119,18 +132,27 @@
   "occ-obj-get-helm-actions")
 
 (cl-defmethod occ-obj-get-helm-actions ((obj null) tree-keybranch)
+  "Return the helm actions for the null OBJ specialization.
+Flattens the callables resolved for the keywords of
+TREE-KEYBRANCH."
   ;; (occ-debug "occ-obj-get-helm-actions: called with obj = %s, tree-keybranch = %s" obj tree-keybranch)
   (mapcan #'identity
          (occ-obj-get-callables obj
                             (occ-get-keywords-list-from-tree tree-keybranch))))
 
 (cl-defmethod occ-obj-get-helm-actions ((obj occ-obj) tree-keybranch)
+  "Return the helm actions for the occ-obj OBJ specialization.
+Flattens the callables resolved for the keywords of
+TREE-KEYBRANCH."
   ;; (occ-debug "occ-obj-get-helm-actions: called with obj = %s, tree-keybranch = %s" obj tree-keybranch)
   (mapcan #'identity
           (occ-obj-get-callables obj
                                  (occ-get-keywords-list-from-tree tree-keybranch))))
 
 (cl-defmethod occ-obj-get-helm-actions-genertator ((obj null) tree-keybranch)
+  "Return a helm action generator for the null OBJ specialization.
+The returned function maps a candidate through
+occ-obj-get-helm-actions for TREE-KEYBRANCH."
   (ignore obj)
   #'(lambda (action candidate)
       (ignore action)
@@ -138,6 +160,9 @@
                                     tree-keybranch)))
 
 (cl-defmethod occ-obj-get-helm-actions-genertator ((obj occ-obj) tree-keybranch)
+  "Return a helm action generator for the occ-obj OBJ specialization.
+The returned function maps a candidate through
+occ-obj-get-helm-actions for TREE-KEYBRANCH."
   (ignore obj)
   #'(lambda (action candidate)
       (ignore action)

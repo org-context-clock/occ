@@ -56,15 +56,20 @@
 (defvar *occ-collector-default-key* 'default)
 
 (defun occ-collector-default-key (&optional key)
+  "Return the default collector key, setting it to KEY when given."
   (if key
       (setq *occ-collector-default-key* key)
     *occ-collector-default-key*))
 (defun occ-collector-read-key (&optional prompt keys)
+  "Prompt for and return a collector key among KEYS using PROMPT."
   (occ-util-select-from-sym-list (or prompt "key for spec: ")
                                  (or keys (occ-collector-keys))))
 (defun occ-collector-get (key)
+  "Return the collection registered under KEY."
   (alist-get key *occ-collector*))
 (cl-defun occ-collector-get-create (key desc spec files &key depth limit rank level)
+  "Return the collection for KEY, creating it from DESC, SPEC and FILES.
+Optional DEPTH, LIMIT, RANK and LEVEL configure a new collection."
   (let ((depth (or depth 0))
         (limit (or limit 0))
         (rank  (or rank 0))
@@ -80,22 +85,28 @@
                                                                      level))))
   (alist-get key *occ-collector*))
 (defun occ-collector-remove (key)
+  "Remove the collection registered under KEY."
   (setq *occ-collector* (assoc-delete-all key *occ-collector*)))
 (defun occ-collector-set (key value)
+  "Set the value of the collection registered under KEY to VALUE."
   (setcdr (alist-get key *occ-collector*) value))
 (defun occ-collector-spec (key)
+  "Return the collection spec registered under KEY."
   (let ((collection (occ-collector-get key)))
     (when collection
       (occ-obj-collection-spec collection))))
 (defun occ-collector-roots (key)
+  "Return the collection roots registered under KEY."
   (let ((collection (occ-collector-get key)))
     (when collection
       (occ-obj-collection-roots collection))))
 (defun occ-collector-files (key)
+  "Return the collection files registered under KEY."
   (let ((collection (occ-collector-get key)))
     (when collection
       (occ-obj-collection-files collection))))
 (defun occ-collector-keys ()
+  "Return all collector keys, ordering the default and unnamed keys."
   (let* ((all-list                 (mapcar #'cl-first
                                            *occ-collector*))
          (default-list             (list *occ-collector-default-key*))
@@ -121,14 +132,17 @@
 ;;   obj)
 
 (defun occ-collections (&rest keys)
+  "Return the collections associated with the KEYS."
   (remove nil
           (mapcar #'occ-obj-collection keys)))
 
 (defun occ-collections-default ()
+  "Return the default and unnamed collections."
   (occ-collections (occ-collector-default-key)
                    *occ-collector-unnamed-key*))
 
 (defun occ-collections-all ()
+  "Return all registered collections."
   (apply #'occ-collections
          (occ-collector-keys)))
 
@@ -137,6 +151,7 @@
 
 ;;;###autoload
 (defun occ-add-after-save-hook-fun-in-org-mode ()
+  "Add the after-save hook that runs OCC in org-mode buffers."
   (add-hook 'after-save-hook
             'occ-after-save-hook-fun t t))
 
@@ -168,12 +183,15 @@
 
 ;;;###autoload
 (defun occ-reset-collection-object (key)
+  "Reset the collection object associated with KEY."
   (interactive (list (occ-collector-read-key "key for spec: ")))
   (occ-reset-collection-tsks key))
 
 
 ;;;###autoload
 (cl-defun occ-set-collection-spec (key desc spec files &key depth limit rank level)
+  "Set the collection spec for KEY from DESC, SPEC and FILES.
+Optional DEPTH, LIMIT, RANK and LEVEL configure the collection."
   (let ((depth (or depth 0))
         (limit (or limit 0))
         (rank  (or rank 0))
@@ -189,6 +207,8 @@
 
 ;;;###autoload
 (cl-defun occ-set-deafult-collection-spec (spec files &key depth limit rank level)
+  "Set the default collection spec from SPEC and FILES.
+Optional DEPTH, LIMIT, RANK and LEVEL configure the collection."
   (let ((depth (or depth 0))
         (limit (or limit 0))
         (rank  (or rank 0))
@@ -203,6 +223,8 @@
                              :level level)))
 ;;;###autoload
 (cl-defun occ-set-primary-deafult-collection-spec (spec files &key depth limit rank level)
+  "Set the primary default collection spec from SPEC and FILES.
+Optional DEPTH, LIMIT, RANK and LEVEL configure the collection."
   (let ((depth (or depth 0))
         (limit (or limit 0))
         (rank  (or rank 20))
@@ -217,11 +239,13 @@
                              :level level)))
 
 (defun occ-reset-deafult-collection-object ()
+  "Reset the default collection object."
   (occ-debug "resetting deafult-tsk-collection")
   (occ-reset-collection-object (occ-collector-default-key)))
 
 
 (defun occ-do-priority-initialize ()
+  "Install the default priority inequalities and recompute priorities."
   (interactive)
   ;; (occ-obj-properties-for-rank)
   ;; (current-clock key status timebeing root currfile)
@@ -236,6 +260,7 @@
 
 
 (defun occ-initialize-hooks (key)
+  "Install the OCC buffer-switch and org-mode hooks for KEY."
   (let ((spec (occ-collector-spec key)))
     (when (and spec
                (occ-valid-spec-p spec))
@@ -251,6 +276,7 @@
       (add-hook 'org-mode-hook           #'occ-add-org-file-timer))))
 
 (defun occ-uninitialize-hooks ()
+  "Remove the OCC buffer-switch and org-mode hooks."
   (remove-hook 'switch-buffer-functions #'occ-switch-buffer-run-curr-ctx-timer-function)
   (remove-hook 'org-mode-hook           #'occ-add-after-save-hook-fun-in-org-mode)
   (remove-hook 'org-mode-hook           #'occ-add-org-file-timer))
@@ -323,6 +349,7 @@
   (setq occ-mode nil))
 
 (defun occ-status ()
+  "Report whether OCC mode and switch-buffer-functions are active."
   (interactive)
   (occ-message "Occ mode is %s and switch-buffer-functions is %s"
                (if occ-mode "on" "off")
@@ -333,6 +360,7 @@
 
 
 (defun occ-find-library-dir (library)
+  "Return the load-path directory holding the LIBRARY."
   (unless occ-dev-dir
     (occ-set-dev-dir))
   (unless occ-dev-dir
@@ -383,6 +411,7 @@ FULL is given."
 
 ;;;###autoload
 (defun occ-set-dev-dir (&optional dirpath)
+  "Set the OCC development source directory to DIRPATH."
   (interactive
    (list (read-directory-name "occ src dir: " nil nil t)))
   (let ((dirpath (or dirpath
@@ -391,6 +420,7 @@ FULL is given."
 
 ;;;###autoload
 (defun occ-add-deps-libs (pkg)
+  "Add the dependencies of package PKG from occ-dev-dir to load-path."
   (let ((deps (cons (symbol-name pkg)
                     (mapcar #'(lambda (x)
                                 (symbol-name (cl-first x)))
@@ -405,6 +435,7 @@ FULL is given."
 
 ;;;###autoload
 (defun occ-load-pkg (pkg-str)
+  "Load all Lisp files of the package named by PKG-STR."
   ;; TODO: load all files in lib dir
   (let ((pkg-dir (occ-find-library-dir pkg-str)))
     (dolist (ef (directory-files pkg-dir nil ".el$"))

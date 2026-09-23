@@ -42,6 +42,10 @@
 
 
 (cl-defgeneric occ-obj-build-tsks (collection)
+  "Build and return the task objects of COLLECTION.
+Implemented by occ-list-tsk for flat list collections and by
+occ-tree-tsk for hierarchical tree collections.  The default method
+signals an error."
   (ignore collection)
   (occ-error "occ-obj-build-tsks"))
 

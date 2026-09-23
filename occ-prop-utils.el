@@ -54,6 +54,9 @@
 (cl-defmethod occ-obj-set-rank-hierarchy ((property symbol)
                                           &key
                                           pos)
+  "Set the rank hierarchy entry of the symbol PROPERTY to POS.
+Currently a no-op stub: PROPERTY and POS are ignored and nothing is
+changed."
   (ignore property)
   (ignore pos)
   (cond))
@@ -63,6 +66,9 @@
 
 (defun occ-prop-util-readprop-list-from-user (obj
                                               property)
+  "Stub: not yet implemented (signals occ-error).
+Would read a list value for PROPERTY of OBJ from the user as suggested
+by the error message."
   (ignore obj)
   (ignore property)
   (occ-error "Implement it, try with (occ-readprop-elem-from-user obj property)"))

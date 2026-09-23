@@ -58,13 +58,20 @@
 (define-prefix-command 'occ-mode-keymap)
 ;;;###autoload
 (defun occ-enable-mode-map ()
+  "Bind occ-mode-keymap under occ-prefix-key in occ-mode-main-keymap."
   (define-key occ-mode-main-keymap (kbd occ-prefix-key) 'occ-mode-keymap))
 ;;;###autoload
 (defun occ-disable-mode-map ()
+  "Unbind occ-prefix-key from occ-mode-main-keymap."
   (define-key occ-mode-main-keymap (kbd occ-prefix-key) nil))
 
 
 (defun occ-set-bindings ()
+  "Register the leader and prefix key bindings of occ-mode.
+Registers the binding list with spacemacs leader keys for
+occ-mode when the target commands are bound and also defines
+them directly in occ-mode-keymap. Adds which-key replacements
+in spacemacs-occ-mode-map."
   (let ((bindings '(("cr" occ-run)
                     ("ms" occ-helm-match-select)
                     ("ls" occ-helm-list-select)
@@ -152,10 +159,12 @@
 (defvar occ-mode-global-allowed nil)
 ;;;###autoload
 (defun occ-mode-global-allow ()
+  "Allow global enabling of occ-mode by setting the guard flag."
   (interactive)
   (setq occ-mode-global-allowed t))
 ;;;###autoload
 (defun occ-mode-global-disallow ()
+  "Disallow global enabling of occ-mode by clearing the guard flag."
   (interactive)
   (setq occ-mode-global-allowed nil))
 

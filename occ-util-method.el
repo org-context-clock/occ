@@ -46,6 +46,7 @@
 
 
 (defun occ-obj-list-select-keys ()
+  "Return the value of occ-list-select-keys."
   occ-list-select-keys)
 
 
@@ -219,7 +220,11 @@ must be NIL, using (occ-list-filters) for FILTERS"
              (occ-debug-uncond "occ-helm-list-debug-select((obj occ-ctx)): No selection"))))))
 
 
-(cl-defmethod occ-do-run-list-select-interactive ())
-(cl-defmethod occ-do-run-list-select-get-obj ())
+(cl-defmethod occ-do-run-list-select-interactive ()
+  "Placeholder default method with an empty body; returns nil."
+  nil)
+(cl-defmethod occ-do-run-list-select-get-obj ()
+  "Placeholder default method with an empty body; returns nil."
+  nil)
 
 ;;; occ-util-method.el ends here

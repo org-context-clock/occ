@@ -108,6 +108,8 @@
 (defun occ-confirm (config
                     msg
                     timeout)
+  "Return non-nil when CONFIG permits the action described by MSG.
+TIMEOUT is currently ignored."
   (ignore timeout)
   (cond
      ((null config) nil)
@@ -125,6 +127,7 @@
 
 
 (cl-defstruct occ-entry-types
+  "Struct holding the org entry type SEQUENCE and CATOGERY."
   sequence
   catogery)
 
@@ -133,16 +136,19 @@
 
 ;;;###autoload
 (defun occ-config-enable-clock-in ()
+  "Enable OCC clock-in behavior."
   (interactive)
   (setq occ-config-clock-in t))
 
 ;;;###autoload
 (defun occ-config-disable-clock-in ()
+  "Disable OCC clock-in behavior."
   (interactive)
   (setq occ-config-clock-in nil))
 
 ;;;###autoload
 (defun occ-config-clock-in ()
+  "Return whether OCC clock-in behavior is enabled."
   occ-config-clock-in)
 
 

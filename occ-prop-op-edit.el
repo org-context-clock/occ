@@ -59,6 +59,10 @@
                                         (prop symbol)
                                         &optional
                                         value)
+  "Ask which operation to apply to property PROP of the occ-obj-tsk OBJ.
+For list properties completes over occ-obj-operations-for-prop showing
+the existing value and returns the chosen operation symbol.  Returns
+put for other properties.  VALUE is currently unused."
   (occ-assert prop)
   (if (occ-obj-list-p obj prop)
       ;; TODO: where are generated actions?? (occ-obj-operations-for-prop 'occ-obj-tsk 'root)
@@ -112,6 +116,11 @@
                                    (prop symbol)
                                    (operation null)
                                    value)
+  "Edit PROP of the occ-obj-ctx-tsk OBJ filling a missing OPERATION.
+Prompts for the operation with occ-obj-select-operation when OPERATION
+is nil and for the value with occ-obj-get on the user agent when VALUE
+is nil then applies through the symbol operation method.  Accepts occ
+compatible values."
   (let* ((operation  (or operation
                          (occ-obj-select-operation obj prop value)))
          (prop-value (or value

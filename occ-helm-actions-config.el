@@ -48,6 +48,12 @@
 
 ;;;###autoload
 (defun occ-helm-actions-config-initialize ()
+  "Build the global occ-helm-callables registry and action tree.
+Registers org-capture+ heading templates for clockable and
+unclockable occ tasks. Then resets occ-helm-callables and fills
+it with normal callables such as Ignore and Select and Clock-in
+plus generator callables such as Fast Edits. Finally rebuilds
+occ-helm-actions-tree with occ-add-helm-actions."
   (interactive)
   (progn
     (progn

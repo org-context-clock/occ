@@ -53,6 +53,8 @@
 ;; Correct it ???
 (cl-defmethod occ-obj-gen-misc ((obj null)
                                 &param-only param-only)
+  "Return no misc callables when OBJ is null.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
@@ -73,6 +75,10 @@
 
 (cl-defmethod occ-obj-gen-misc ((obj occ-obj-ctx-tsk)
                                 &param-only param-only)
+  "Generate the Continue misc callable for the occ-obj-ctx-tsk OBJ.
+Returns a list holding one occ-callable-normal built by
+occ-obj-build-callable-normal that messages ok continue.  PARAM-ONLY
+is ignored."
   (ignore obj)
   (ignore param-only)
   (let ((continue (occ-obj-build-callable-normal :continue
@@ -82,6 +88,8 @@
 
 (cl-defmethod occ-obj-gen-misc ((obj occ-obj-ctx)
                                 &param-only param-only)
+  "Return no misc callables for a plain occ-obj-ctx OBJ.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)

@@ -60,6 +60,9 @@
 ;; "org tsks accss common api"
 
 (defun occ-plist-get (plist prop)
+  "Return the value of property PROP from PLIST.
+Looks up PROP as a keyword with sym2key and signals occ-error
+when no keyword can be made for PROP."
   (let ((key (sym2key prop)))
     (if key
         (plist-get plist
@@ -67,6 +70,9 @@
       (occ-error "occ-plist-get: Can not make keyword for `'%s'" prop))))
 
 (defmacro occ-plist-set (plist prop value)
+  "Store VALUE as the value of property PROP in PLIST.
+Asserts an even length PLIST and signals occ-error when no
+keyword can be made for PROP."
   `(let ((key (sym2key ,prop)))
      (occ-assert (cl-evenp (length ,plist)))
      (if key
@@ -75,6 +81,8 @@
        (occ-error "occ-plist-set: Can not make keyword for `'%s'" ,prop))))
 
 (defun occ-list-get-evens (lst)
+  "Return the elements of LST at even indices starting at zero.
+Collects every other element of LST beginning with the first."
   (cond
    ((null lst) nil)
    (t          (cons (cl-first lst)
@@ -86,6 +94,9 @@
 ;;    ( t (cons  (nth 1 lst) (list-get-odds (cl-rest (cl-rest lst)))))))
 
 (defun occ-plist-get-keys (plist)
+  "Return the property keys of PLIST.
+Collects the even indexed elements of PLIST via
+occ-list-get-evens."
   (occ-list-get-evens plist))
 
 
@@ -104,6 +115,10 @@
 
 (cl-defmethod occ-obj-get-property-internal ((obj occ-obj)
                                              (prop symbol))
+  "Return the raw value of property PROP of OCC-OBJ OBJ.
+Reads the class slot PROP when OBJ has one and otherwise looks
+PROP up in the plist of OBJ as an org property key as is and
+upcased."
   ;; mainly used by occ-tsk only.
   (occ-debug "(OCC-OBJ-GET-PROPERTY (OBJ OCC-OBJ)): calling for prop %s" prop)
   (if (memq prop
@@ -117,6 +132,8 @@
 
 (cl-defmethod occ-obj-get-properties-internal ((obj   occ-obj)
                                                (props list))
+  "Return an alist of PROP to value for PROPS of OCC-OBJ OBJ.
+Pairs each prop of PROPS with its occ-obj-get-property value."
   ;; mainly used by occ-tsk only.
   (mapcar #'(lambda (prop)
               (cons prop (occ-obj-get-property obj prop)))
@@ -147,16 +164,23 @@
 
 (cl-defmethod occ-obj-get-properties ((obj   occ-obj-tsk)
                                       (props list))
+  "Return PROPS as an alist of values from OCC-OBJ-TSK OBJ.
+Delegates to occ-obj-get-properties-internal on the wrapped task."
   ;; mainly used by occ-tsk only.
   (occ-obj-get-properties-internal (occ-obj-tsk obj) props))
 
 (cl-defmethod occ-obj-get-properties ((obj   occ-obj-ctx-tsk)
                                       (props list))
+  "Return PROPS as an alist of values from OCC-OBJ-CTX-TSK OBJ.
+Delegates to occ-obj-get-properties on the wrapped task."
   ;; mainly used by occ-tsk only.
   (occ-obj-get-properties (occ-obj-tsk obj) props))
 
 (cl-defmethod occ-obj-get-properties ((obj   occ-obj-ctx)
                                       (props list))
+  "Return PROPS as an alist of values from OCC-OBJ-CTX OBJ.
+Delegates to occ-obj-get-properties on the context wrapped in
+OBJ."
   ;; mainly used by occ-tsk only.
   (occ-obj-get-properties (occ-obj-ctx obj) props))
 
@@ -164,6 +188,10 @@
 (cl-defmethod occ-obj-set-property ((obj occ-obj)
                                     prop
                                     value)
+  "Set the value of property PROP of OCC-OBJ OBJ to VALUE.
+Stores into the matching class slot when PROP names one and
+otherwise into the plist slot of OBJ under the org property key
+for PROP."
   ;; mainly used by occ-tsk only
   ;; (occ-debug "(occ-obj-set-property occ-obj): prop %s, value %s"
   ;;            (prin1-to-string prop)
@@ -195,6 +223,8 @@
 (cl-defmethod occ-obj-set-property ((obj occ-tree-tsk)
                                     prop
                                     value)
+  "Set the value of property PROP of OCC-TREE-TSK OBJ to VALUE.
+Forwards to the next method which stores slots or plist values."
   ;; TODO: do it recursively.
   ;; mainly used by occ-tsk only
   ;; NOTE
@@ -213,6 +243,8 @@
 (cl-defmethod occ-obj-set-property ((obj occ-obj-tsk)
                                     prop
                                     value)
+  "Set the value of property PROP of OCC-OBJ-TSK OBJ to VALUE.
+Ignores OBJ itself and forwards to the next method."
   (ignore obj)
   ;; (occ-debug "(occ-obj-set-property (obj occ-obj-tsk)) prop %s, value %s"
   ;;            (prin1-to-string prop)
@@ -222,6 +254,8 @@
 (cl-defmethod occ-obj-set-property ((obj occ-obj-ctx-tsk)
                                     prop
                                     value)
+  "Set the value of property PROP of OCC-OBJ-CTX-TSK OBJ to VALUE.
+Delegates to occ-obj-set-property on the task wrapped in OBJ."
   ;; (occ-debug "(occ-obj-set-property (obj occ-obj-ctx-tsk)) prop %s, value %s"
   ;;            (prin1-to-string prop)
   ;;            (prin1-to-string (occ-obj-nonocc-format value)))
@@ -231,6 +265,8 @@
 (cl-defmethod occ-obj-set-property ((obj occ-obj-ctx)
                                     prop
                                     value)
+  "Set the value of property PROP of OCC-OBJ-CTX OBJ to VALUE.
+Delegates to occ-obj-set-property on the context wrapped in OBJ."
   ;; (occ-debug "(occ-obj-set-property (obj occ-obj-ctx)) prop %s, value %s"
   ;;            (prin1-to-string prop)
   ;;            (prin1-to-string (occ-obj-nonocc-format value)))
@@ -239,12 +275,18 @@
 
 
 (cl-defmethod occ-obj-class-slots ((obj occ-obj))
+  "Return the slot symbols of OCC-OBJ OBJ as a list.
+Appends the class slots of OBJ with the org property keys found
+in the plist of OBJ."
   (let* ((plist      (occ-cl-obj-plist-value obj))
          (plist-keys (occ-plist-get-keys plist))
          (slots      (occ-cl-class-slots (occ-cl-inst-classname obj))))
     (append slots
             (mapcar #'key2sym plist-keys))))
 (cl-defmethod occ-obj-defined-slots ((obj occ-obj))
+  "Return every defined slot symbol of OCC-OBJ OBJ as a list.
+Combines the class slots of OBJ with the org property keys in the
+plist of OBJ."
   (let* ((plist      (occ-cl-obj-plist-value obj))
          (plist-keys (occ-plist-get-keys plist))
          (slots      (append (occ-cl-class-slots (occ-cl-inst-classname obj))
@@ -252,22 +294,31 @@
                                      plist-keys))))
     slots))
 (cl-defmethod occ-obj-defined-slots-with-value ((obj occ-obj))
+  "Return the defined slots of OCC-OBJ OBJ that read non nil.
+Filters occ-obj-defined-slots keeping slots whose property has a
+value."
   (let* ((slots (occ-obj-defined-slots obj)))
     (cl-remove-if-not #'(lambda (slot)
                           (occ-obj-get-property obj slot))
                       slots)))
 (cl-defmethod occ-obj-cl-method-matched-arg ((method symbol)
                                              (ctx symbol))
+  "Return the first args of METHOD ignoring the symbol CTX.
+Applies no property filtering when CTX is a symbol."
   (ignore ctx)
   (occ-cl-method-first-arg method))
 (cl-defmethod occ-obj-cl-method-matched-arg ((method symbol)
                                              (ctx occ-ctx))
+  "Return the first args of METHOD matching valued slots of CTX.
+Keeps args that are among the defined slots with values on OCC-CTX
+CTX."
   (let ((slots (occ-obj-defined-slots-with-value ctx)))
     (cl-remove-if-not #'(lambda (arg) (memq arg slots))
                       (occ-cl-method-first-arg method))))
 (cl-defmethod occ-obj-cl-method-matched-arg ((method1 symbol)
                                              (method2 symbol)
                                              (ctx occ-ctx))
+  "Return first args of METHOD1 matching METHOD2 valued slots of CTX."
   (let ((slots (occ-cl-method-first-arg-with-value method2
                                                ctx)))
     (cl-remove-if-not #'(lambda (arg) (memq arg slots))
@@ -279,10 +330,14 @@
   "test")
 (cl-defmethod occ-obj-cl-method-sig-matched-arg ((method-sig cons)
                                                  (ctx symbol))
+  "Return the param case of METHOD-SIG ignoring the symbol CTX.
+Applies no property filtering when CTX is a symbol."
   (ignore ctx)
   (occ-cl-method-param-case method-sig))
 (cl-defmethod occ-obj-cl-method-sig-matched-arg ((method-sig cons)
                                                  (ctx occ-ctx))
+  "Return the param case args of METHOD-SIG valued on CTX.
+Keeps args among the defined slots with values on OCC-CTX CTX."
   (let ((slots (occ-obj-defined-slots-with-value ctx))) ;; ((slots (occ-obj-defined-slots-with-value-new ctx)))
     (cl-remove-if-not #'(lambda (arg) (memq arg slots))
                       (occ-cl-method-param-case method-sig))))
@@ -296,6 +351,9 @@
 (cl-defmethod occ-obj-cl-method-sigs-matched-arg ((method-sig1 cons)
                                                   (method-sig2 cons)
                                                   (args cons))
+  "Return param case args of METHOD-SIG1 valued by METHOD-SIG2.
+Keeps args of METHOD-SIG1 among the slots with values when
+METHOD-SIG2 runs on ARGS."
   (let ((slots (occ-cl-method-param-case-with-value-new method-sig2 args)))
     (cl-remove-if-not #'(lambda (arg) (memq arg slots))
                       (occ-cl-method-param-case method-sig1))))

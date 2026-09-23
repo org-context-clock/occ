@@ -83,6 +83,9 @@
 ;; TODO: Verify all tsk objects
 
 (cl-defmethod occ-do-verify ((obj occ-obj-tsk))
+  "Verify the cached occ property values of the occ-obj-tsk OBJ.
+Compares each cached property with the org entry value fetched by
+occ-do-org-operation and logs mismatches."
   (occ-debug "occ-do-verify: Verifying %s" (occ-obj-format obj 'capitalize))
   (let ((plist-keys (mapcar #'downcase-sym
                             (mapcar #'key2sym
@@ -100,11 +103,15 @@
             (occ-debug "prop %s NOT correct" prop)))))))
 
 (cl-defmethod occ-do-verify ((obj occ-collection))
+  "Verify every task of the occ-collection OBJ with occ-do-verify."
   (ignore obj)
   (dolist (tsk (occ-obj-list nil))
       (occ-do-verify tsk)))
 
 (defun occ-do-verify-objects ()
+  "Verify cached occ property values of the default collection.
+Walks every task of the collection via occ-do-verify on
+occ-collection and reports wrong property values."
   (interactive)
   (occ-do-verify (occ-default-collection)))
 ;; testing verification
@@ -136,9 +143,11 @@
 
 (when nil                               ;occ-util-common.el
   (defun time-consuming ()
+    "Sum the numbers below 1000000 as a busy loop delay helper."
     (cl-loop for i below (* 1000 1000 1) sum i))
 
   (defun test-no-input ()
+    "Debug helper printing the last input event and return value."
     (let ((retval nil))
       (occ-debug "last-input-event %s retval %s" last-input-event retval)))
 
@@ -152,9 +161,11 @@
 
 (when nil                             ;while-no-input occ-main.el
   (defun time-consuming ()
+    "Sum the numbers below 1000000 as a busy loop delay helper."
     (cl-loop for i below (* 1000 1000 1) sum i)
 
     (defun test-no-input ()
+      "Run redisplay and the busy loop under while-no-input."
       (let ((retval
              (while-no-input
                (redisplay)
@@ -174,6 +185,7 @@
 (when nil                               ;occ-prop-edit.el
   ;; testing verification
  (defun occ-files-with-null-regex ()
+   "Print the occ collection files whose org heading regexp is null."
    (interactive)
    (let ((files
           (remove-if
@@ -185,6 +197,7 @@
 
  ;; testing verification;; testing verification
  (defun occ-files-not-in-org-mode ()
+   "Print the occ collection files whose buffer is not in org-mode."
    (interactive)
    (let ((files (remove-if #'(lambda (f)
                                (with-current-buffer (find-file-noselect f)
@@ -194,6 +207,9 @@
 
 
 (defun functions-in-file-test ()
+  "Return the functions defined in occ-main.el.
+Scans obatoms for bound symbols whose symbol-file base name is
+occ-main.el."
   ;; https://stackoverflow.com/questions/26330363/how-do-i-get-a-list-of-functions-defined-in-an-emacs-lisp-file
   (let ((funclist ()))
     (mapatoms
@@ -220,9 +236,13 @@
   (when nil
 
     (cl-defmethod occ-obj-rank (tsk-pair ctx)
+      "Test cl-defmethod of occ-obj-rank for unspecialized arguments.
+Returns a rank of 0 for any TSK-PAIR and CTX."
       0)
 
     (cl-defmethod occ-obj-rank ((tsk-pair (head root)) (ctx list))
+      "Test cl-defmethod of occ-obj-rank on head root pairs.
+Debug prints the TSK-PAIR and returns nil."
       (occ-debug "%s" tsk-pair))
 
     (occ-obj-rank '(root  1) nil)
@@ -231,6 +251,8 @@
 
     (cl-defmethod occ-obj-rank ((tsk occ-tsk)
                                 (ctx occ-ctx))
+      "Test cl-defmethod of occ-obj-rank on occ-tsk and occ-ctx.
+Debug prints a match message and returns nil."
       (occ-debug "match occ-obj-rank"))
 
     (occ-obj-rank (make-occ-tree-tsk) (make-occ-ctx))))
@@ -243,9 +265,11 @@
   (when nil ;; https://curiousprogrammer.wordpress.com/2010/07/19/emacs-defstruct-vs-other-languages/
 
     (defun occ-cl-get-field (object field)
+      "Return the FIELD slot value of the cl-struct OBJECT."
       (cl-struct-slot-value (occ-cl-inst-classname object) field object))
 
     (defun occ-occ-cl-set-field (object field value)
+      "Set the FIELD slot of the cl-struct OBJECT to VALUE."
       (setf (cl-struct-slot-value (occ-cl-inst-classname object) field object) value))
 
     (get-field dave 'name)
@@ -370,6 +394,9 @@
 
 (when nil
   (defun occ-capture-test ()
+    "Experiment running before-org-capture-plus on a selected task.
+Interactive experiment: selects a ctsk and captures on its marker
+with the occ-obj-capture-plus helm template selector."
     (interactive)
     (let* ((ctsk (occ-obj-select (occ-obj-make-ctx nil) #'occ-list))
            (tsk  (if ctsk (occ-ctsk-tsk ctsk)))
@@ -380,6 +407,9 @@
 
 
   (defun occ-capture-test ()
+    "Experiment running org-capture-plus on a selected task.
+Interactive experiment: finalizes with the property window editor
+for the selected ctsk."
     (interactive)
     (let* ((ctsk (occ-obj-select (occ-obj-make-ctx nil) #'occ-list))
            (ctx  (if ctsk (occ-ctsk-ctx ctsk)))
@@ -460,17 +490,23 @@
 
 (occ-testing
  (cl-defmethod test-method1 ((obj symbol))
+   "Test cl-defmethod of test-method1 on symbol OBJ.
+Messages the matched signature."
    (ignore obj)
    (message "test-method1 ((obj symbol))"))
 
  (cl-defmethod test-method1 ((obj symbol)
                              (x number))
+   "Test cl-defmethod of test-method1 on symbol OBJ and number X.
+Messages the matched signature."
    (ignore obj)
    (ignore x)
    (message "test-method1 ((obj symbol) (x number))"))
 
  (cl-defmethod test-method1 ((obj number)
                              (m   marker))
+   "Test cl-defmethod of test-method1 on number OBJ and marker M.
+Messages the matched signature."
    (ignore obj)
    (ignore m)
    (message "test-method1 ((obj number) (m   marker))"))

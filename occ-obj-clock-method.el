@@ -81,6 +81,10 @@
 (cl-defmethod occ-obj-ctxual-current-tsk ((obj occ-ctx)
                                           &key
                                           other-allowed)
+  "Ctxual-tsk builder method on ctx objects.
+  Build the ctxual-tsk pairing the currently clocked task with
+  CTX OBJ or return nil when nothing is clocked.  OTHER-ALLOWED
+  is passed on to occ-current-tsk."
   (let ((curr-tsk (occ-current-tsk :other-allowed other-allowed)))
     (when curr-tsk
       (occ-obj-build-ctxual-tsk-with curr-tsk
@@ -183,6 +187,11 @@ then return t else nil"
 ;;       t)))
 
 (cl-defmethod occ-obj-try-current-if-unassociated-p ((obj occ-obj-ctx)) ;; should handle occ-ctx
+  "Association gate method on ctx objects.
+  Return t when the currently clocked task is unassociated with
+  the context OBJ so a next clock-in should be offered.  Builds
+  the ctxual current tsk with other buffers allowed and delegates
+  to occ-obj-try-if-unassociated-p."
   (occ-obj-try-if-unassociated-p (occ-obj-ctxual-current-tsk obj :other-allowed t)))
 
 
@@ -194,6 +203,12 @@ then return t else nil"
                                       ap-transf
                                       auto-select-if-only
                                       timeout)
+  "Association gate method on ctx objects.
+  Clock in a task for the context OBJ only when the currently
+  clocked task is unassociated with OBJ.  When the clock-in
+  selection is quit or times out and no unnamed clock is running
+  this may create and clock into an unnamed task.  Return t when
+  the gate allowed a clock-in attempt and nil otherwise."
   (ignore ap-normal)
   (ignore ap-transf)
   (unless builder (occ-error "Builder can not be nil"))
@@ -246,17 +261,26 @@ then return t else nil"
 
 
 (cl-defmethod occ-obj-consider-for-clockin-in-p ()
+  "Return t when enough time passed since the last buffer selection.
+Enough means more than 7 seconds (the value of
+*occ-tsk-current-ctx-time-interval*)."
   (> (float-time (time-since *occ-last-buff-sel-time*))
      *occ-tsk-current-ctx-time-interval*))
 
 (cl-defmethod occ-obj-try-to-clock-in-p ((curr occ-ctx)
                                          (prev occ-ctx))
+  "Change gate method on ctx objects.
+  Return t when the current context CURR differs from the
+  previous context PREV so a new clock-in should be tried."
   ;;BUG: Reconsider whether it is catching case after some delay.
   (not (equal curr
               prev)))
 
 (cl-defmethod occ-obj-try-to-clock-in-p ((curr occ-ctx)
                                          (prev null))
+  "Change gate method for a null previous context PREV.
+  Return t because without a previous context there is nothing to
+  compare the current context CURR against."
   (ignore curr)
   (ignore prev)
   t)
@@ -273,6 +297,13 @@ then return t else nil"
                                       ap-transf
                                       auto-select-if-only
                                       timeout)
+  "Change gate method on ctx objects.
+Clocks in for the context OBJ only when enough time has passed
+since the last buffer selection and the context changed since
+the previous clock-in attempt.  Updates the previous context
+tracking variables and explains via
+occ-do-describe-try-to-clock-in why no clock-in was tried.
+Returns nil when the gate refused to proceed."
   (ignore ap-normal)
   (ignore ap-transf)
   (let ((filters (or filters (occ-match-filters)))
@@ -319,12 +350,16 @@ then return t else nil"
 (defvar occ-ignore-buffer-regexps '(" *helm" "*Help*" "*helpful") "occ-ignore-buffer-names")
 
 (defun occ-add-ignore-buffer-names ()
+  "Add the name of the current buffer to occ-ignore-buffer-names."
   (interactive)
   (let ((buffname (buffer-name (current-buffer))))
     (cl-pushnew buffname
                 occ-ignore-buffer-names)))
 
 (defun occ-obj-ignore-ctx-p (ctx-buff)
+  "Return t when the buffer CTX-BUFF is an ignored buffer.
+  A buffer is ignored when its name is listed in
+  occ-ignore-buffer-names or matches occ-ignore-buffer-regexps."
   (or (member (buffer-name ctx-buff)
               occ-ignore-buffer-names)
       (cl-some #'(lambda (re)
@@ -333,6 +368,11 @@ then return t else nil"
 
 (cl-defmethod occ-do-describe-try-to-clock-in ((curr occ-ctx)
                                                (prev occ-ctx))
+  "Diagnostic method on ctx objects: log why no clock-in was tried.
+  Compares the current context CURR with the previous context
+  PREV and logs the reason: unchangeable clock state or a null
+  or dead or minibuffer or ignored context buffer or an
+  unchanged context."
   (let ((buff (occ-ctx-buffer curr)))
     (let ((msg (cond
                  ((not (occ-chgable-p))
@@ -357,6 +397,10 @@ then return t else nil"
 
 ;;;###autoload
 (defun occ-do-clock-in-curr-ctx (&optional force)
+  "Clock in a task selected for the context at point right now.
+Runs the association gate occ-do-clock-in-if-not directly and
+skips the change gate.  Optional FORCE argument is currently
+ignored."
   (interactive "P")
   (ignore force)
   (let ((ctx (occ-obj-make-ctx-at-point)))
@@ -377,6 +421,10 @@ then return t else nil"
 
 ;;;###autoload
 (defun occ-do-clock-in-curr-ctx-if-not (&optional force)
+  "Clock in for the current buffer only when the context changed.
+Skips ignored buffers and applies the change gate
+occ-do-clock-in-if-chg.  With non-nil FORCE it bypasses the
+change gate and runs occ-do-clock-in-curr-ctx directly."
   (interactive "P")
   ;; TODO: Add code to which check if only focus present than only trigger else
   ;;       postpone it by calling run-with-idle-plus-timer
@@ -413,10 +461,14 @@ then return t else nil"
 ;; TODO: Add method/function descriptions
 
 (defun occ-run-curr-ctx-timer ()
+  "Timer callback that runs occ-do-clock-in-curr-ctx unconditionally."
   (occ-debug "occ-run-curr-ctx-chg-timer: begin")
   (occ-do-clock-in-curr-ctx nil))
 
 (defun occ-run-curr-ctx-chg-timer ()
+  "Timer callback that runs occ-do-clock-in-curr-ctx-if-not.
+The change gate applies so clocking happens only when the
+context changed."
   (occ-debug "occ-run-curr-ctx-chg-timer: begin")
   (occ-do-clock-in-curr-ctx-if-not nil))
 
@@ -424,6 +476,11 @@ then return t else nil"
 ;; TODO: find some better name
 ;;;###autoload
 (defun occ-do-clock-in-curr-ctx-if-not-timer-function (event)
+  "Timer callback for EVENT running the gated clock-in pipeline.
+Refuses to run when quiet mode is on or a minibuffer is active
+or a recursive edit is in progress and always reschedules the
+next timeout via occ-do-try-clock-schedule-next-timeout.  An
+EVENT of buffer-switch runs the change gated entry point."
   (occ-debug "occ-do-clock-in-curr-ctx-if-not-timer-function: begin")
   ;;BUG: could be the cause of high MEM usage
   (unwind-protect
@@ -443,6 +500,9 @@ then return t else nil"
 
 
 (defun occ-cancel-timer ()
+  "Cancel the pending buffer selection timer.
+Cancels *occ-buff-sel-timer* when one is scheduled and clears
+the variable."
   (when *occ-buff-sel-timer*
     (cancel-timer *occ-buff-sel-timer*)
     (setq *occ-buff-sel-timer* nil)))
@@ -474,6 +534,9 @@ then return t else nil"
 ;;;###autoload
 (defun occ-switch-buffer-run-curr-ctx-timer-function (prev
                                                       next)
+  "Switch-buffer-functions callback for a switch from PREV to NEXT.
+Records the buffer selection time and schedules the idle timer
+for the next gated clock-in attempt with event buffer-switch."
   (ignore prev next)
   (occ-debug "occ-switch-buffer-run-curr-ctx-timer-function: begin")
   (setq *occ-last-buff-sel-time* (current-time))
@@ -489,11 +552,17 @@ then return t else nil"
 
 (cl-defmethod occ-do-add-org-buffer ((key symbol)
                                      buff)
+  "Add-org-buffer fallback method on symbol KEY.
+Ignores the non buffer BUFF argument with only a debug message."
   (ignore key)
   (occ-debug "occ-do-add-org-buffer: ignoring buff %s" buff))
 
 (cl-defmethod occ-do-add-org-buffer ((key  symbol)
                                      (buff buffer))
+  "Add-org-buffer method on symbol KEY for a buffer BUFF.
+When BUFF is the current buffer ask whether to add its org file
+to the collector spec under KEY and reschedule the add-org-file
+timer either way."
   (if (and (buffer-live-p buff)
            (eql buff (current-buffer))())
       (when (< occ-add-inquery 3)
@@ -516,12 +585,18 @@ then return t else nil"
   (occ-add-org-file-timer key buff))
 
 (defun occ-add-org-buffer (key buff)
+  "Dispatch occ-do-add-org-buffer for KEY and BUFF.
+Warns and does nothing when BUFF is nil or not a live buffer."
   (if (and buff
            (buffer-live-p buff))
       (occ-do-add-org-buffer key buff)
     (occ-warn "occ-add-org-buff: ignoring %s to add to %s" buff key)))
 
 (defun occ-add-org-file-timer (&optional key buffer)
+  "Schedule the idle timer that offers to add BUFFER to occ.
+Cancels any previous timer in BUFFER and reschedules with a
+growing delay while occ-add-inquery stays below 3.  Optional KEY
+is ignored in favor of the default collector key."
   (ignore key)
   (occ-nodisplay "occ-add-org-file-timer: started for buff %s, occ-add-inquery %s, occ-add-org-file-timer %s"
                  buffer

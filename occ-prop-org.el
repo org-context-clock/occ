@@ -65,21 +65,33 @@
 
 
 (cl-defmethod occ-obj-org-property-name ((prop symbol))
+  "Return the org drawer property name for the symbol PROP.
+Prepends the occ- prefix only when occ-obj-occ-prop-p approves PROP as
+in currfile becoming occ-currfile."
   (concat (and (occ-obj-occ-prop-p prop) "occ-")
           (symbol-name prop)))
 
 (cl-defmethod occ-obj-org-property-symb ((prop symbol))
+  "Return the interned org property symbol for the symbol PROP.
+Interns the org property name from occ-obj-org-property-name with
+occ-symb."
   (occ-symb (occ-obj-org-property-name prop)))
 
 
 (defun occ-org-entry-get (pom
                           prop)
+  "Read the org property of PROP at the org entry POM.
+Thin wrapper around org-entry-get using the occ prefixed org property
+name for PROP."
   (org-entry-get pom
                  (occ-obj-org-property-name prop)))
 
 (defun occ-org-entry-put (pom
                           prop
                           value)
+  "Write VALUE to the org property of PROP at the org entry POM.
+Wraps org-entry-put in lotus-org-with-safe-modification and uses the
+occ prefixed org property name for PROP."
   (lotus-org-with-safe-modification
     (org-entry-put pom
                    (occ-obj-org-property-name prop)
@@ -88,6 +100,9 @@
 (defun occ-org-entry-delete (pom
                              prop
                              value)
+  "Delete the org property of PROP at the org entry POM.
+Wraps org-entry-delete in lotus-org-with-safe-modification with the
+occ prefixed org property name for PROP; VALUE passes through."
   (lotus-org-with-safe-modification
     (org-entry-delete pom
                       (occ-obj-org-property-name prop)
@@ -95,12 +110,19 @@
 
 (defun occ-org-entry-get-multivalued-property (pom
                                                prop)
+  "Read the multivalued org property of PROP at the org entry POM.
+Wraps org-entry-get-multivalued-property with the occ prefixed org
+property name for PROP; list values are space split."
   (org-entry-get-multivalued-property pom
                                       (occ-obj-org-property-name prop)))
 
 (defun occ-org-entry-put-multivalued-property (pom
                                                prop
                                                values)
+  "Write VALUES to the multivalued org property of PROP at POM.
+Wraps org-entry-put-multivalued-property in
+lotus-org-with-safe-modification with the occ prefixed org property
+name for PROP."
   (lotus-org-with-safe-modification
     (org-entry-put-multivalued-property pom
                                         (occ-obj-org-property-name prop)
@@ -109,6 +131,10 @@
 (defun occ-org-entry-add-to-multivalued-property (pom
                                                   prop
                                                   value)
+  "Add VALUE to the multivalued org property of PROP at POM.
+Wraps org-entry-add-to-multivalued-property in
+lotus-org-with-safe-modification with the occ prefixed org property
+name for PROP and returns t."
   (lotus-org-with-safe-modification
     (org-entry-add-to-multivalued-property pom
                                            (occ-obj-org-property-name prop)
@@ -118,6 +144,10 @@
 (defun occ-org-entry-remove-from-multivalued-property (pom
                                                        prop
                                                        value)
+  "Remove VALUE from the multivalued org property of PROP at POM.
+Wraps org-entry-remove-from-multivalued-property in
+lotus-org-with-safe-modification with the occ prefixed org property
+name for PROP and returns t."
   (lotus-org-with-safe-modification
     (org-entry-remove-from-multivalued-property pom
                                                 (occ-obj-org-property-name prop)
@@ -127,6 +157,9 @@
 (defun occ-org-entry-member-in-multivalued-property (pom
                                                      prop
                                                      values)
+  "Test membership of VALUES in the multivalued org property of PROP.
+Wraps org-entry-member-in-multivalued-property with the occ prefixed
+org property name for PROP at the org entry POM."
   (org-entry-member-in-multivalued-property pom
                                             (occ-obj-org-property-name prop)
                                             values))

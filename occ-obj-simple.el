@@ -80,6 +80,8 @@
 
 (cl-defmethod occ-obj-find ((collection list)
                             (mrk marker))
+  "Return nil for a list COLLECTION and marker MRK.
+Performs no lookup and always yields nil."
   (ignore collection)
   (ignore mrk))
 
@@ -87,6 +89,8 @@
   "occ-do-goto")
 
 (cl-defmethod occ-do-goto ((obj marker))
+  "Switch to the buffer of marker OBJ and jump to its position.
+Shows the outline content up to level ten for orientation."
   (switch-to-buffer (marker-buffer obj))
   ;; TODO find about "org-overview"
   ;; https://stackoverflow.com/questions/25161792/emacs-org-mode-how-can-i-fold-everything-but-the-current-headline
@@ -98,6 +102,8 @@
   (goto-char obj))
 
 (cl-defmethod occ-do-goto ((obj occ-obj-tsk))
+  "Go to the org entry of OCC-OBJ-TSK OBJ.
+Uses the marker of OBJ and signals occ-error when it is invalid."
   (let ((mrk (occ-obj-marker obj)))
     (if (and (markerp mrk)
              (marker-buffer mrk))
@@ -109,6 +115,8 @@
   "occ-do-set-to")
 
 (cl-defmethod occ-do-set-to ((obj marker))
+  "Set the current buffer to the buffer of marker OBJ.
+Moves point to the position of OBJ without switching windows."
   (set-buffer (marker-buffer obj))
   ;; TODO find about "org-overview"
   ;; https://stackoverflow.com/questions/25161792/emacs-org-mode-how-can-i-fold-everything-but-the-current-headline
@@ -120,6 +128,8 @@
   (goto-char obj))
 
 (cl-defmethod occ-do-set-to ((obj occ-obj-tsk))
+  "Set the current buffer to the org entry of OCC-OBJ-TSK OBJ.
+Signals occ-error when the marker of OBJ is invalid."
   (let ((mrk (occ-obj-marker obj)))
     (if (and (markerp mrk)
              (marker-buffer mrk))
@@ -129,6 +139,9 @@
 
 (cl-defmethod occ-do-induct-child ((obj   occ-tree-tsk)
                                    (child occ-tree-tsk))
+  "Attach CHILD to OCC-TREE-TSK OBJ as a new subtree child.
+Sets the parent and subtree level of CHILD and inserts it into the
+org file after the last subtree entry of OBJ."
   ;; (occ-message "Inducting child %s in parent %s"
   ;;              (occ-obj-format child)
   ;;              (occ-obj-format obj))
@@ -145,6 +158,9 @@
 
 (cl-defmethod occ-do-induct-child ((obj   occ-list-tsk)
                                    (child occ-list-tsk))
+  "Attach CHILD to OCC-LIST-TSK OBJ in its list collection.
+Sets the parent and subtree level of CHILD and inserts it into the
+org list right after OBJ."
   (occ-obj-set-property child 'parent obj)
   (occ-obj-set-property child 'subtree-level
                         (occ-obj-get-property obj 'subtree-level))
@@ -154,6 +170,9 @@
 
 (cl-defmethod occ-do-abondon-child ((obj   occ-tree-tsk)
                                     (child occ-tree-tsk))
+  "Refile CHILD under OCC-TREE-TSK OBJ without setting parent.
+Raises the subtree level of CHILD and appends it to the subtree of
+OBJ in the org file."
   ;; (occ-message "Inducting child %s in parent %s"
   ;;              (occ-obj-format child)
   ;;              (occ-obj-format obj))
@@ -169,6 +188,9 @@
 
 (cl-defmethod occ-do-abondon-child ((obj   occ-list-tsk)
                                     (child occ-list-tsk))
+  "Refile CHILD under OCC-LIST-TSK OBJ without setting parent.
+Raises the subtree level of CHILD and inserts it into the org list
+right after OBJ."
   (occ-obj-set-property child 'subtree-level
                         (1+ (occ-obj-get-property obj 'subtree-level)))
   (occ-insert-node-after-element child obj
@@ -186,6 +208,9 @@
                               template
                               clock-in
                               immediate-finish)
+  "Capture a new entry at marker OBJ with org-capture+.
+Ignores TEMPLATE and CLOCK-IN and picks the template with
+occ-obj-capture+-helm-select-template adding one empty line."
   (ignore template)
   (ignore clock-in)
   (org-capture-run 'entry
@@ -198,6 +223,9 @@
                               template
                               clock-in
                               immediate-finish)
+  "Capture a new entry for the org marker of OCC-TSK OBJ.
+Delegates to the marker method passing TEMPLATE and CLOCK-IN and
+IMMEDIATE-FINISH through."
   (let ((mrk (occ-tsk-marker obj)))
     (occ-do-capture mrk
                     :clock-in         clock-in
@@ -208,6 +236,11 @@
                               template
                               clock-in
                               immediate-finish)
+  "Capture a new child entry for OCC-OBJ-CTX-TSK OBJ.
+Runs TEMPLATE at the marker of OBJ and lets the properties of the
+new entry be edited unless IMMEDIATE-FINISH is set.
+Inducts the new task as a child of the task of OBJ and calls
+occ-do-try-clock-in on the child when CLOCK-IN is set."
   (let ((mrk      (occ-obj-marker obj))
         (tsk      (occ-obj-tsk    obj))
         (ctx      (occ-obj-ctx    obj))
@@ -238,6 +271,9 @@
                               template
                               clock-in
                               immediate-finish)
+  "Capture a new child after selecting a task at point.
+Chooses a contextual task from all collections with
+occ-obj-list-select and signals occ-error when none is chosen."
   (ignore obj)
   ;; BUG: occ-list-select is become an interactive function, here it is not returning desired object.
   ;; NOTE: ACTION-TRANSFORMER is superseding ACTION for OCC-LIST-SELECT
@@ -322,6 +358,8 @@
                                    template
                                    clock-in
                                    immediate-finish)
+  "Create a child of the entry at marker OBJ via occ-do-capture.
+Signals occ-error when OBJ is an unnamed task."
   (if (not (occ-obj-unnamed-p obj))
       (occ-do-capture obj
                       :clock-in clock-in ;; helm-current-prefix-arg
@@ -338,6 +376,8 @@
                                    template
                                    clock-in
                                    immediate-finish)
+  "Create a child of OCC-OBJ-TSK OBJ via occ-do-capture.
+Signals occ-error when OBJ is an unnamed task."
   (if (not (occ-obj-unnamed-p obj))
       (occ-do-capture obj
                       :clock-in clock-in ;; helm-current-prefix-arg
@@ -419,14 +459,20 @@
   "occ-child-clock-in")
 
 (cl-defmethod occ-do-create-child-clock-in ((obj null))
+  "Create a child for a task selected at point and clock it in.
+Delegates to occ-do-capture with CLOCK-IN enabled."
   (occ-do-capture obj
                :clock-in t))
 
 (cl-defmethod occ-do-create-child-clock-in ((obj marker))
+  "Create a child of the entry at marker OBJ and clock it in.
+Delegates to occ-do-capture with CLOCK-IN enabled."
   (occ-do-capture obj
                :clock-in t))
 
 (cl-defmethod occ-do-create-child-clock-in ((obj occ-obj-tsk))
+  "Create a child of OCC-OBJ-TSK OBJ and clock it in.
+Delegates to occ-do-capture with CLOCK-IN enabled."
   (occ-do-capture obj
                   :clock-in t))
 
@@ -502,6 +548,9 @@
      (buffer-string))))
 
 (defun sacha/helm-org-create-task (candidate)
+  "Create a task from CANDIDATE with a prefilled capture template.
+Selects an org-capture template and fills it with CANDIDATE then
+places the filled template in the capture buffer."
   (let ((entry (org-capture-select-template "T")))
     (org-capture-set-plist entry)
     (org-capture-get-template)

@@ -86,6 +86,8 @@
 
 
 (cl-defmethod occ-obj-intf-occ-prop-p ((prop symbol))
+  "Predicate method on symbol PROP: tell whether PROP is an OCC property.
+  Thin delegator to occ-obj-impl-occ-prop-p."
   (occ-obj-impl-occ-prop-p prop))
 
 
@@ -254,6 +256,10 @@ org string to occ representation."
                                    (ctx occ-obj-ctx)
                                    (property symbol)
                                    (operation symbol))
+  "Values method on tsk and ctx objects for PROPERTY in OPERATION.
+  Return the values of PROPERTY relevant to OPERATION computed
+  from TSK judged against CTX.  Thin delegator to
+  occ-obj-impl-values."
   (occ-obj-impl-values tsk
                        ctx
                        property
@@ -263,6 +269,10 @@ org string to occ representation."
                                    (ctx null)
                                    (property symbol)
                                    (operation symbol))
+  "Values method on tsk objects with a null ctx for OPERATION.
+  Return the values of PROPERTY relevant to OPERATION computed
+  from TSK when no context is available.  Thin delegator to
+  occ-obj-impl-values."
   (occ-obj-impl-values tsk
                        ctx
                        property
@@ -293,6 +303,9 @@ org string to occ representation."
 (cl-defmethod occ-obj-intf-checkout-p ((obj occ-obj-ctx)
                                        (prop symbol)
                                        value)
+  "Checkout support method on ctx objects for PROP and VALUE.
+  Tell whether OBJ supports checking out PROP with VALUE.  Thin
+  delegator to occ-obj-impl-checkout-p."
   (occ-obj-impl-checkout-p obj
                            prop
                            value))
@@ -312,6 +325,9 @@ org string to occ representation."
 
 
 (cl-defmethod occ-obj-intf-inheritable-p ((property symbol))
+  "Inheritable predicate method on symbol PROPERTY.
+  Tell whether PROPERTY is inheritable from parent headings.
+  Thin delegator to occ-obj-impl-inheritable-p."
   (occ-obj-impl-inheritable-p property))
 
 

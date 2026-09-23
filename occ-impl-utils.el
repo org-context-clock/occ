@@ -38,10 +38,14 @@
 
 
 (defun occ-pu-safe-file-truename (file)
+  "Return the truename of FILE or nil when FILE is nil."
   (and file
        (file-truename file)))
 
 (defun occ-pu-file-in-dir-p (dir file)
+  "Return non-nil when the truename of FILE is inside DIR.
+Both paths go through occ-pu-safe-file-truename before the prefix
+test."
   (let ((dir  (occ-pu-safe-file-truename dir))
         (file (occ-pu-safe-file-truename file)))
     (and dir
@@ -50,12 +54,14 @@
                           file))))
 
 (defun occ-pu-file= (&rest files)
+  "Return t when all FILES resolve to the same truename."
   (let ((files (mapcar #'occ-pu-safe-file-truename files)))
     (cl-every #'string=
               files
               (cdr-safe files))))
 
 (defun occ-pu-string= (str1 str2)
+  "Return t when STR1 and STR2 are both non-nil and string equal."
   (and str1
        str2
        (string= str1 str2)))

@@ -62,14 +62,18 @@
 
 (defvar occ-obj-static-filters nil)
 (defun occ-obj-static-filter-add (static-filter)
+  "Register STATIC-FILTER in the global static filter registry."
   (cl-pushnew static-filter
               occ-obj-static-filters))
 (defun occ-obj-static-filter-get (key)
+  "Return the registered occ-static-filter whose keyword is KEY."
   (cl-first (cl-remove-if-not #'(lambda (filter)
                                   (eq key
                                       (occ-static-filter-keyword filter)))
                               occ-obj-static-filters)))
 (defun occ-obj-static-filters-get (keylist)
+  "Return the registered static filters matching any key of KEYLIST.
+Keys may be plain keywords or conses whose car is the keyword."
   (mapcan #'(lambda (key)
               (let ((fkey (or (car-safe key)
                               key)))
@@ -82,6 +86,7 @@
 
 (cl-defmethod occ-obj-get-static-filters ((obj occ-obj-ctx)
                                           keylist)
+  "Return the static filters of KEYLIST for the OCC-OBJ-CTX OBJ."
   ;; TODO: do we require (apply #'append ...)
   (ignore obj)
   (occ-debug "(OCC-OBJ-GET-FILTERS OCC-OBJ-TSK): called")
@@ -94,18 +99,24 @@
 
 (cl-defmethod occ-obj-average ((obj occ-stat)
                                sequence)
+  "Method of occ-obj-average for OCC-STAT OBJ.
+Return the average of SEQUENCE and cache it in OBJ when unset."
   (unless (occ-stat-average obj)
     (setf (occ-stat-average obj) (apply #'occ-stats-average sequence)))
   (occ-stat-average obj))
 
 (cl-defmethod occ-obj-stddev ((obj occ-stat)
                               sequence)
+  "Method of occ-obj-stddev for OCC-STAT OBJ.
+Return the standard deviation of SEQUENCE and cache it in OBJ."
   (unless (occ-stat-stddev obj)
     (setf (occ-stat-stddev obj) (apply #'occ-stats-stddev sequence)))
   (occ-stat-stddev obj))
 
 (cl-defmethod occ-obj-variance ((obj occ-stat)
                                 sequence)
+  "Method of occ-obj-variance for OCC-STAT OBJ.
+Return the variance of SEQUENCE and cache it in OBJ."
   (unless (occ-stat-variance obj)
     (setf (occ-stat-variance obj) (apply #'occ-stats-variance sequence)))
   (occ-stat-variance obj))
@@ -113,6 +124,9 @@
 
 (cl-defmethod occ-obj-ctx-stat ((obj occ-obj-ctx)
                                 stat)
+  "Method of occ-obj-ctx-stat for OCC-OBJ-CTX OBJ.
+Return the cached occ-stat for STAT in the OBJ stat plist.
+Create and store a fresh occ-stat when none is cached yet."
   (unless (plist-get (occ-obj-ctx-stat-plist obj)
                      stat)
     (plist-put (occ-obj-ctx-stat-plist obj) stat
@@ -124,6 +138,9 @@
                                             (obj occ-ctx)
                                             sequence
                                             &key rank)
+  "Method of occ-obj-static-filter-points for OCC-STATIC-FILTER.
+Call the STATIC-FILTER points-gen-fn on CTX and SEQUENCE with RANK
+to compute the threshold points of the filter."
   (let ((points-gen-fn (occ-static-filter-points-gen-fn static-filter)))
     (funcall points-gen-fn
              obj
@@ -133,36 +150,66 @@
 (cl-defmethod occ-obj-static-filter-default-pivot ((static-filter occ-static-filter)
                                                    (obj occ-ctx)
                                                    points)
+  "Method of occ-obj-static-filter-default-pivot for OCC-STATIC-FILTER.
+Call the STATIC-FILTER default-pivot-fn on CTX and POINTS to get the
+initial pivot index of the filter."
   (let ((default-pivot-fn (occ-static-filter-default-pivot-fn static-filter)))
     (funcall default-pivot-fn obj
              points)))
 
 
 (cl-defmethod occ-obj-dyn-filter-init ((dyn-filter occ-obj-dyn-filter))
+  "Method of occ-obj-dyn-filter-init for OCC-OBJ-DYN-FILTER DYN-FILTER.
+Invoke the init closure which computes the threshold points and the
+default pivot of the filter session."
   (funcall (occ-obj-dyn-filter-init-closure-fn dyn-filter)))
 
 (cl-defmethod occ-obj-dyn-filter-seq ((dyn-filter occ-obj-dyn-filter))
+  "Method of occ-obj-dyn-filter-seq for OCC-OBJ-DYN-FILTER DYN-FILTER.
+Invoke the seq closure and return the candidate sequence the filter
+operates on."
   (funcall (occ-obj-dyn-filter-seq-closure-fn dyn-filter)))
 
 (cl-defmethod occ-obj-dyn-filter-selectable-filter ((dyn-filter occ-obj-dyn-filter))
+  "Method of occ-obj-dyn-filter-selectable-filter for DYN-FILTER.
+Invoke the selectable-filter closure of the OCC-OBJ-DYN-FILTER
+DYN-FILTER and return the tasks whose selected rank passes the
+current threshold."
   (funcall (occ-obj-dyn-filter-selectable-filter-closure-fn dyn-filter)))
 
 (cl-defmethod occ-obj-dyn-filter-display-filter ((dyn-filter occ-obj-dyn-filter))
+  "Method of occ-obj-dyn-filter-display-filter for DYN-FILTER.
+Invoke the display-filter closure of the OCC-OBJ-DYN-FILTER
+DYN-FILTER and return the tasks to show at the current threshold
+ranked by the display rank function."
   (funcall (occ-obj-dyn-filter-display-filter-closure-fn dyn-filter)))
 
 (cl-defmethod occ-obj-dyn-filter-increment ((dyn-filter occ-obj-dyn-filter))
+  "Method of occ-obj-dyn-filter-increment for OCC-OBJ-DYN-FILTER DYN-FILTER.
+Invoke the increment closure which steps the threshold pivot one
+rank point."
   (funcall (occ-obj-dyn-filter-increment-closure-fn dyn-filter)))
 
 (cl-defmethod occ-obj-dyn-filter-decrement ((dyn-filter occ-obj-dyn-filter))
+  "Method of occ-obj-dyn-filter-decrement for OCC-OBJ-DYN-FILTER DYN-FILTER.
+Invoke the decrement closure which steps the threshold pivot one
+rank point back."
   (funcall (occ-obj-dyn-filter-decrement-closure-fn dyn-filter)))
 
 (cl-defmethod occ-obj-dyn-filter-reset ((dyn-filter occ-obj-dyn-filter))
+  "Method of occ-obj-dyn-filter-reset for OCC-OBJ-DYN-FILTER DYN-FILTER.
+Invoke the reset closure which restores the pivot to the default
+pivot of the filter session."
   (funcall (occ-obj-dyn-filter-reset-closure-fn dyn-filter)))
 
 (cl-defmethod occ-obj-dyn-filter-next-closure-fn ((dyn-filter occ-combined-dyn-filter))
+  "Method of occ-obj-dyn-filter-next-closure-fn for DYN-FILTER.
+Return the next closure of the OCC-COMBINED-DYN-FILTER DYN-FILTER."
   (occ-combined-dyn-filter-next-closure-fn dyn-filter))
 
 (cl-defmethod occ-obj-dyn-filter-prev-closure-fn ((dyn-filter occ-combined-dyn-filter))
+  "Method of occ-obj-dyn-filter-prev-closure-fn for DYN-FILTER.
+Return the prev closure of the OCC-COMBINED-DYN-FILTER DYN-FILTER."
   (occ-combined-dyn-filter-prev-closure-fn dyn-filter))
 
 
@@ -170,6 +217,9 @@
                                   rank
                                   pivot
                                   dir)
+  "Compare RANK with PIVOT using COMPARE-FN in direction DIR.
+Call COMPARE-FN with RANK then PIVOT when DIR is non-nil and with
+PIVOT then RANK otherwise."
   (if dir
       (funcall compare-fn
                rank
@@ -180,6 +230,8 @@
 (defun occ-obj-filter-incrementor (pivot
                                    length
                                    dir)
+  "Return the pivot index after one increment step modulo LENGTH.
+Direction DIR moves the index up or down before the wrap."
   (mod (if dir
            (1+ pivot)
          (1- pivot))
@@ -187,6 +239,8 @@
 (defun occ-obj-filter-decrementor (pivot
                                    length
                                    dir)
+  "Return the pivot index after one decrement step modulo LENGTH.
+Direction DIR moves the index down or up before the wrap."
   (mod (if dir
            (1- pivot)
          (1+ pivot))
@@ -199,6 +253,14 @@
                                             filter-dir
                                             rank-select-fn
                                             rank-display-fn)
+  "Compile the OCC-STATIC-FILTER STATIC-FILTER into a dynamic filter.
+The returned occ-obj-dyn-filter is instantiated over candidate
+SEQUENCE for context CTX and chained onto PREV through the prev slot
+so its seq closure consumes the selectable filter of PREV when
+present.  Its init closure computes the threshold points with the
+STATIC-FILTER points-gen-fn and the default pivot with default-pivot-fn.
+Ranks come from RANK-SELECT-FN and RANK-DISPLAY-FN and are compared
+against the pivot with COMPARE-FN in FILTER-DIR order."
   (occ-debug "occ-obj-static-to-dyn-filter in %s 1" (occ-obj-name static-filter))
   (let ((rank-display-fn  (or (occ-static-filter-rank-display-fn static-filter)
                               rank-display-fn
@@ -269,6 +331,14 @@
                                                    (filter-dir t)
                                                    rank-select-fn
                                                    rank-display-fn)
+  "Build the dynamic filter chain for CTX over candidate SEQUENCE.
+STATIC-FILTER-METHODS lists filter specs as keywords or as conses of
+keyword and rank function; a plain non-keyword element sets the
+filter direction for the remaining specs.  Specs are built so that
+the last one is the innermost filter and earlier ones consume its
+output through the prev slot.  RANK-SELECT-FN and RANK-DISPLAY-FN
+default the rank functions of the compiled filters.  Returns the
+outermost occ-obj-dyn-filter or nil when no spec remains."
   ;; (occ-message "len(static-filter-methods) = %d" (length static-filter-methods))
   (let ((static-filterkw-rank (cl-first static-filter-methods)))
     (if (or (consp static-filterkw-rank)
@@ -319,6 +389,13 @@
                                            &key
                                            rank-select-fn
                                            rank-display-fn)
+  "Build the combined dynamic filter bundle for CTX over SEQUENCE.
+Builds the filter chain from STATIC-FILTER-METHODS with
+occ-obj-build-dyn-filters-recursive and wraps it in a combined
+occ-combined-dyn-filter whose prev and next closures keep a stack so
+the user can move between filter sets live.  RANK-SELECT-FN and
+RANK-DISPLAY-FN give the default rank functions.  Signals occ-error
+when no dynamic filter could be built."
   (occ-debug "occ-obj-combined-dyn-filter: Going in")
   (let ((curr-dyn-filter (occ-obj-build-dyn-filters-recursive obj
                                                               static-filter-methods ;; (list :incremental);; static-filter-methods

@@ -55,6 +55,9 @@
 
 (cl-defmethod occ-obj-marker= ((obj marker)
                                (mrk marker))
+  "Return non-nil when markers OBJ and MRK are equal or one apart.
+Compares the org markers of OBJ and MRK and requires both to be valid
+via occ-valid-marker."
   (if (and (occ-valid-marker obj)
            (occ-valid-marker mrk))
    (let ((obj-marker (occ-obj-org-marker obj))
@@ -68,27 +71,35 @@
 
 (cl-defmethod occ-obj-marker= ((obj occ-obj-tsk)
                                (tsk occ-obj-tsk))
+  "Return non-nil when the markers of occ-obj-tsk OBJ and TSK match.
+Delegates to the marker specialized occ-obj-marker= method."
   (occ-obj-marker= (occ-obj-marker (occ-obj-tsk obj))
                    (occ-obj-marker (occ-obj-tsk tsk))))
 
 (cl-defmethod occ-obj-marker= ((obj occ-obj-tsk)
                                (mrk marker))
+  "Return non-nil when the marker of occ-obj-tsk OBJ matches marker MRK.
+Delegates to the marker specialized occ-obj-marker= method."
   (occ-obj-marker= (occ-obj-marker (occ-obj-tsk obj))
                    (occ-obj-marker mrk)))
 
 (cl-defmethod occ-obj-marker= ((obj marker)
                                (tsk occ-obj-tsk))
+  "Return non-nil when marker OBJ matches the marker of occ-obj-tsk TSK.
+Delegates to the marker specialized occ-obj-marker= method."
   (occ-obj-marker= (occ-obj-marker obj)
                    (occ-obj-marker (occ-obj-tsk tsk))))
 
 (cl-defmethod occ-obj-marker= ((obj occ-obj-tsk)
                                (mrk null))
+  "Return nil for occ-obj-tsk OBJ against a null MRK."
   (ignore obj)
   (ignore mrk)
   nil)
 
 (cl-defmethod occ-obj-marker= ((obj null)
                                (tsk occ-obj-tsk))
+  "Return nil for a null OBJ against occ-obj-tsk TSK."
   (ignore obj)
   (ignore tsk)
   nil)
@@ -124,6 +135,8 @@
     (occ-obj-associable-p ctxual-tsk)))
 
 (cl-defmethod occ-obj-associable-p ((obj occ-ctxual-tsk))
+  "Return non-nil when occ-ctxual-tsk OBJ has a positive rank.
+A positive occ-obj-rank means OBJ is associable with its context."
   (> (occ-obj-rank obj)
      0))
 
@@ -134,6 +147,9 @@
 
 (cl-defmethod occ-obj-associable-with-p ((obj occ-obj-tsk)
                                          (ctx occ-ctx))
+  "Return non-nil when occ-obj-tsk OBJ associates with occ-ctx CTX.
+Builds the contextual task for OBJ and CTX and checks that its rank is
+positive."
   (let ((ctxual-tsk (occ-obj-build-ctxual-tsk-with (occ-obj-tsk obj)
                                                    ctx)))
     (occ-obj-associable-p ctxual-tsk)))
@@ -143,15 +159,22 @@
   "occ-obj-unnamed-p")
 
 (cl-defmethod occ-obj-unnamed-p ((obj marker))
+  "Return non-nil when marker OBJ is an unnamed task clock marker.
+Uses occ-clock-marker-unnamed-p."
   ;; (occ-debug "occ-obj-unnamed-p(marker=%s)" obj)
   (occ-clock-marker-unnamed-p obj))
 
 (cl-defmethod occ-obj-unnamed-p ((obj occ-obj-tsk))
+  "Return non-nil when the marker of occ-obj-tsk OBJ is unnamed.
+Delegates to the marker specialized occ-obj-unnamed-p method."
   ;; (occ-debug "occ-obj-unnamed-p(occ-tsk=%s)" (occ-name obj))
   (occ-obj-unnamed-p (occ-obj-marker obj)))
 
 
 (cl-defmethod occ-obj-current-associable-p ((ctx occ-ctx))
+  "Return non-nil when the currently clocked task still fits occ-ctx CTX.
+Builds the contextual current task of CTX and checks that it is
+associable."
   (let ((ctxual-current-tsk (occ-obj-ctxual-current-tsk ctx)))
     (occ-obj-associable-p ctxual-current-tsk)))
 

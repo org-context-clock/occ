@@ -103,6 +103,10 @@
                                    (ctx occ-obj-ctx)
                                    (property symbol)
                                    (operation (eql add)))
+  "Return the add values of PROPERTY for the occ-obj-tsk TSK from CTX.
+The PROPERTY value of CTX is the list-operation value and is wrapped
+in a list when PROPERTY is a list in TSK while the context value is
+not.  Signals occ-error for non-list operations."
   (let ((tsk   (occ-obj-tsk tsk))
         (ctx   (occ-obj-ctx ctx))
         (value (occ-obj-get-property ctx
@@ -119,6 +123,10 @@
                                    (ctx occ-obj-ctx)
                                    (property symbol)
                                    (operation (eql remove)))
+  "Return the remove values of PROPERTY for the occ-obj-tsk TSK from CTX.
+Same derivation as the add method: the PROPERTY value of CTX wrapped
+in a list when needed for list valued properties.  Signals occ-error
+for non-list operations."
   (let ((tsk   (occ-obj-tsk tsk))
         (ctx   (occ-obj-ctx ctx))
         (value (occ-obj-get-property ctx
@@ -134,6 +142,10 @@
                                    (ctx occ-obj-ctx)
                                    (property symbol)
                                    (operation (eql put)))
+  "Return the put value of PROPERTY for the occ-obj-tsk TSK from CTX.
+For non-list operations returns the PROPERTY value of CTX only when
+PROPERTY is not a list in TSK nor in CTX.  Signals occ-error for
+list operations."
   (let ((tsk   (occ-obj-tsk tsk))
         (ctx   (occ-obj-ctx ctx))
         (value (occ-obj-get-property ctx
@@ -148,6 +160,10 @@
                                    (ctx occ-obj-ctx)
                                    (property symbol)
                                    (operation (eql delete)))
+  "Return the delete value of PROPERTY for the occ-obj-tsk TSK from CTX.
+Same derivation as the put method: the PROPERTY value of CTX only
+when PROPERTY is not list valued.  Signals occ-error for list
+operations."
   (let ((tsk   (occ-obj-tsk tsk))
         (ctx   (occ-obj-ctx ctx))
         (value (occ-obj-get-property ctx
@@ -247,6 +263,10 @@ for prop MEMBER and VALUES"
                                      (operation (eql add))
                                      (prop      symbol)
                                      value)
+  "Method of occ-do-impl-operation on occ-obj-tsk OBJ for add.
+Add VALUE to the in-memory PROPERTY of OBJ by consing VALUE onto the
+current PROPERTY value when PROPERTY is list valued.  Signals
+occ-error otherwise."
   (let ((tsk (occ-obj-tsk obj)))
     (occ-debug "(occ-do-impl-operation occ-obj-tsk add): operation %s prop %s" operation prop)
     (if (occ-obj-list-p obj prop)
@@ -263,6 +283,8 @@ for prop MEMBER and VALUES"
                                      (operation (eql put))
                                      (prop      symbol)
                                      value)
+  "Method of occ-do-impl-operation on occ-obj-tsk OBJ for put.
+Set the in-memory PROPERTY of OBJ to VALUE."
   (let ((tsk (occ-obj-tsk obj)))
     (occ-debug "(occ-do-impl-operation occ-obj-tsk): operation %s prop %s" operation prop)
     (occ-obj-set-property tsk prop
@@ -272,6 +294,9 @@ for prop MEMBER and VALUES"
                                      (operation (eql remove))
                                      (prop      symbol)
                                      value)
+  "Method of occ-do-impl-operation on occ-obj-tsk OBJ for remove.
+Remove VALUE from the in-memory list valued PROPERTY of OBJ.
+Signals occ-error when PROPERTY is not list valued."
   (let ((tsk (occ-obj-tsk obj)))
     (occ-debug "(occ-do-impl-operation occ-obj-tsk): operation %s prop %s" operation prop)
     (if (occ-obj-list-p obj prop)
@@ -286,6 +311,8 @@ for prop MEMBER and VALUES"
                                      (operation (eql delete))
                                      (prop      symbol)
                                      value)
+  "Method of occ-do-impl-operation on occ-obj-tsk OBJ for delete.
+Set the in-memory PROPERTY of OBJ to nil."
   (occ-obj-set-property tsk prop nil))
 
 ;; (cl-defmethod occ-do-impl-operation ((obj       occ-obj-tsk)
@@ -306,10 +333,12 @@ for prop MEMBER and VALUES"
 (defvar occ-property-method-skeleton
   '(
     (cl-defmethod occ-obj-impl-occ-prop-p ((prop (eql PROPERTY)))
+      "Template method telling that PROPERTY is a known occ property."
       t)
     (cl-defmethod occ-obj-impl-prop= ((prop (eql PROPERTY))
                                       prop-value
                                       value)
+      "Template prop= comparing PROPERTY value PROP-VALUE with VALUE."
       (occ-pu-string= prop-value
                       value))
     (cl-defmethod occ-obj-impl-get ((ctx occ-ctx)
@@ -330,6 +359,9 @@ for prop MEMBER and VALUES"
     (cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
                                         (prop (eql PROPERTY))
                                         (vdirector number))
+      "Template checkout method visiting the file stored in PROPERTY.
+VDIRECTOR selects which value variant of PROPERTY to use for the
+OCC-OBJ-TSK OBJ."
       (require 'magit-git)
       (let* ((tsk        (occ-obj-tsk obj))
              (prop-value (occ-obj-pvalue tsk
@@ -372,6 +404,7 @@ for prop MEMBER and VALUES"
       (unless (string= value "")
         value))
     (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql PROPERTY)))
+      "Template method telling that PROPERTY ranks are inheritable."
       t)
     (cl-defmethod occ-obj-impl-require-p ((obj occ-obj-tsk)
                                           (operation (eql _operation_))

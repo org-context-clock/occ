@@ -58,6 +58,7 @@
 
 (defvar occ-helm-select-buffer-name " *helm: occ select*")
 (defun occ-obj-helm-select-buffer ()
+  "Return the name of the helm buffer used by OCC selection sessions."
   occ-helm-select-buffer-name)
 
 ;; checkout spaceline--helm-buffer-ids variable

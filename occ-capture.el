@@ -50,6 +50,8 @@
                                 return-to-marker
                                 win-config
                                 lines)
+  "Insert LINES as a subtree into the org entry at ORG-MARKER.
+Modeled on org-capture-place-entry and returns t."
   ;; taken from org-capture-place-entry
   (lotus-with-marker org-marker
     (let ((org-text (string-join lines "\n"))
@@ -79,6 +81,9 @@
                                 return-to-marker
                                 win-config
                                 lines)
+  "Store the captured text as plain text in the entry at ORG-MARKER.
+Skips meta data and drawers and marks the inserted region for
+later kill."
   (lotus-with-marker org-marker
     (if t ;; (org-capture-get :prepend)
         ;; Skip meta data and drawers.
@@ -204,6 +209,9 @@
 ;;       (setq txt (replace-match "" t t txt)))
 ;;     (setq lines (and (not (equal "" txt)) (org-split-string txt "\n")))))
 (defun occ-capture-capture ()
+  "Return the captured buffer text as a list of cleaned lines.
+Strips leading comment lines and trailing whitespace from the
+buffer string and splits it on newlines."
   (let ((txt (prog1 (buffer-string)))
         lines)
     (while (string-match "\\`# .*\n[ \t\n]*" txt)
@@ -214,14 +222,20 @@
 
 
 (defun occ-capture-set-type (type)
+  "Set the :type of occ-capture-cmd-local-plist to TYPE."
   (plist-put occ-capture-cmd-local-plist
              :type type))
 (defun occ-capture-get-type ()
+  "Return the :type stored in occ-capture-cmd-local-plist."
   (plist-get occ-capture-cmd-local-plist
              :type))
 
 
 (defun occ-capture-star ()
+  "Insert a picked org-capture+ template or a literal asterisk.
+At column zero the template picked with
+occ-obj-capture+-helm-select-template is inserted and the capture
+type is set to entry."
   (interactive)
   (if (= 0
          (current-column))
@@ -265,6 +279,8 @@
 
 (defun occ-capture-kill (org-marker
                          win-config)
+  "Kill the *Occ Capture* buffer and restore WIN-CONFIG.
+Signals occ-error when WIN-CONFIG is nil."
   (if win-config
       (progn
         (set-window-configuration win-config))
@@ -272,28 +288,37 @@
   (kill-buffer (get-buffer occ-capture-buffer-name)))
 
 (defun occ-capture-refile ()
+  "Stub: not yet implemented."
   (interactive))
 
 (defun occ-capture-replace-template ()
+  "Stub: not yet implemented."
   (interactive))
 
 
 (defvar occ-capture-cmd-local-plist nil)
 (make-variable-buffer-local 'occ-capture-cmd-local-plist)
 (defun occ-capture-cmd (cmd)
+  "Run the command function stored for CMD.
+Looks CMD up in occ-capture-cmd-local-plist and funcalls it when
+present."
   (let ((cmd-fn (plist-get occ-capture-cmd-local-plist cmd)))
     (if cmd-fn
         (funcall cmd-fn))))
 (defun occ-capture-cmd-finalize ()
+  "Finalize the capture by running the stored finalize command."
   (interactive)
   (occ-capture-cmd :finalize))
 (defun occ-capture-cmd-kill ()
+  "Kill the capture by running the stored kill command."
   (interactive)
   (occ-capture-cmd :kill))
 (defun occ-capture-cmd-refile ()
+  "Refile the capture by running the stored refile command."
   (interactive)
   (occ-capture-cmd :refile))
 (defun occ-capture-cmd-replace-template ()
+  "Replace the template by running the stored command."
   (interactive)
   (occ-capture-cmd :replace-template))
 (defvar occ-capture-mode-map
@@ -327,6 +352,9 @@
                                success-fun
                                fail-fun
                                run-before)
+  "Build the finalize and kill closures for a capture session.
+Asserts RETURN-TO-MARKER and returns a plist with :finalize and
+:kill closures over ORG-MARKER and WIN-CONFIG."
   (occ-assert return-to-marker)
   (occ-assert (marker-buffer return-to-marker))
   (occ-message "build: return-to-marker = %s" return-to-marker)
@@ -382,6 +410,9 @@
 (cl-defun occ-do-capture-add (marker
                              &key
                              win-config)
+  "Open the *Occ Capture* buffer for MARKER in a timed window.
+Prepares the capture buffer with occ-add-capture-buffer and cleans
+up the window when the capture aborts."
   (occ-assert marker)
   (occ-assert (marker-buffer marker))
   (let ((win-timeout     7)

@@ -83,11 +83,15 @@
 ;;{{ currfile
 
 (cl-defmethod occ-obj-impl-occ-prop-p ((prop (eql currfile)))
+  "Impl-occ-prop-p specialization for the currfile property:
+marks currfile as an OCC introduced property."
   t)
 
 (cl-defmethod occ-obj-impl-prop= ((prop (eql currfile))
                                   prop-value
                                   value)
+  "Impl-prop= specialization for the currfile property: VALUE
+matches PROP-VALUE when both name the same file."
   (occ-pu-file= prop-value
                 value))
 (cl-defmethod occ-obj-impl-rank ((tsk occ-obj-tsk)
@@ -112,15 +116,21 @@
     currfile))
 (cl-defmethod occ-obj-impl-list-p ((mrk marker)
                                    (prop (eql currfile)))
+  "Impl-list-p specialization for the currfile property: returns
+t so currfile counts as a list valued property on MARKER."
   (ignore prop)
   t)
 
 (cl-defmethod occ-obj-impl-to-org ((prop (eql currfile))
                                    value)
+  "Impl-to-org specialization for the currfile property: VALUE is
+already an org compatible string."
   (ignore prop)
   value)
 (cl-defmethod occ-obj-impl-from-org ((prop (eql currfile))
                                      value)
+  "Impl-from-org specialization for the currfile property: VALUE
+is kept unchanged as the org drawer string."
   (ignore prop)
   value)
 (cl-defmethod occ-obj-impl-get ((user occ-user-agent)
@@ -138,6 +148,8 @@
 (cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
                                     (prop (eql currfile))
                                     (vdirector number))
+  "Do-impl-checkout specialization for the currfile property:
+find-file the currfile value of TSK selected by VDIRECTOR."
   (let* ((tsk  (occ-obj-tsk obj))
          (file (occ-obj-pvalue tsk
                                prop
@@ -146,6 +158,8 @@
            (find-file file)
          (occ-debug "occ-do-impl-checkout: %s value ruturned for prop %s" file prop))))
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql currfile)))
+  "Impl-inheritable-p specialization for the currfile property:
+the rank propagates up to ancestor tasks."
   t)
       ;;}}
 
@@ -157,11 +171,15 @@
 ;;{{ root
 
 (cl-defmethod occ-obj-impl-occ-prop-p ((prop (eql root)))
+  "Impl-occ-prop-p specialization for the root property: marks
+root as an OCC introduced property."
   t)
 
 (cl-defmethod occ-obj-impl-prop= ((prop (eql root))
                                   prop-value
                                   value)
+  "Impl-prop= specialization for the root property: VALUE matches
+PROP-VALUE by directory containment."
   (occ-pu-file-in-dir-p prop-value
                         value))
 (cl-defmethod occ-obj-impl-rank ((tsk occ-obj-tsk)
@@ -185,14 +203,20 @@
         (directory-file-name (dirname-of-file file)))))
 (cl-defmethod occ-obj-impl-list-p ((mrk marker)
                                    (prop (eql root)))
+  "Impl-list-p specialization for the root property: returns t so
+root counts as a list valued property on MARKER."
   (ignore prop)
   t)
 (cl-defmethod occ-obj-impl-to-org ((prop (eql root))
                                    value)
+  "Impl-to-org specialization for the root property: VALUE is
+already an org compatible string."
   (ignore prop)
   value)
 (cl-defmethod occ-obj-impl-from-org ((prop (eql root))
                                      value)
+  "Impl-from-org specialization for the root property: VALUE is
+kept unchanged as the org drawer string."
   (ignore prop)
   value)
 (cl-defmethod occ-obj-impl-get ((user occ-user-agent)
@@ -209,6 +233,8 @@
 (cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
                                     (prop (eql root))
                                     (vdirector number))
+  "Do-impl-checkout specialization for the root property:
+find-file the root directory value of TSK selected by VDIRECTOR."
   (let* ((tsk (occ-obj-tsk obj))
          (dir (occ-obj-pvalue tsk
                               prop
@@ -218,6 +244,8 @@
       (occ-debug "occ-do-impl-checkout: %s value ruturned for prop %s" dir prop))))
 
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql root)))
+  "Impl-inheritable-p specialization for the root property: the
+rank propagates up to ancestor tasks."
   t)
       ;;}}
 
@@ -230,10 +258,14 @@
 
 
 (cl-defmethod occ-obj-impl-occ-prop-p ((prop (eql git-branch)))
+  "Impl-occ-prop-p specialization for the git-branch property:
+marks git-branch as an OCC introduced property."
   t)
 (cl-defmethod occ-obj-impl-prop= ((prop (eql git-branch))
                                   prop-value
                                   value)
+  "Impl-prop= specialization for the git-branch property: VALUE
+matches PROP-VALUE when vc root and branch name both match."
   (let ((prop-val-list (when prop-value
                          (split-string prop-value "::")))
         (val-list      (when value
@@ -285,6 +317,9 @@
 (cl-defmethod occ-do-impl-checkout ((obj occ-obj-tsk)
                                     (prop (eql git-branch))
                                     (vdirector number))
+  "Do-impl-checkout specialization for the git-branch property:
+run magit-checkout for the branch VALUE of TSK selected by
+VDIRECTOR."
   (require 'magit-git)
   (require 'magit-process)
   (let* ((tsk        (occ-obj-tsk obj))
@@ -338,6 +373,8 @@
   (unless (string= value "")
     value))
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql git-branch)))
+  "Impl-inheritable-p specialization for the git-branch property:
+the rank propagates up to ancestor tasks."
   t)
 
 ;; (cl-defmethod occ-obj-impl-require-p ((obj occ-obj-tsk)
@@ -447,6 +484,9 @@
 (cl-defmethod occ-obj-impl-rank ((tsk occ-obj-tsk)
                                  (ctx null)
                                  (prop (eql timebeing)))
+  "Impl-rank specialization for the timebeing property with a null
+CTX: score the remaining timebeing minutes of TSK against its
+clock sum on a 0 to 100 scale."
   (ignore prop)
   (let ((timebeing (occ-obj-get-property tsk
                                          'timebeing)))
@@ -466,11 +506,15 @@
 
 (cl-defmethod occ-obj-impl-list-p ((mrk marker)
                                    (prop (eql timebeing)))
+  "Impl-list-p specialization for the timebeing property: returns
+nil so timebeing is treated as single valued on MARKER."
   (ignore prop)
   nil)
 
 (cl-defmethod occ-obj-impl-to-org ((prop (eql timebeing))
                                    value)
+  "Impl-to-org specialization for the timebeing property: convert
+a numeric VALUE to its string form or the empty string."
   (ignore prop)
   (if (numberp value)
       (number-to-string value)
@@ -478,6 +522,8 @@
 
 (cl-defmethod occ-obj-impl-from-org ((prop (eql timebeing))
                                      value)
+  "Impl-from-org specialization for the timebeing property: parse
+VALUE as a number with 0 as fallback."
   (ignore prop)
   (if (stringp value)
       (or (string-to-number value)
@@ -499,6 +545,8 @@
                                       (operation (eql increment))
                                       (prop (eql timebeing))
                                       values)
+  "Impl-require-p specialization for the timebeing property and
+increment OPERATION: required only when TSK is currently clocked."
   (ignore operation)
   (ignore prop)
   (ignore values)
@@ -507,6 +555,9 @@
 (cl-defmethod occ-obj-impl-default ((obj occ-obj-tsk)
                                     (prop (eql timebeing))
                                     (operation (eql increment)))
+  "Impl-default specialization for the timebeing property and
+increment OPERATION: a default VALUE of 10 minutes when TSK is
+currently clocked."
   (ignore prop)
   (ignore operation)
   (when (occ-obj-current-p obj)
@@ -516,6 +567,9 @@
                                      (operation (eql increment))
                                      (prop (eql timebeing))
                                      values)
+  "Do-impl-operation specialization for the timebeing property
+and increment OPERATION on TSK: Stub: not yet implemented (signals
+occ-error)."
   (ignore operation)
   (ignore values)
   (let ((tsk    (occ-obj-tsk obj)))
@@ -528,6 +582,9 @@
                                      (operation (eql increment))
                                      (prop (eql timebeing))
                                      values)
+  "Do-impl-operation specialization for the timebeing property and
+increment OPERATION on MARKER: Stub: not yet implemented (signals
+occ-error)."
   (ignore obj)
   (ignore operation)
   (ignore values)
@@ -540,11 +597,15 @@
 
 (cl-defmethod occ-obj-valid-p ((operation (eql increment))
                                (prop      (eql timebeing)))
+  "Occ-obj-valid-p specialization for the timebeing property and
+increment OPERATION: increment is a valid operation for timebeing."
   (ignore prop)
   (ignore operation)
   t)
 
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql timebeing)))
+  "Impl-inheritable-p specialization for the timebeing property:
+the rank does not propagate to ancestor tasks."
   nil)
 
 ;; Timebeing property of task (not fully implemented) will use for keeping a task clocked in for given time:1 ends here
@@ -568,6 +629,8 @@
       (occ-rank-percentage 0))))
 
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql status)))
+  "Impl-inheritable-p specialization for the status property: the
+rank propagates up to ancestor tasks."
   t)
 
 ;; STATUS property of task:1 ends here
@@ -589,6 +652,8 @@
         (occ-rank-percentage 0))))
 
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql key)))
+  "Impl-inheritable-p specialization for the key property: the
+rank does not propagate to ancestor tasks."
   nil)
 
 ;; Key property of task for setting arbitrary rank:1 ends here
@@ -599,6 +664,9 @@
 (cl-defmethod occ-obj-impl-rank ((tsk  occ-obj-tsk)
                                  (ctx  null)
                                  (prop (eql current-clock)))
+  "Impl-rank specialization for the current-clock property with a
+null CTX: rank 100 when TSK is the task currently clocked by
+org-clock else 0."
   (ignore prop)
   (let* ((tsk-marker (occ-obj-get-property tsk 'marker)))
     (ignore tsk-marker)
@@ -608,6 +676,8 @@
       (occ-rank-percentage 0))))
 
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql current-clock)))
+  "Impl-inheritable-p specialization for the current-clock
+property: the rank does not propagate to ancestor tasks."
   nil)
 
 ;; Current clock status property of task (will rank based on task is currently clocking-in or not):1 ends here
@@ -618,6 +688,9 @@
 ;;{{ sub-tree
 (cl-defmethod occ-obj-readprop ((obj occ-obj-ctx-tsk)
                                 (prop (eql subtree)))
+  "Occ-obj-readprop specialization for the subtree property: pick
+an org subtree file with ido and return its name relative to the
+default directory."
   (let ((tsk (occ-obj-tsk obj))
         (ctx (occ-obj-ctx obj)))
     (ignore tsk)
@@ -635,6 +708,8 @@
                           default-directory))))
 
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql subtree)))
+  "Impl-inheritable-p specialization for the subtree property: the
+rank does not propagate to ancestor tasks."
   nil)
 ;;}}
 
@@ -660,6 +735,8 @@
         (occ-rank-percentage 0))))
 
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql deadline)))
+  "Impl-inheritable-p specialization for the deadline property:
+the rank propagates up to ancestor tasks."
   t)
 
 ;; DEADLINE property of task:1 ends here
@@ -683,6 +760,8 @@
         (occ-rank-percentage 0))))
 
 (cl-defmethod occ-obj-impl-inheritable-p ((prop (eql scheduled)))
+  "Impl-inheritable-p specialization for the scheduled property:
+the rank propagates up to ancestor tasks."
   t)
 
 ;; SCHEDULED property of task:1 ends here

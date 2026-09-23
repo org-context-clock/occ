@@ -58,10 +58,12 @@
 
 
 (defun occ-obj-properties-for-rank ()
+  "Return the combined properties used to rank tasks and contexts."
   (delete-dups (append (occ-obj-properties-to-calculate-rank 'occ-obj-tsk 'null)
                        (occ-obj-properties-to-calculate-rank 'occ-obj-tsk 'occ-obj-ctx))))
 
 (defun occ-do-assert-sexp-ineq (ineq)
+  "Assert sexp inequality INEQ has the expected operator and operands."
   (occ-assert (= 3 (length ineq)))
   (occ-assert (memq (car ineq) '(> < =)))
   (occ-assert (not (cl-every #'consp (cdr ineq))))
@@ -101,6 +103,7 @@
 ;; (occ-do-assert-math-ineq-has-prop (occ-obj-ineq-wash (occ-obj-math-read-expr "root + nil") 'key) 'key)
 
 (defun occ-obj-math-var (sym)
+  "Return a calc var expression for SYM."
   ;;(math-read-expr (symbol-name sym))
   `(var ,sym ,(intern (concat "var-" (symbol-name sym)))))
 (defun occ-math-read-sexp-expr (sexp)
@@ -113,6 +116,7 @@
         (t sexp)))
 ;; (occ-math-read-sexp-expr '(> current-clock timebeing))
 (defun occ-math-read-str-expr (ineq-str)
+  "Parse the inequality string INEQ-STR into a calc expression."
   (let ((replace-op-alist '(("-" . "XXXMINUSXXX")
                             ("_" . "XXXEXPOXXX"))))
     (cl-labels ((replace-op-char (str op-char op-replacement)
@@ -146,6 +150,7 @@
                         ((consp ineq)   (occ-math-read-sexp-expr ineq))
                         (t (occ-error "ineq %s not string or list" ineq)))))
 (defun occ-obj-ineq-wash (ineq property)
+  "Replace nil and this placeholders in INEQ with the PROPERTY variable."
   (cond ((and (listp ineq)
               (eql 'var (car ineq))
               (memq (cadr ineq) '(nil this)))
@@ -157,6 +162,7 @@
 ;; (occ-obj-ineq-wash (occ-obj-math-read-expr "a + nil") 'xx)
 ;; (occ-do-assert-ineq (occ-obj-ineq-wash (occ-obj-math-read-expr "root + nil") 'key))
 (defun occ-obj-topo-sort-ineqs-expr (inequalities)
+  "Return a topological ordering of the inequality graph INEQUALITIES."
   (let ((graph     '())
         (in-degree '()))
     (dolist (ineq inequalities)
@@ -198,17 +204,21 @@
             (list :in-degree in-degree)
             (list :sorted-vars sorted-vars)))))
 (defun occ-obj-gen-constant (prefix)
+  "Return a fresh gensym whose name starts with PREFIX."
   (gensym (concat prefix "")))
 (defun occ-obj-gen-math-constant (prefix)
+  "Return a calc var for a fresh constant named with PREFIX."
   (let ((const-var (occ-obj-gen-constant prefix)))
     `,(occ-obj-math-var const-var)))
 (defun occ-obj-gen-ineq2eq-constant (op)
+  "Return slack constants converting an OP inequality into an equation."
   (let* ((calc-const-geq-var (occ-obj-gen-math-constant "cxgeq"))
          (calc-const-gth-var (occ-obj-gen-math-constant "cxgth")))
     (if (memq op '(calcFunc-gt calcFunc-lt))
         `(+ ,calc-const-gth-var ,calc-const-geq-var)
       calc-const-geq-var)))
 (defun occ-obj-ineq2eq (ineq)
+  "Convert inequality INEQ into an equivalent calc equation with slack."
   (cond ((and (consp ineq)
               (symbolp (car ineq))
               (memq (car ineq) '(calcFunc-gt calcFunc-geq calcFunc-lt calcFunc-leq)))
@@ -224,24 +234,31 @@
                             (mapcar #'occ-obj-ineq2eq (cdr ineq))))
         (t ineq)))
 (defun occ-obj-ineqs2eqs (ineqs)
+  "Convert the list of inequalities INEQS into equivalent equations."
   (mapcar #'occ-obj-ineq2eq
           ineqs))
 (defun occ-obj-ineqs-from-map (ineqs-map)
+  "Return all inequalities stored in the INEQS-MAP alist."
   (apply #'append
          (mapcar #'cdr ineqs-map)))
 (defun occ-obj-vars-from-syms (syms)
+  "Return calc var expressions for the symbols in SYMS."
   (mapcar #'(lambda (var) (occ-obj-math-var var))
           syms))
 (defun occ-obj-vars-from-map (ineqs-map)
+  "Return calc var expressions for the property keys of INEQS-MAP."
   (occ-obj-vars-from-syms (mapcar #'car
                                   ineqs-map)))
 (defun occ-obj-build-math-solve-expr (eqs vars)
+  "Return a calc solve expression for equations EQS over variables VARS."
   `(calcFunc-solve (vec ,@(occ-obj-ineqs2eqs eqs))
                    (vec ,@vars)))
 (defun occ-obj-normalize-eqs (eqs vars)
+  "Return the calc-normalized solution of equations EQS over VARS."
   (calc-normalize (occ-obj-build-math-solve-expr eqs
                                                  vars)))
 (defun occ-obj-eqs-normalized-p (eqs vars)
+  "Return non-nil when EQS over VARS have a consistent solution."
   (let ((sol (occ-obj-normalize-eqs eqs
                                     vars)))
     (if (> (length (cdadr sol))
@@ -250,12 +267,15 @@
                   'calcFunc-solve))
       t)))
 (defun occ-obj-normalize-ineqs-map (ineqs-map)
+  "Solve the inequalities in INEQS-MAP and return normalized results."
   (occ-obj-normalize-eqs (occ-obj-ineqs2eqs (occ-obj-ineqs-from-map ineqs-map))
                          (occ-obj-vars-from-map ineqs-map)))
 (defun occ-obj-eqs-exprs (eqs)
+  "Return the right-hand expressions of the calc solution EQS."
   (mapcar #'caddr
           (cdr eqs)))
 (defun occ-obj-find-expr-vars (expr)
+  "Return the calc variable symbols referenced by expression EXPR."
   (cond ((and (listp expr)
               (eql 'var (car expr)))
          (list (cadr expr)))
@@ -267,14 +287,17 @@
                    (apply #'append  rest-els))))
         (t nil)))
 (defun occ-obj-find-exprs-vars (exprs)
+  "Return the distinct calc variable symbols referenced by EXPRS."
   (delete nil
           (delete-dups (apply #'append
                               (mapcar #'occ-obj-find-expr-vars exprs)))))
 (defun occ-obj-find-eqs-vars (eqs)
+  "Return the distinct variables appearing in the solution EQS."
   (occ-obj-find-exprs-vars (occ-obj-eqs-exprs eqs)))
 
 
 (defun occ-do-add-ineq-internal (property ineq)
+  "Add priority inequality INEQ for PROPERTY, rejecting circular ones."
   (let ((ineq (occ-obj-ineq-wash (occ-obj-math-read-expr ineq)
                                  property)))
     (when (and (occ-do-assert-math-ineq-has-prop-p ineq property)
@@ -302,14 +325,17 @@
                      property))))))
 
 (defun occ-obj-ineq-internal (property)
+  "Return the priority inequalities declared for PROPERTY."
   (cdr (assoc property
               occ-property-priority-inequalities)))
 
 (defun occ-obj-priority-internal (property)
+  "Return the computed priority value stored for PROPERTY."
   (cdr (assoc property
               occ-property-priorities)))
 
 (defun occ-obj-const-value (const)
+  "Return the value used to instantiate free constant CONST."
   (if occ-config-ineq-const-value
       (if (fboundp occ-config-ineq-const-value)
           (funcall occ-config-ineq-const-value)
@@ -317,6 +343,7 @@
       (random 99)))
 
 (defun occ-obj-equal-consts-exprs (consts)
+  "Return calc equations assigning a value to each constant in CONSTS."
   (cons 'vec
         (mapcar #'(lambda (c)
                     `(calcFunc-eq ,(occ-obj-math-var c)
@@ -324,10 +351,12 @@
                 consts)))
 
 (defun occ-obj-eqality2pair (eq)
+  "Return a pair of the variable and value held by equality EQ."
   (cons (cadadr eq)
         (caddr eq)))
 
 (defun ooc (ineqs-map)
+  "Return the solved priority pairs for the inequalities in INEQS-MAP."
   (let* ((sols   (occ-obj-normalize-ineqs-map ineqs-map))
          (consts (occ-obj-find-eqs-vars sols)))
     (while consts
@@ -339,6 +368,7 @@
             (cdr sols))))
 
 (defun occ-obj-ineq-map-solution (ineqs-map)
+  "Solve INEQS-MAP and return its property and value pairs."
   (let* ((sols   (occ-obj-normalize-ineqs-map ineqs-map))
          (consts (occ-obj-find-eqs-vars sols)))
     (while consts
@@ -350,6 +380,7 @@
             (cdr sols))))
 
 (defun occ-do-set-prop-priorities ()
+  "Recompute and store the property priorities from the inequalities."
   (setq occ-property-priorities (occ-obj-ineq-map-solution occ-property-priority-inequalities)))
 
 

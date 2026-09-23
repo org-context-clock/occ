@@ -96,6 +96,11 @@ only argument required for some other further processing"
                                     (prop      symbol)
                                     vdirector
                                     &key param-only)
+  "Build a checkout helm callable for the occ-obj-tsk OBJ.
+Combines a prompt from occ-obj-gen-checkout-prompt and a callback from
+occ-obj-gen-checkout-fun into an occ-callable-normal keyed by a fresh
+keyword.  PARAM-ONLY makes the callback return the parameter list
+instead of calling occ-do-op-prop-checkout."
   (occ-debug "occ-obj-gen-checkout: checking prop %s" prop)
   (let ((prompt (occ-obj-gen-checkout-prompt obj
                                              prop
@@ -115,6 +120,10 @@ only argument required for some other further processing"
                                                 (prop      symbol)
                                                 vdirector
                                                 &key param-only)
+  "Build a checkout callable for PROP on the occ-obj-tsk OBJ when required.
+Checks occ-obj-require-p on the context with operation checkout for the
+value directed by VDIRECTOR then delegates to occ-obj-gen-checkout when
+approved and returns nil otherwise.  PARAM-ONLY passes through."
   (occ-debug "occ-obj-gen-checkout: checking prop %s" prop)
   (let ((tsk       (occ-obj-tsk obj))
         (ctx       (occ-obj-ctx obj))
@@ -136,6 +145,10 @@ only argument required for some other further processing"
 (cl-defmethod occ-obj-gen-checkouts-if-required ((obj  occ-obj-tsk)
                                                  (prop symbol)
                                                  &key param-only)
+  "Generate checkout callables for each element of PROP on OBJ.
+Maps occ-obj-gen-checkout-if-required over the occ-obj-vdirectors of
+PROP when it holds a value and only logs when it does not.  PARAM-ONLY
+passes through."
   (if (occ-obj-get-property obj
                             prop)
       (mapcar #'(lambda (vdirector)
@@ -152,6 +165,10 @@ only argument required for some other further processing"
 (cl-defmethod occ-obj-gen-checkouts-if-required ((obj occ-obj-tsk) ;cover OCC-OBJ-CTX-TSK also
                                                  (prop null)
                                                  &key param-only)
+  "Generate checkout callables for every checkoutable property of OBJ.
+Expands occ-obj-properties-to-checkout over the task part of OBJ
+collecting per-property results.  PROP is nil.  PARAM-ONLY passes
+through and nil results are removed."
   (let* ((props        (occ-obj-properties-to-checkout (occ-obj-tsk obj)))
          (checkout-ops (mapcan #'(lambda (prop)
                                    (occ-obj-gen-checkouts-if-required obj
@@ -165,22 +182,31 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-each-prop-checkouts ((obj null)
                                                &key param-only)
+  "Return no checkout callables when OBJ is null.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
 
 (cl-defmethod occ-obj-gen-each-prop-checkouts ((obj occ-tsk) ;cover OCC-TSK, OCC-TREE-TSK, OCC-LIST-TSK only
                                                &key param-only)
+  "Return no checkout callables for a plain occ-tsk OBJ.
+PARAM-ONLY is ignored."
   nil)
 
 (cl-defmethod occ-obj-gen-each-prop-checkouts ((obj occ-obj-tsk) ;cover OCC-OBJ-CTX-TSK also
                                                &key param-only)
+  "Generate checkout callables for all checkoutable properties of OBJ.
+Delegates to occ-obj-gen-checkouts-if-required with PROP nil.
+PARAM-ONLY passes through."
   (occ-obj-gen-checkouts-if-required obj
                                      nil
                                      :param-only param-only))
 
 (cl-defmethod occ-obj-gen-each-prop-checkouts ((obj occ-obj-ctx)
                                                &key param-only)
+  "Return no checkout callables for a plain occ-obj-ctx OBJ.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
@@ -188,6 +214,10 @@ only argument required for some other further processing"
 
 (cl-defun occ-obj-gen-each-prop-fast-checkouts (obj
                                                 &key param-only)
+  "Generate fast checkout callables for OBJ and its task part.
+Appends the checkout callables generated for OBJ itself with those
+generated for its task from occ-obj-gen-each-prop-checkouts.
+PARAM-ONLY passes through."
   (append (occ-obj-gen-each-prop-checkouts obj
                                            :param-only param-only)
           (occ-obj-gen-each-prop-checkouts (occ-obj-tsk obj)
@@ -196,12 +226,18 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-simple-checkouts ((obj null)
                                             &key param-only)
+  "Return no simple checkout callables when OBJ is null.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)
 
 (cl-defmethod occ-obj-gen-simple-checkouts ((obj occ-obj-tsk)
                                             &key param-only)
+  "Generate the single simple checkout callable for the occ-obj-tsk OBJ.
+Returns one occ-callable-normal with a Checkout prompt whose callback
+runs occ-do-op-props-checkout to checkout all properties.  PARAM-ONLY
+is ignored."
   (ignore param-only)
   (list (occ-obj-make-callable-normal :checkout
                                   (format "Checkout %s" (occ-obj-Format obj))
@@ -210,6 +246,8 @@ only argument required for some other further processing"
 
 (cl-defmethod occ-obj-gen-simple-checkouts ((obj occ-obj-ctx)
                                             &key param-only)
+  "Return no simple checkout callables for a plain occ-obj-ctx OBJ.
+PARAM-ONLY is ignored."
   (ignore obj)
   (ignore param-only)
   nil)

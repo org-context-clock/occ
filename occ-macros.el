@@ -44,16 +44,21 @@
 
 (defvar occ-testing-status nil)
 (defun occ-enable-testing ()
+  "Enable occ testing so occ-testing blocks are evaluated."
   (setq occ-testing-status t))
 (defun occ-disable-testing ()
+  "Disable occ testing so occ-testing blocks are skipped."
   (setq occ-testing-status nil))
 (defun occ-toggle-testing ()
+  "Toggle whether occ-testing blocks are evaluated."
   (setq occ-testing-status (not occ-testing-status)))
 (defmacro occ-testing (&rest body)
+  "Evaluate BODY when occ testing is enabled, otherwise expand to nil."
   `(when occ-testing-status ,@body))
 
 
 (defmacro occ-mac-with-marker (marker &rest body)
+  "Evaluate BODY with marker bound to MARKER in a local let form."
   `(let ((marker ,marker))
      (progn
        ,@body)))
@@ -61,6 +66,9 @@
 
 
 (defmacro occ-mac-with-org-marker (mrk &rest body)
+  "Evaluate BODY at the org heading referenced by MRK.
+Switches to the buffer of MRK, moves to the heading there, and runs
+BODY with point at that heading."
   `(with-current-buffer (marker-buffer ,mrk)
      (save-excursion
        (goto-char ,mrk)
@@ -79,12 +87,16 @@
 ;; (put 'occ-debug-return 'lisp-indent-function 1)
 
 (defmacro occ-debug-return (label &rest body)
+  "Evaluate BODY, ignoring LABEL, and return its value."
   (ignore label)
   `(progn ,@body))
 (put 'occ-debug-return 'lisp-indent-function 1)
 
 
 (defmacro occ-try-until (tries test &rest body)
+  "Evaluate BODY up to TRIES times while TEST stays non-nil.
+Decrements a counter each iteration and stops when it reaches zero
+or TEST becomes nil."
   `(let* ((total-tries ,tries)
           (try         total-tries))
      (while (and (> try 0)
@@ -95,6 +107,9 @@
 
 
 (defmacro occ-aggregate-rank (var property tsk aggregator &rest body)
+  "Aggregate rank over PROPERTY values of TSK into a total rank.
+Binds VAR to each value and evaluates BODY to compute a rank, then
+combines it with AGGREGATOR, returning the accumulated total."
   `(let ((values    (if (occ-obj-list-p tsk ,property)
                         (occ-obj-get-property ,tsk ,property)
                       (list (occ-obj-get-property ,tsk ,property))))
@@ -110,6 +125,8 @@
 
 ;;;###autoload
 (defmacro occ-defcommand (name args &rest body)
+  "Define a function NAME with argument list ARGS and BODY.
+Expands to a defun named NAME."
   `(progn
      (defun ,name ,args
        ,@body)))
@@ -117,6 +134,9 @@
 
 
 (defmacro occ-generate-plist-functions (prefix item)
+  "Generate plist accessor functions for PREFIX and ITEM.
+Defines a plist variable plus clear add set get and all-get
+functions whose names combine PREFIX and ITEM."
   (let* ((plist  (intern (concat (symbol-name prefix) "-" (symbol-name item) "s-plist")))
          (clear  (intern (concat (symbol-name prefix) "-" (symbol-name item) "-clear")))
          (add    (intern (concat (symbol-name prefix) "-" (symbol-name item) "-add")))
@@ -156,10 +176,12 @@
 
 ;; configs
 (defun occ-mkstr (&rest args)
+  "Concatenate ARGS into a string using princ."
   (with-output-to-string
     (dolist (a args) (princ a))))
 
 (defun occ-symb (&rest args)
+  "Intern the concatenation of ARGS as a symbol."
   (intern (apply #'occ-mkstr args)))
 
 
@@ -168,6 +190,9 @@
                                           suffix
                                           default
                                           &rest body)
+  "Generate enable, disable, toggle and value commands for an option.
+The option variable is named from PREFIX, NAME and SUFFIX and is
+initialized to DEFAULT; BODY runs after the commands are defined."
   (let* ((option      (occ-symb prefix name      suffix))
          (enable-fun  (occ-symb prefix 'enable-  name '-function))
          (disable-fun (occ-symb prefix 'disable- name '-function))
@@ -216,6 +241,9 @@
                                     suffix
                                     default
                                     &rest body)
+  "Generate enable, disable, toggle and value commands for an option.
+The option variable is named from PREFIX, NAME and SUFFIX and is
+initialized to DEFAULT; BODY runs after the commands are defined."
   (let* ((option      (occ-symb prefix name      suffix))
          (enable-fun  (occ-symb prefix 'enable-  name '-function))
          (disable-fun (occ-symb prefix 'disable- name '-function))
@@ -258,7 +286,9 @@
            (occ-debug "Define %s function" ',disable-fun))))))
 
 
-(defun occ-get-location ())
+(defun occ-get-location ()
+  "Stub: not yet implemented, currently returns nil."
+  nil)
 
 
 ;;;###autoload
@@ -271,15 +301,20 @@
 
 ;;;###autoload
 (defun occ-enable-condition-case-control-debug ()
+  "Enable verbose condition-case handling for debugging."
   (interactive)
   (setq occ-condition-case-control-debug t))
 
 ;;;###autoload
 (defun occ-disable-condition-case-control-debug ()
+  "Disable verbose condition-case handling for debugging."
   (interactive)
   (setq occ-condition-case-control-debug nil))
 
 (defmacro condition-case-control (var bodyform &rest handlers)
+  "Evaluate BODYFORM, optionally wrapping it in a condition-case.
+When condition-case control is enabled evaluate BODYFORM under
+condition-case with VAR and HANDLERS; otherwise just BODYFORM."
   (if occ-condition-case-control-debug
       `(condition-case ,var
            ,bodyform
@@ -287,6 +322,9 @@
     bodyform))
 (put 'condition-case-control 'lisp-indent-function 1)
 (defmacro occ-mac-condition-case-control (var bodyform &rest handlers)
+  "Evaluate BODYFORM, optionally wrapping it in a condition-case.
+When condition-case control is enabled evaluate BODYFORM under
+condition-case with VAR and HANDLERS; otherwise just BODYFORM."
   (if occ-condition-case-control-debug
       `(condition-case ,var
            ,bodyform
@@ -306,6 +344,10 @@
 
 (defmacro occ-run-unobtrusively (obtrusive &rest
                                            body)
+  "Evaluate BODY, interruptibly unless OBTRUSIVE is non-nil.
+When OBTRUSIVE is non-nil or the call is interactive run BODY
+directly; otherwise run it under while-no-input and return nil if
+user input arrives."
   `(progn
      (ignore ,obtrusive)
      (if (or obtrusive

@@ -76,6 +76,8 @@
 
 ;;;###autoload
 (defun occ-set-log-level (level)
+  "Set the occ log level to LEVEL and update the enabled levels.
+LEVEL must be a member of occ-log-levels."
   (interactive (list (intern (completing-read (format "Log level [%s]: " occ-log-level)
                                               (reverse occ-log-levels)
                                               nil
@@ -86,32 +88,39 @@
     (setq occ-log-current-levels (memq occ-log-level occ-log-levels))))
 ;;;###autoload
 (defun occ-clear-log-level ()
+  "Reset the occ log level to the default t."
   (occ-set-log-level t))
 
 
 ;;;###autoload
 (defun occ-enable-debug ()
+  "Set the occ log level to debug."
   (interactive)
   (occ-set-log-level :debug))
 
 ;;;###autoload
 (defun occ-disable-debug ()
+  "Reset the occ log level to the default t."
   (interactive)
   (occ-set-log-level t))
 
 
 ;;;###autoload
 (defun occ-enable-debug-uncond ()
+  "Enable unconditional occ debug output."
   (interactive)
   (setq occ-debug-uncond t))
 ;;;###autoload
 (defun occ-disable-debug-uncond ()
+  "Disable unconditional occ debug output."
   (interactive)
   (setq occ-debug-uncond nil))
 
 
 ;;;###autoload
 (defun occ-lwarn (level &rest args)
+  "Log ARGS with lwarn and message when LEVEL is enabled.
+Returns nil always."
   (when (or (null level)
             (memq level occ-log-current-levels))
     (apply #'lwarn 'occ level args)
@@ -119,6 +128,10 @@
   nil)
 
 (defun occ-debug-index (index fmt &rest args)
+  "Log FMT and ARGS at the debug level, prefixed by the caller name.
+When FMT is a string it is logged as a debug message with ARGS;
+otherwise FMT is treated as the level and the format and args come
+from ARGS.  INDEX selects the backtrace frame used for the caller."
   (let* ((strfmtp (stringp fmt))
          (level   (if strfmtp :debug fmt)))
     (when (memq level occ-log-current-levels)
@@ -133,41 +146,51 @@
 
 
 (defun occ-critical (fmt &rest args)
+  "Log FMT and ARGS as critical, then signal an error."
   (apply #'occ-lwarn :critical fmt args)
   (apply #'error fmt args))
 
 (defun occ-emergency (fmt &rest args)
+  "Log FMT and ARGS as emergency, then signal an error."
   (apply #'occ-lwarn :emergency fmt args)
   (apply #'error fmt args))
 
 (defun occ-error (fmt &rest args)
+  "Log FMT and ARGS as an error, then signal an error."
   (apply #'occ-lwarn :error fmt args)
   (apply #'error fmt args))
 
 (defun occ-warn (fmt &rest args)
+  "Log FMT and ARGS at the warning level."
   (apply #'occ-lwarn :warning fmt args))
 
 (defun occ-info (fmt &rest args)
+  "Log FMT and ARGS at the info level."
   (apply #'occ-lwarn :info fmt args))
 
 ;;;### autoload
 (defun occ-message (fmt &rest args)
+  "Display FMT and ARGS as a message."
   (apply #'message fmt args))
 
 (when nil
 
   (defun occ-debug (fmt &rest args)
+    "Log FMT and ARGS at the debug level."
     (apply #'occ-debug-index 3 fmt args))
 
   ;;;### autoload
   (defun occ-dmessage (fmt &rest args)
+    "Log FMT and ARGS at the dmessage level."
     (apply #'occ-debug-index 3 :dmessage fmt args))
 
  (defun occ-nodisplay (fmt &rest args)
+   "Log FMT and ARGS at the nodisplay level."
    (apply #'occ-lwarn :nodisplay fmt args))
 
  ;;;### autoload
  (defun occ-debug-uncond (&rest args)
+   "Log ARGS unconditionally when occ-debug-uncond is set."
    (when occ-debug-uncond
      (apply #'occ-lwarn nil args))))
 
@@ -178,15 +201,19 @@
 (fmakunbound 'occ-debug-uncond)
 
 (defmacro occ-debug (fmt &rest args)
+  "Expand to nil so occ-debug calls compile to no-ops."
   nil)
 
 (defmacro occ-dmessage (fmt &rest args)
+  "Expand to nil so occ-dmessage calls compile to no-ops."
   nil)
 
 (defmacro occ-nodisplay (fmt &rest args)
+  "Expand to nil so occ-nodisplay calls compile to no-ops."
   nil)
 
 (defmacro occ-debug-uncond (&rest args)
+  "Expand to nil so occ-debug-uncond calls compile to no-ops."
   nil)
 
 

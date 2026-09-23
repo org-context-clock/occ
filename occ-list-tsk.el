@@ -67,12 +67,18 @@ TSK-BUILDER-AT-POINT function e.g. occ-collect-tsk"
 (cl-defmethod occ-obj-drived-tsk-builder ((collection occ-list-collection)
                                           &optional
                                           subtree-level)
+  "Return the derived tsk builder for occ-list-collection.
+The returned function builds the flat task list of FILE with
+occ-list-tsk-build at the optional SUBTREE-LEVEL."
   #'(lambda (file)
       (occ-list-tsk-build file
                           collection
                           subtree-level)))
 
 (cl-defmethod occ-obj-build-tsks ((collection occ-list-collection))
+  "Build the task list of the occ-list-collection COLLECTION.
+Maps the derived builder over the collection roots and drops nil
+results. The limit and depth slots are currently ignored."
   (let ((depth (occ-obj-collection-depth collection))
         (limit (occ-obj-collection-limit collection))
         ;; TODO: use collection-limit to limit childs it can be null pr 0

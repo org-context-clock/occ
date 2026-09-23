@@ -92,29 +92,38 @@ return occ-return-label."
 
 
 (cl-defmethod occ-obj-return-in-labels-p (retval &rest label)
+  "Default method for a plain RETVAL: return RETVAL itself.
+Non-nil only when RETVAL is set.  LABEL is ignored."
   (ignore label)
   retval)
 
 (cl-defmethod occ-obj-return-in-labels-p ((retval occ-return) &rest label)
+  "Return non-nil when the label of occ-return RETVAL is one of LABEL."
   (memq (occ-return-label retval)
         label))
 
 
 (cl-defmethod occ-obj-return-get-value (retval)
+  "Default method for a plain RETVAL: return RETVAL itself."
   retval)
 
 (cl-defmethod occ-obj-return-get-value ((retval occ-return))
+  "Return the value carried by the occ-return RETVAL."
   (occ-return-value retval))
 
 
 (cl-defmethod occ-obj-return-get-label (retval)
+  "Default method for a plain RETVAL: return RETVAL itself."
   retval)
 
 (cl-defmethod occ-obj-return-get-label ((retval occ-return))
+  "Return the label of the occ-return RETVAL."
   (occ-return-label retval))
 
 
 (defun occ-specs ()
+  "Return the occ-cl-method-param-case template for the
+occ-obj-make-collection method signature."
   ;; (occ-cl-method-param-case '(occ-obj-make-collection (`((head ,val)) val)))
   (occ-cl-method-param-case '(occ-obj-make-collection (`(string symbol (eql ,val) list integer integer) val))))
 
@@ -136,6 +145,8 @@ return occ-return-label."
   
 
 (defun occ-valid-spec-p (spec)
+  "Return non-nil when SPEC is a valid collection spec kind.
+Only :tree and :list are valid."
   (memq spec (list :tree :list)))
 
 ;;; occ-obj-utils.el ends here

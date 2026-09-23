@@ -183,6 +183,8 @@
 (cl-defmethod occ-obj-priority-rank ((obj number)
                                      (ctx null)
                                      (prop symbol))
+  "Weight a NUMBER OBJ by the priority of PROP with CTX nil.
+  Signal occ-error when PROP has no priority."
   (let ((value    obj)
         (priority (occ-obj-priority prop)))
     (unless priority
@@ -193,6 +195,9 @@
 (cl-defmethod occ-obj-priority-rank ((obj number)
                                      (ctx null)
                                      (prop symbol))
+  "Weight a NUMBER OBJ by the priority of PROP with CTX nil.
+  Overrides the earlier method with the same specializers and
+  returns 0 when PROP has no priority."
   (let ((value obj)
         (priority (occ-obj-priority prop)))
     (if priority
@@ -395,6 +400,9 @@ method provided."))))
 
 (cl-defmethod occ-obj-operations-for-prop ((class symbol)
                                            (prop  symbol))
+  "Return the operations supported for PROP on class CLASS.
+  Collects operation symbols from occ-do-impl-operation method
+  signatures and drops add and remove unless PROP is list valued."
   ;; check about (occ-obj-list-p prop) also
   (let ((ops (append (occ-cl-method-param-values 'occ-do-impl-operation
                                                  (list '\` `(,class (eql ,'(\, val)) symbol t))
@@ -411,6 +419,8 @@ method provided."))))
 
 (cl-defmethod occ-obj-operations-for-prop ((obj  occ-obj-tsk)
                                            (prop symbol))
+  "Return the operations supported for PROP on task OBJ.
+  Collects over the classes of OBJ and removes duplicates."
   ;; check about (occ-obj-list-p prop) also
   (let ((ops (occ-cl-collect-on-classes #'(lambda (class)
                                             (occ-obj-operations-for-prop class
@@ -420,6 +430,8 @@ method provided."))))
 
 (cl-defmethod occ-obj-operations-for-prop ((obj  marker)
                                            (prop symbol))
+  "Return the operations supported for PROP on marker OBJ.
+  Collects over the classes of OBJ and removes duplicates."
   ;; check about (occ-obj-list-p prop) also
   (let ((ops (occ-cl-collect-on-classes #'(lambda (class)
                                             (occ-obj-operations-for-prop class
@@ -449,6 +461,9 @@ method provided."))))
 
 
 (defun occ-internal-remove-template-symbol (prop-list)
+  "Return PROP-LIST with template placeholder symbols removed.
+  Placeholders match the regex ^_.+_$ and stand for methods not
+  yet implemented for a property."
   (cl-remove-if #'(lambda (prop)
                     (string-match "^_.+_$" (symbol-name prop)))
                 prop-list))
@@ -509,6 +524,10 @@ method provided."))))
                                          (ctx occ-obj-ctx)
                                          (property symbol)
                                          (operation symbol))
+  "Return non-nil when OPERATION is valid for PROPERTY of TSK.
+  OPERATION must be among the operations supported for PROPERTY
+  and its list or scalar form must agree with the list valuedness
+  of PROPERTY in TSK and in context CTX."
   (when (memq operation
               (occ-obj-operations-for-prop obj
                                            property))
@@ -525,6 +544,8 @@ method provided."))))
                                          (ctx null)
                                          (property symbol)
                                          (operation symbol))
+  "Return non-nil when OPERATION is valid for PROPERTY of TSK.
+  Like the occ-obj-ctx method but with CTX nil."
   (when (memq operation
               (occ-obj-operations-for-prop obj
                                            property))
@@ -551,6 +572,8 @@ method provided."))))
                            (property symbol)
                            (operation symbol)
                            func)
+  "Map FUNC over the values of PROPERTY of TSK and context CTX.
+  The values come from occ-obj-values for OPERATION."
   (mapcar func
           (occ-obj-values tsk
                           ctx
@@ -561,6 +584,8 @@ method provided."))))
                            (property symbol)
                            (operation symbol)
                            func)
+  "Map FUNC over the values of PROPERTY of TSK for OPERATION.
+  The context CTX is nil."
   (mapcar func
           (occ-obj-values tsk
                           ctx
@@ -569,18 +594,23 @@ method provided."))))
 
 
 (cl-defmethod occ-obj-inheritable-p ((property symbol))
+  "Return non-nil when PROPERTY propagates to ancestor tasks."
   (occ-obj-intf-inheritable-p property))
 
 (cl-defmethod occ-obj-inheritable ((properties list))
+  "Return the inheritable properties among PROPERTIES."
   (cl-remove-if-not #'occ-obj-inheritable-p
                     properties))
 
 (cl-defmethod occ-obj-nonheritable ((properties list))
+  "Return the non inheritable properties among PROPERTIES."
   (cl-remove-if #'occ-obj-inheritable-p
                 properties))
 
 
 (cl-defmethod occ-obj-occ-prop-p ((prop symbol))
+  "Return non-nil when PROP is an OCC introduced property.
+  Such properties get the occ- prefixed org drawer keys."
   (occ-obj-intf-occ-prop-p prop))
 
 
@@ -588,6 +618,9 @@ method provided."))))
                                 (operation symbol)
                                 (prop      symbol)
                                 value)
+  "Apply OPERATION with VALUE to PROP of marker OBJ.
+  Delegates to occ-do-intf-operation which reads or writes the
+  org drawer entry for PROP."
   (occ-do-intf-operation obj
                          operation
                          prop
@@ -596,6 +629,10 @@ method provided."))))
                                 (operation symbol)
                                 (prop      symbol)
                                 value)
+  "Apply OPERATION with VALUE to PROP of task OBJ in org world.
+  Delegates to occ-do-intf-operation and when OPERATION is a
+  write also resets the cached rank of OBJ for PROP via
+  occ-obj-reset-prop-rank."
   (prog1
     (occ-do-intf-operation obj
                            operation
@@ -608,6 +645,7 @@ method provided."))))
                                 (operation symbol)
                                 (prop      symbol)
                                 value)
+  "Signal occ-error because the context OBJ is read only."
   (occ-error "OCC-CTX is read only, can not be changed"))
 
 (cl-defmethod occ-do-operation :around ((obj       occ-obj-tsk)
@@ -698,26 +736,38 @@ method provided."))))
 
 
 (cl-defmethod occ-obj-op-list-p ((operation symbol))
+  "Return nil because OPERATION is not a list operation."
   nil)
 (cl-defmethod occ-obj-op-list-p ((operation (eql add)))
+  "Return t because the add OPERATION is a list operation."
   t)
 (cl-defmethod occ-obj-op-list-p ((operation (eql remove)))
+  "Return t because the remove OPERATION drops a list value."
   t)
 
 (cl-defmethod occ-obj-op-delete-p ((operation symbol))
+  "Return nil because OPERATION is not a delete operation."
   nil)
 (cl-defmethod occ-obj-op-delete-p ((operation symbol))
+  "Return nil because OPERATION is not a delete operation.
+  Duplicate method which shadows the earlier same-specializer
+  method."
   nil)
 (cl-defmethod occ-obj-op-delete-p ((operation (eql remove)))
+  "Return t because the remove OPERATION deletes one value."
   t)
 (cl-defmethod occ-obj-op-delete-p ((operation (eql delete)))
+  "Return t because the delete OPERATION deletes the value."
   t)
 
 (cl-defmethod occ-obj-op-write-p ((operation symbol))
+  "Return t because OPERATION writes the property by default."
   t)
 (cl-defmethod occ-obj-op-write-p ((operation (eql get)))
+  "Return nil because the get OPERATION is read only."
   nil)
 (cl-defmethod occ-obj-op-write-p ((operation (eql member)))
+  "Return nil because the member OPERATION is read only."
   nil)
 
 
@@ -725,6 +775,10 @@ method provided."))))
                            (ctsk occ-obj-ctx-tsk)
                            (property symbol)
                            (operation symbol))
+  "Read PROPERTY for CTSK from the user USER for OPERATION.
+  Reading list valued PROPERTY is not implemented and signals
+  occ-error.  Other PROPERTY values delegate to
+  occ-obj-intf-get."
   (if (occ-obj-list-p (occ-obj-tsk ctsk)
                       property)
       ;; (mapcar #'(lambda (v)
@@ -740,6 +794,8 @@ method provided."))))
                            (ctsk occ-obj-ctx-tsk)
                            (property symbol)
                            (operation (eql add)))
+  "Read PROPERTY for CTSK from the user USER for add.
+  Signal occ-error when PROPERTY is not list valued."
   (if (occ-obj-list-p (occ-obj-tsk ctsk)
                       property)
       (occ-obj-intf-get user
@@ -752,6 +808,8 @@ method provided."))))
                            (ctsk occ-obj-ctx-tsk)
                            (property symbol)
                            (operation (eql remove)))
+  "Read PROPERTY for CTSK from the user USER for remove.
+  Signal occ-error when PROPERTY is not list valued."
   (if (occ-obj-list-p (occ-obj-tsk ctsk)
                       property)
       (occ-obj-intf-get user
@@ -764,6 +822,8 @@ method provided."))))
                            (ctsk occ-obj-ctx-tsk)
                            (property symbol)
                            (operation null))
+  "Read PROPERTY for CTSK from USER with a nil OPERATION.
+  Delegates to the next applicable method."
   (cl-call-next-method))
 
 
@@ -783,11 +843,15 @@ method provided."))))
 
 
 (defun occ-org-list-value-to-org (value)
+  "Concatenate the elements of list VALUE into an org string."
   (string-join value))
 
 (cl-defmethod occ-obj-to-org ((property symbol)
                               (operation symbol)
                               value)
+  "Convert the occ VALUE of PROPERTY to org world form for OPERATION.
+  List valued PROPERTY converts each element with
+  occ-obj-intf-to-org before joining."
   (if (occ-obj-list-p nil
                       property)
       (occ-org-list-value-to-org (mapcar #'(lambda (v)
@@ -798,6 +862,9 @@ method provided."))))
 (cl-defmethod occ-obj-to-org ((property symbol)
                               (operation symbol)
                               value)
+  "Convert the occ VALUE of PROPERTY to its org string form.
+  Overrides the earlier method with the same specializers and
+  applies list OPERATION semantics before converting."
   (if (occ-obj-list-p nil
                       property)
       (if (occ-obj-op-list-p operation)
@@ -815,6 +882,8 @@ method provided."))))
 (cl-defmethod occ-obj-to-org ((property symbol)
                               (operation (eql add))
                               value)
+  "Convert VALUE of PROPERTY to org form for the add OPERATION.
+  Signal occ-error when PROPERTY is not list valued."
   (if (occ-obj-list-p nil
                       property)
       (occ-obj-intf-to-org property
@@ -825,6 +894,8 @@ method provided."))))
 (cl-defmethod occ-obj-to-org ((property symbol)
                               (operation (eql remove))
                               value)
+  "Convert VALUE of PROPERTY to org form for the remove OPERATION.
+  Signal occ-error when PROPERTY is not list valued."
   (if (occ-obj-list-p nil
                       property)
       (occ-obj-intf-to-org property
@@ -835,15 +906,21 @@ method provided."))))
 (cl-defmethod occ-obj-to-org ((property symbol)
                               (operation null)
                               value)
+  "Convert VALUE of PROPERTY with a nil OPERATION.
+  Delegates to the next applicable method."
   (cl-call-next-method))
 
 
 (defun occ-org-list-value-from-org (value)
+  "Split the org string VALUE into a list of elements."
   (split-string value))
 
 (cl-defmethod occ-obj-from-org ((property symbol)
                                 (operation symbol)
                                 value)
+  "Convert the org string VALUE of PROPERTY to occ world form for OPERATION.
+  List valued PROPERTY is split and each element
+  converts with occ-obj-intf-from-org."
   (if (occ-obj-list-p nil
                       property)
       (mapcar #'(lambda (v)
@@ -855,6 +932,9 @@ method provided."))))
 (cl-defmethod occ-obj-from-org ((property symbol)
                                 (operation symbol)
                                 value)
+  "Convert the org string VALUE of PROPERTY to occ world form.
+  Overrides the earlier method with the same specializers and
+  applies list OPERATION semantics before converting."
   (if (occ-obj-list-p nil
                       property)
       (if (occ-obj-op-list-p operation)
@@ -873,6 +953,8 @@ method provided."))))
 (cl-defmethod occ-obj-from-org ((property symbol)
                                 (operation (eql add))
                                 value)
+  "Convert VALUE of PROPERTY from org form for the add OPERATION.
+  Signal occ-error when PROPERTY is not list valued."
   (if (occ-obj-list-p nil
                       property)
       (occ-obj-intf-from-org property
@@ -883,6 +965,8 @@ method provided."))))
 (cl-defmethod occ-obj-from-org ((property symbol)
                                 (operation (eql remove))
                                 value)
+  "Convert VALUE of PROPERTY from org form for the remove OPERATION.
+  Signal occ-error when PROPERTY is not list valued."
   (if (occ-obj-list-p nil
                       property)
       (occ-obj-intf-from-org property
@@ -894,6 +978,8 @@ method provided."))))
 (cl-defmethod occ-obj-from-org ((property symbol)
                                 (operation null)
                                 value)
+  "Convert VALUE of PROPERTY with a nil OPERATION.
+  Delegates to the next applicable method."
   (cl-call-next-method))
 
 
@@ -939,6 +1025,8 @@ and remove OPERATION."
                                        (property symbol)
                                        (operation (eql remove))
                                        value)
+  "Return the PROPERTY value of TSK that matches VALUE.
+  Used for the remove OPERATION."
   (occ-obj-match (occ-obj-tsk tsk)
                  property
                  value))
@@ -963,6 +1051,8 @@ and remove OPERATION."
                               (ctx occ-obj-ctx)
                               (property symbol)
                               (operation symbol))
+  "Return the values of PROPERTY of TSK and CTX for OPERATION.
+  Delegates to occ-obj-intf-values."
   (occ-obj-intf-values tsk
                        ctx
                        property
@@ -971,6 +1061,8 @@ and remove OPERATION."
                               (ctx null)
                               (property symbol)
                               (operation symbol))
+  "Return the values of PROPERTY of TSK for OPERATION.
+  The context CTX is nil.  Delegates to occ-obj-intf-values."
   (occ-obj-intf-values tsk
                        ctx
                        property
@@ -979,6 +1071,9 @@ and remove OPERATION."
 
 (cl-defmethod occ-obj-vdirectors ((tsk occ-obj-tsk)
                                   (property symbol))
+  "Return the value director indices for PROPERTY of TSK.
+  Indices run from 1 up to the number of values of PROPERTY.
+  Returns a list holding nil when PROPERTY is not list valued."
   (if (occ-obj-list-p tsk
                       property)
       (cl-loop for i from 1 to (length (occ-obj-get-property tsk property))
@@ -987,12 +1082,14 @@ and remove OPERATION."
 (cl-defmethod occ-obj-pvalue ((tsk occ-obj-tsk)
                               (property symbol)
                               (vdirector number))
+  "Return the value of PROPERTY of TSK at index VDIRECTOR."
   (nth (1- vdirector)
        (occ-obj-get-property tsk
                              property)))
 (cl-defmethod occ-obj-pvalue ((tsk occ-obj-tsk)
                               (property symbol)
                               (vdirector null))
+  "Return the whole value of PROPERTY of TSK as VDIRECTOR is nil."
   (occ-obj-get-property tsk
                         property))
 
@@ -1045,6 +1142,9 @@ and remove OPERATION."
 (cl-defmethod occ-obj-checkout-p ((obj occ-obj-ctx)
                                   (prop symbol)
                                   value)
+  "Return non-nil when context OBJ supports checkout of PROP.
+  VALUE is the value to check out.  Delegates to
+  occ-obj-intf-checkout-p."
   (occ-obj-intf-checkout-p obj
                            prop
                            value))

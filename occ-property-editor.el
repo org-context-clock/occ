@@ -85,6 +85,10 @@
 
 (cl-defmethod occ-do-select-propetry ((obj occ-obj-ctx-tsk)
                                       &optional prompt)
+  "Prompt for a property of the task of the occ-obj-ctx-tsk OBJ to edit.
+Completes over occ-obj-properties-to-edit plus the fixed keys edit and
+done showing current values.  PROMPT overrides the default prompt.
+Returns the selected property symbol or one of edit and done."
   (let ((tsk (occ-obj-tsk obj))
         (ctx (occ-obj-ctx obj)))
     (ignore ctx)
@@ -136,6 +140,9 @@
 
 
 (defun org-get-flag-property-drawer (&optional force)
+  "Return org-cycle-subtree-status if a property block exists at point.
+The block is looked up by org-get-property-block at point and created
+when FORCE is non-nil."
   (let ((range (org-get-property-block (point) force)))
     (when range
       org-cycle-subtree-status)))
@@ -212,6 +219,9 @@
 (defun org-get-flag-property-drawer-at-marker (marker
                                                &optional
                                                force)
+  "Return drawer state for the property drawer at marker MARKER.
+Switches to the buffer of MARKER moves to its position and calls
+org-get-flag-property-drawer with FORCE."
   (let ((buff (marker-buffer marker))
         (loc  (marker-position marker)))
     (when (and buff
@@ -247,6 +257,11 @@
 
 
 (cl-defmethod occ-do-open-property-block ((obj marker))
+  "Open the properties drawer of the org entry at the marker OBJ.
+Switches to the buffer of OBJ moves to the marker position and expands
+the property drawer with org-flag-property-drawer-at-marker.  Returns
+non-nil when the drawer was opened and errors when the marker has no
+buffer."
   ;; Find better name
   (let ((mrk              obj)
         (buffer-read-only nil))
@@ -273,11 +288,18 @@
                    (occ-obj-Format obj))))))
 
 (cl-defmethod occ-do-open-property-block ((obj null))
+  "Open the properties drawer at point for the null OBJ.
+Ignores OBJ and delegates to the marker method with a marker at
+point."
   (ignore obj)
   (occ-do-open-property-block (point-marker)))
 
 
 (cl-defmethod occ-do-properties-editor ((obj occ-obj-ctx-tsk))
+  "Loop selecting and editing properties of the occ-obj-ctx-tsk OBJ.
+Calls occ-do-select-propetry until edit or done is chosen and applies
+each selected property through occ-do-op-prop-edit.  Returns the last
+non-nil edit result."
   (occ-debug "occ-do-properties-editor: begin %s"
              (occ-obj-Format obj))
   (let ((tsk (occ-obj-tsk obj))
@@ -301,6 +323,11 @@
 
 
 (cl-defmethod occ-do-properties-editor-in-cloned-buffer ((obj occ-obj-ctx-tsk))
+  "Edit properties of the occ-obj-ctx-tsk OBJ in a cloned org buffer.
+Clones the tree around the task marker with org-with-cloned-marker and
+narrows to it so the real buffer stays untouched then opens the
+property block and runs occ-do-properties-editor.  Errors when the
+property block cannot be opened."
   (occ-debug "occ-do-properties-editor-in-cloned-buffer: begin")
   ;; (message "message")
   ;; (message (occ-obj-format (occ-obj-tsk obj)))
@@ -320,6 +347,10 @@
                                                  cleanup
                                                  local-cleanup
                                                  win)
+  "Handle the editor response PROP of a timed property window.
+For done or an unexpected response run CLEANUP with WIN and
+LOCAL-CLEANUP and cancel TIMER; for edit cancel TIMER and reselect WIN
+so editing can continue.  TIMEOUT is ignored."
   (ignore timeout)
   (cond ((eql 'done prop)
          (funcall cleanup
@@ -347,6 +378,12 @@
                                                &key
                                                return-transform
                                                timeout)
+  "Edit properties of the occ-obj-ctx-tsk OBJ in a timed window.
+Runs the cloned buffer editor under lotus-with-timed-new-win with
+TIMEOUT defaulting to occ-idle-timeout.  The done response closes the
+window the edit response keeps it open and timeout or quit cleans up.
+Wraps the return with occ-obj-make-return when RETURN-TRANSFORM is
+non-nil."
   (let* ((timeout (or timeout
                       occ-idle-timeout)))
     (let* ((local-cleanup #'(lambda ()
@@ -396,6 +433,11 @@
                                                ap-transf
                                                return-transform ;Here caller know if return value is going to be used.
                                                timeout)
+  "Select a task for the occ-ctx OBJ and edit its properties.
+Selects with occ-obj-select using FILTERS BUILDER AP-NORMAL AP-TRANSF
+RETURN-TRANSFORM and TIMEOUT then recurses on the selected contextual
+task.  Returns a false occ-obj-make-return when the context buffer is
+deleted or is a helm buffer."
   (ignore ap-normal)
   (ignore ap-transf)
   (let* ((filters   (or filters nil))
@@ -457,6 +499,10 @@
                                                ap-transf
                                                return-transform
                                                timeout)
+  "Edit properties for a context built at point for the null OBJ.
+Ignores OBJ and delegates to the occ-ctx method with a context from
+occ-obj-make-ctx-at-point passing FILTERS BUILDER AP-NORMAL AP-TRANSF
+RETURN-TRANSFORM and TIMEOUT."
   (ignore obj)
   (ignore ap-normal)
   (ignore ap-transf)
@@ -534,6 +580,11 @@
                                                     ap-transf
                                                     return-transform
                                                     timeout)
+  "Safely edit properties of the org entry at the marker OBJ.
+Builds a context with occ-obj-make-ctx and delegates to the occ-ctx
+occ-do-safe-properties-window-editor method passing FILTERS BUILDER
+AP-NORMAL AP-TRANSF RETURN-TRANSFORM and TIMEOUT.  Returns the
+selection result."
   (ignore obj)
   (occ-debug "occ-do-safe-properties-window-editor((obj marker)): begin")
   (let ((selected (occ-do-safe-properties-window-editor (occ-obj-make-ctx obj)

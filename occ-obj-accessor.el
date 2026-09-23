@@ -62,143 +62,179 @@
 
 
 (cl-defmethod occ-obj-class-name (obj)
+  "Return the class name of OBJ; unmatched types report unknown."
   (ignore obj)
   "unknown")
 
 (cl-defmethod occ-obj-class-name ((obj symbol))
+  "Return the class name of the symbol OBJ, namely symbol."
   (ignore obj)
   "symbol")
 
 (cl-defmethod occ-obj-class-name ((obj null))
+  "Return the class name of the null OBJ, namely null."
   (ignore obj)
   "null")
 
 (cl-defmethod occ-obj-class-name ((obj marker))
+  "Return the class name of the marker OBJ, namely marker."
   (ignore obj)
   "marker")
 
 (cl-defmethod occ-obj-class-name ((obj occ-tsk))
+  "Accessor specialization for occ-tsk objects, naming them task."
   (ignore obj)
   "task")
 
 (cl-defmethod occ-obj-class-name ((obj occ-ctsk))
+  "Accessor specialization for occ-ctsk objects, naming them context task."
   (ignore obj)
   "context task")
 
 (cl-defmethod occ-obj-class-name ((obj occ-ctxual-tsk))
+  "Accessor specialization for occ-ctxual-tsk objects, naming them contextual task."
   (ignore obj)
   "contextual task")
 
 
 (cl-defmethod occ-obj-obj ((obj occ-obj))
+  "Return the object wrapped by OBJ, read through occ-obj-return-get-value."
   (occ-obj-return-get-value obj))
 
 (cl-defmethod occ-obj-obj ((obj occ-return))
+  "Accessor specialization for occ-return, unwrapping its held value."
   (occ-obj-return-get-value obj))
 
 
 (cl-defmethod occ-obj-obj ((obj null))
+  "Return nil for the null OBJ, the empty wrapper."
   (ignore obj)
   nil)
 
 
 (cl-defmethod occ-obj-tsk ((obj null))
+  "Return nil for the null OBJ, which wraps no task."
   (ignore obj)
   nil)
 
 (cl-defmethod occ-obj-tsk ((obj occ-tsk))
+  "Return the task OBJ itself, already an occ-tsk."
   obj)
 
 ;; will also cover occ-ctxual-tsk
 (cl-defmethod occ-obj-tsk ((obj occ-ctsk))
+  "Return the org task of OBJ, unwrapping ctsk and ctxual-tsk wrappers."
   (occ-ctsk-tsk obj))
 
 (cl-defmethod occ-obj-tsk ((obj occ-obj-ctx))
+  "Return nil for a context OBJ, which wraps no task."
   (ignore obj)
   nil)
 
 
 (cl-defmethod occ-obj-ctx ((obj null))
+  "Return nil for the null OBJ, which wraps no context."
   (ignore obj)
   nil)
 
 (cl-defmethod occ-obj-ctx ((obj occ-ctx))
+  "Return the context OBJ itself, already an occ-ctx."
   obj)
 
 ;; will also cover occ-ctxual-tsk
 (cl-defmethod occ-obj-ctx ((obj occ-ctsk))
+  "Return the context of OBJ, unwrapping ctsk and ctxual-tsk wrappers."
   (occ-ctsk-ctx obj))
 
 (cl-defmethod occ-obj-ctx ((obj occ-obj-tsk))
+  "Return nil for a task OBJ, which wraps no context."
   nil)
 
 
 (cl-defmethod occ-obj-marker ((obj null))
+  "Return nil for the null OBJ, which has no marker."
   (ignore obj)
   nil)
 
 (cl-defmethod occ-obj-marker ((obj marker))
+  "Return the marker OBJ itself, already a marker."
   obj)
 
 (cl-defmethod occ-obj-marker ((obj occ-obj-tsk))
+  "Return the org marker of TSK, unwrapping the task wrapper."
   (occ-tsk-marker (occ-obj-tsk obj)))
 
 
 (cl-defmethod occ-obj-org-marker ((obj null))
+  "Return nil for the null OBJ, which has no org marker."
   (ignore obj)
   nil)
 
 (cl-defmethod occ-obj-org-marker ((obj marker))
+  "Return an org marker at point for the marker OBJ."
   (occ-mac-with-org-marker obj
     (point-marker)))
 
 (cl-defmethod occ-obj-org-marker ((obj occ-obj-tsk))
+  "Return the org marker of TSK, unwrapping the task wrapper."
   (occ-tsk-marker (occ-obj-tsk obj)))
 
 
 (cl-defmethod occ-obj-heading-marker ((obj null))
+  "Return a fresh unset marker for the null OBJ."
   (ignore obj)
   (make-marker))
 
 (cl-defmethod occ-obj-heading-marker ((obj marker))
+  "Return the heading marker of the marker OBJ at org point."
   (occ-mac-with-org-marker obj
     (point-marker)))
 
 (cl-defmethod occ-obj-heading-marker ((obj occ-obj-tsk))
+  "Return the heading marker of TSK via its raw marker."
   (occ-obj-heading-marker (occ-obj-marker obj)))
 
 
 (cl-defmethod occ-obj-buffer ((obj null))
+  "Return nil for the null OBJ, which has no buffer."
   (ignore obj)
   nil)
 
 (cl-defmethod occ-obj-buffer ((obj marker))
+  "Return the buffer owning the marker OBJ."
   (marker-buffer obj))
 
 (cl-defmethod occ-obj-buffer ((obj occ-obj-tsk))
+  "Return the buffer of TSK, resolved from its org marker."
   (occ-obj-buffer (occ-tsk-marker (occ-obj-tsk obj))))
 
 (cl-defmethod occ-obj-buffer ((obj occ-ctx))
+  "Return the buffer recorded in the context OBJ."
   (occ-ctx-buffer obj))
 
 (cl-defmethod occ-obj-buffer ((obj occ-ctsk))
+  "Return the buffer held by the context of the ctsk OBJ."
   (let ((ctx (occ-obj-ctx obj)))
     (occ-ctx-buffer ctx)))
 
 
 (cl-defmethod occ-obj-file ((obj occ-ctx))
+  "Return the file recorded in the context OBJ."
   (occ-ctx-file obj))
 
 (cl-defmethod occ-obj-file ((obj occ-ctsk))
+  "Return the file held by the context of the ctsk OBJ."
   (let ((ctx (occ-obj-ctx obj)))
     (occ-ctx-file ctx)))
 
 
 (cl-defmethod occ-obj-callable ((callable occ-callable))
+  "Return the callable CALLABLE itself, already an occ-callable."
   callable)
 
 (cl-defmethod occ-obj-callable-build ((callable list)
                                       (type (eql :normal)))
+  "Build an occ-callable-normal from the three element list CALLABLE."
   (if (= (length callable) 3)
       (let ((keyword (nth 0 callable))
             (name    (nth 1 callable))
@@ -208,6 +244,7 @@
 
 (cl-defmethod occ-obj-callable-build ((callable list)
                                       (type (eql :generator)))
+  "Build an occ-callable-generator from the three element list CALLABLE."
   (if (= (length callable) 3)
       (let ((keyword (nth 0 callable))
             (name    (nth 1 callable))
@@ -216,24 +253,30 @@
     (occ-error "callable [%s] is not list of 3 elements" callable)))
 
 (cl-defmethod occ-obj-callable-normal ((callable list))
+  "Build and return a normal occ-callable from the list CALLABLE."
   (occ-obj-callable-build callable
                           :normal))
 
 (cl-defmethod occ-obj-callable-generator ((callable list))
+  "Build and return a generator occ-callable from the list CALLABLE."
   (occ-obj-callable-build callable
                           :generator))
 
 (cl-defmethod occ-obj-callable ((callable list))
+  "Build a callable from the list CALLABLE, defaulting to normal kind."
   (occ-obj-callable-normal callable))
 
 
 (cl-defmethod occ-callable-desc     ((callable occ-callable))
+  "Return the description of the occ-callable CALLABLE."
   (occ-callable-name callable))
 
 (cl-defmethod occ-obj-callable-desc ((callable occ-callable))
+  "Return the description of the occ-callable CALLABLE."
   (occ-callable-desc callable))
 
 (cl-defmethod occ-obj-callable-name ((callable occ-callable))
+  "Return the name of the occ-callable CALLABLE."
   (occ-callable-name callable))
 
 ;; methods
@@ -316,22 +359,27 @@
 
 ;; TODO: Consider preparing
 (cl-defmethod occ-obj-ap (xyz)
+  "Stub: not yet implemented (signals occ-error)."
   (ignore xyz)
   (occ-error "Implement it"))
 
 (cl-defmethod occ-obj-ap-normal (xyz)
+  "Stub: not yet implemented (signals occ-error)."
   (ignore xyz)
   (occ-error "Implement it"))
 
 (cl-defmethod occ-obj-ap-transf (xyz)
+  "Stub: not yet implemented (signals occ-error)."
   (ignore xyz)
   (occ-error "Implement it"))
 
 
 (cl-defmethod occ-obj-ap-base ((ap-obj occ-ap))
+  "Return the tree keybranch of the action pack AP-OBJ, or nil."
   (occ-ap-tree-keybranch ap-obj))
 
 (cl-defmethod occ-obj-ap-base ((ap-obj occ-ap-normal))
+  "Return the base of the action pack AP-OBJ, falling back to its callables."
   (let ((base (cl-call-next-method)))
     (or base
         (let ((callables (occ-ap-normal-callables ap-obj)))
@@ -339,6 +387,7 @@
             (cons :callables callables))))))
 
 (cl-defmethod occ-obj-ap-base ((ap-obj occ-ap-transf))
+  "Return the base of the action pack AP-OBJ, falling back to its transform."
   (let ((base (cl-call-next-method)))
     (or base
         (let ((transform (occ-ap-transf-transform ap-obj)))
@@ -347,6 +396,7 @@
 
 (cl-defmethod occ-obj-ap-tree-keybranch ((ap-obj occ-ap)
                                          (obj    occ-obj))
+  "Return the tree keybranch of the action pack AP-OBJ, erroring when absent."
   (ignore obj)
   (unless (occ-ap-tree-keybranch ap-obj)
     (occ-error "occ-ap obj %s missing tree-keybranch %s" ap-obj (occ-ap-tree-keybranch ap-obj)))
@@ -354,6 +404,8 @@
 
 (cl-defmethod occ-obj-ap-callables ((ap-obj occ-ap-normal)
                                     (obj occ-obj))
+  "Return the callables of the action pack AP-OBJ for OBJ.
+Generates them from the tree keybranch when needed and caches the result."
   (occ-debug "occ-obj-ap-callables: ap-obj = %s" ap-obj)
   ;; NOTE:
   ;; If TREE-KEYBRANCH are present then callable must have to generated afresh every time
@@ -395,6 +447,7 @@
 
 (cl-defmethod occ-obj-ap-helm-actions ((ap-obj list)
                                        (obj occ-obj))
+  "Build an action pack from the list AP-OBJ and return its helm actions for OBJ."
   (let* ((ap-obj    (occ-obj-build-ap-normal ap-obj obj))
          (callables (occ-obj-ap-callables ap-obj obj)))
     (occ-obj-callable-helm-actions callables
@@ -402,18 +455,21 @@
 
 (cl-defmethod occ-obj-ap-helm-actions ((ap-obj occ-ap-normal)
                                        (obj occ-obj))
+  "Return the helm actions of the action pack AP-OBJ for OBJ."
   (let ((callables (occ-obj-ap-callables ap-obj obj)))
     (occ-obj-callable-helm-actions callables
                                    obj)))
 
 (cl-defmethod occ-obj-ap-helm-actions ((ap-obj occ-ap-transf)
                                        (obj occ-obj))
+  "Signal an error: a transformer pack cannot list helm actions directly."
   (ignore obj)
   (ignore ap-obj)
   (occ-error "OCC-OBJ-AP-HELM-ACTIONS can not work for OCC-AP-TRANSF as it requires OCC-AP-NORMAL to run TRANSFORMATION function"))
 
 
 (cl-defmethod occ-obj-ap-helm-transformation ((ap-obj occ-ap-transf))
+  "Return the helm action transformer for AP-OBJ, memoized on the pack."
   (let ((transform (occ-obj-ap-transform ap-obj)))
     (occ-assert transform)
     #'(lambda (action
@@ -468,6 +524,7 @@
 (cl-defmethod occ-obj-ap-helm-transformed-actions ((apn occ-ap-normal)
                                                    (apt occ-ap-transf)
                                                    (obj occ-obj))
+  "Return helm actions transformed by the transformer pack APT for OBJ."
   (let ((callables (occ-obj-callable-helm-actions (occ-obj-ap-callables apn obj)
                                                   obj))
         (fun       (occ-obj-ap-helm-transformation apt)))
@@ -477,17 +534,20 @@
 (cl-defmethod occ-obj-ap-helm-get-actions ((obj occ-obj)
                                            (apn occ-ap-normal)
                                            (apt occ-ap-transf))
+  "Return transformed helm actions when both a normal and a transformer pack are given."
   (occ-obj-ap-helm-transformed-actions apn apt obj))
 
 (cl-defmethod occ-obj-ap-helm-get-actions ((obj occ-obj)
                                            (apn occ-ap-normal)
                                            (apt null))
+  "Return plain helm actions from the normal pack APN for OBJ."
   (ignore apt)
   (occ-obj-ap-helm-actions apn obj))
 
 (cl-defmethod occ-obj-ap-helm-get-actions ((obj occ-obj)
                                            (apn null)
                                            (apt occ-ap-transf))
+  "Signal an error; no normal action pack is available for OBJ."
   (ignore obj)
   (ignore apn)
   (ignore apt)
@@ -508,6 +568,7 @@
 
 (cl-defmethod occ-obj-ranktbl-with ((tsk occ-obj-tsk)
                                     (ctx occ-obj-ctx))
+  "Return the rank table pairing TSK with CTX, creating and caching it when absent."
   (unless (cdr (assoc tsk
                       (occ-ctx-tsk-ranktbl-list ctx)))
     (setf (occ-obj-ranktbl-with tsk
@@ -518,11 +579,13 @@
 
 (cl-defmethod occ-obj-ranktbl-with ((tsk occ-obj-tsk)
                                     (ctx null))
+  "Return the rank table of TSK when no context CTX is given."
   (occ-obj-ranktbl tsk))
 
 (cl-defmethod (setf occ-obj-ranktbl-with) ((rt  occ-ranktbl)
                                            (tsk occ-obj-tsk)
                                            (ctx occ-obj-ctx))
+  "Set the rank table RT pairing TSK with CTX in the context cache."
   (if (cdr (assoc tsk
                   (occ-ctx-tsk-ranktbl-list ctx)))
       (setf (cdr (assoc tsk (occ-ctx-tsk-ranktbl-list ctx))) rt)
@@ -533,10 +596,12 @@
 (cl-defmethod (setf occ-obj-ranktbl-with) ((rt  occ-ranktbl)
                                            (tsk occ-obj-tsk)
                                            (ctx null))
+  "Set the rank table RT on TSK when no context CTX is given."
   (setf (occ-obj-ranktbl tsk) rt))
 
 
 (cl-defmethod occ-obj-ranktbl ((obj occ-obj-tsk))
+  "Return the rank table of the task OBJ, creating and caching it when absent."
   (let ((tsk (occ-obj-tsk obj)))
     (unless (occ-tsk-ranktbl tsk)
       (setf (occ-tsk-ranktbl tsk) (occ-make-ranktbl)))
@@ -545,21 +610,25 @@
     (occ-tsk-ranktbl tsk)))
 
 (cl-defmethod occ-obj-ranktbl ((obj occ-obj-ctx-tsk))
+  "Return the rank table of OBJ for its own context, via occ-obj-ranktbl-with."
   (occ-obj-ranktbl-with (occ-obj-tsk obj)
                         (occ-obj-ctx obj)))
 
 (cl-defmethod (setf occ-obj-ranktbl) ((rt  occ-ranktbl)
                                       (obj occ-obj-tsk))
+  "Set the rank table RT on the task OBJ."
   (let ((tsk (occ-obj-tsk obj)))
     (setf (occ-tsk-ranktbl tsk) rt)))
 
 (cl-defmethod (setf occ-obj-ranktbl) ((rt  occ-ranktbl)
                                       (obj occ-obj-ctx-tsk))
+  "Set the rank table RT on OBJ for its own context."
   (setf (occ-obj-ranktbl-with (occ-obj-tsk obj)
                               (occ-obj-ctx obj)) rt))
 
 
 (cl-defmethod occ-obj-member-tsk-rank ((obj occ-ctxual-tsk))
+  "Return the rank of the task held by the ctxual-tsk OBJ."
   ;; (occ-debug "occ-obj-member-tsk-rank(occ-ctxual-tsk=%s)" (occ-obj-Format (occ-obj-tsk obj)))
   ;; (occ-debug "occ-obj-member-tsk-rank(occ-ctxual-tsk=%s)" (occ-obj-Format (occ-obj-tsk obj)))
   (let ((tsk (occ-ctxual-tsk-tsk obj)))
@@ -571,6 +640,7 @@
 (cl-defmethod occ-obj-format-string ((obj occ-tsk)
                                      &optional
                                      no-propterties)
+  "Return the memoized format string of the task OBJ, building it when absent."
   ;; (occ-debug "occ-tsk-format-string(occ-tsk=%s)" obj)
   (let ((format-string (occ-tsk-format-string obj)))
     (unless format-string
@@ -579,12 +649,14 @@
     (occ-tsk-format-string obj)))
 
 (cl-defmethod (setf occ-obj-format-string) (value (obj occ-tsk))
+  "Set the format string VALUE on the task OBJ."
   ;; (occ-debug "occ-tsk-format-string(occ-tsk=%s)" obj)
   (setf (occ-tsk-format-string obj) value))
 
 
 ;; occ-tsk - accessors
 (cl-defmethod occ-obj-format-file ((obj occ-tsk))
+  "Return the memoized format file of the task OBJ, building it when absent."
   ;; (occ-debug "occ-tsk-format-file(occ-tsk=%s)" obj)
   (let ((format-file (occ-tsk-format-file obj)))
     (unless format-file
@@ -592,12 +664,14 @@
     (occ-tsk-format-file obj)))
 
 (cl-defmethod (setf occ-obj-format-file) (value (obj occ-tsk))
+  "Set the format file VALUE on the task OBJ."
   ;; (occ-debug "occ-tsk-format-file(occ-tsk=%s)" obj)
   (setf (occ-tsk-format-file obj) value))
 
 
 ;; occ-ctx - accessors
 (cl-defmethod occ-obj-avgrank ((obj occ-ctx))
+  "Return the memoized average rank of the context OBJ, computing it when absent."
   ;; (occ-debug "occ-obj-avgrank(occ-ctx=%s)" obj)
   (let ((avgrank (occ-ctx-avgrank obj)))
     (unless avgrank
@@ -605,12 +679,14 @@
     (occ-ctx-avgrank obj)))
 
 (cl-defmethod (setf occ-obj-avgrank) (value (obj occ-ctx))
+  "Set the average rank VALUE on the context OBJ."
   ;; (occ-debug "occ-obj-avgrank(occ-ctx=%s)" obj)
   (setf (occ-ctx-avgrank obj) value))
 
 
 ;; occ-ctx - accessors
 (cl-defmethod occ-obj-varirank ((obj occ-ctx))
+  "Return the memoized rank variance of the context OBJ, computing it when absent."
   ;; (occ-debug "occ-obj-varirank(occ-ctx=%s)" obj)
   (let ((varirank (occ-ctx-varirank obj)))
     (unless varirank
@@ -618,12 +694,14 @@
     (occ-ctx-varirank obj)))
 
 (cl-defmethod (setf occ-obj-varirank) (value (obj occ-ctx))
+  "Set the rank variance VALUE on the context OBJ."
   ;; (occ-debug "occ-obj-varirank(occ-ctx=%s)" obj)
   (setf (occ-ctx-varirank obj) value))
 
 
 ;; occ-collection - accessors
 (cl-defmethod occ-obj-avgrank ((obj occ-collection))
+  "Return the memoized average rank of the collection OBJ, computing it when absent."
   ;; (occ-debug "occ-obj-avgrank(occ-collection=%s)" obj)
   (let ((avgrank (occ-collection-avgrank obj)))
     (unless avgrank
@@ -631,12 +709,14 @@
     (occ-collection-avgrank obj)))
 
 (cl-defmethod (setf occ-obj-avgrank) (value (obj occ-collection))
+  "Set the average rank VALUE on the collection OBJ."
   ;; (occ-debug "occ-obj-avgrank(occ-collection=%s)" obj)
   (setf (occ-collection-avgrank obj) value))
 
 
 ;; occ-ctxual-tsk - accessors
 (cl-defmethod occ-obj-varirank ((obj occ-collection))
+  "Return the memoized rank variance of the collection OBJ, computing it when absent."
   ;; (occ-debug "occ-obj-varirank(occ-collection=%s)" obj)
   (let ((varirank (occ-collection-varirank obj)))
     (unless varirank
@@ -644,6 +724,7 @@
     (occ-collection-varirank obj)))
 
 (cl-defmethod (setf occ-obj-varirank) (value (obj occ-collection))
+  "Set the rank variance VALUE on the collection OBJ."
   ;; (occ-debug "occ-obj-varirank(occ-collection=%s)" obj)
   (setf (occ-collection-varirank obj) value))
 
@@ -669,8 +750,10 @@ pointing to it."
 ;; find place to put these all function
 
 (cl-defmethod occ-do-checkout ((obj occ-obj-tsk))
+  "Check out the environment to match the properties of task OBJ."
   (occ-do-op-props-checkout obj))
 (cl-defmethod occ-do-checkout ((obj occ-ctxual-tsk))
+  "Check out the environment for the task held by the ctxual-tsk OBJ."
   (occ-do-op-props-checkout (occ-ctxual-tsk-tsk obj)))
 
 
@@ -680,9 +763,11 @@ pointing to it."
 ;;       occ-return getting passed
 
 (defun occ-util-read-sexp-from-minibuffer (prompt)
+ "Prompt with PROMPT, read an sexp and return its first form."
  (cl-first (read-from-string (read-from-minibuffer prompt))))
 
 (cl-defmethod occ-do-call-with-obj ((obj occ-obj-tsk))
+  "Prompt for an expression and call it with the task OBJ bound as obj."
   (let ((fun (let ((obj obj)
                    (exp-with-obj (occ-util-read-sexp-from-minibuffer "expression with obj: ")))
                #'(lambda ()
@@ -691,6 +776,7 @@ pointing to it."
     (funcall fun)))
 
 (cl-defmethod occ-do-call-with-obj ((obj occ-obj-tsk))
+  "Prompt for an argument name and an expression then call it with OBJ bound."
   (let ((fun (let ((obj-name     (occ-util-read-sexp-from-minibuffer "obj name: ")) ;prefill with obj
                    (exp-with-obj (occ-util-read-sexp-from-minibuffer "expression with obj: ")))
                #'(lambda ()
@@ -700,16 +786,20 @@ pointing to it."
 
 (let ((occ-debug-object nil))
   (cl-defmethod occ-do-set-debug-obj ((obj occ-obj-tsk))
+    "Record the task OBJ as the debug object for later inspection."
     (setq occ-debug-object obj)
     (occ-debug "Use (occ-get-debug-obj) to access object."))
   (defun occ-describe-debug-obj ()
+    "Display the stored debug object in a help buffer."
     (interactive)
     (occ-do-describe-obj occ-debug-object))
   (defun occ-get-debug-obj ()
+    "Return the stored debug object."
     (interactive)
     occ-debug-object))
 
 (cl-defmethod occ-do-describe-obj ((obj occ-obj-tsk))
+  "Display a buffer describing the task OBJ with helpful output."
   (let ((buf (get-buffer-create (format "*helpful occ-object: %s*"
                                         (occ-obj-format obj)))))
     (with-current-buffer buf
@@ -725,6 +815,9 @@ pointing to it."
 
 
 (cl-defun occ-current-tsk (&key other-allowed)
+  "Return the currently clocked task as an occ-tsk.
+Errors when the clocked task is outside OCC unless OTHER-ALLOWED is
+non-nil, in which case a fresh task is built from the clock marker."
   (let ((ctxual-tsk (cl-first *occ-clocked-ctxual-tsk-ctx-history*))
         (org-clock  (or (occ-valid-marker org-clock-marker)
                         (occ-valid-marker org-clock-hd-marker))))
@@ -753,12 +846,16 @@ pointing to it."
               (occ-obj-make-tsk org-clock)))))))
 
 (cl-defun occ-current-ctxual-tsk (&key other-allowed)
+  "Return the current ctxual-tsk pairing the clocked task with the context at point."
   (let ((current-tsk (occ-current-tsk :other-allowed other-allowed)))
     (occ-obj-build-ctxual-tsk-with current-tsk
                                    (occ-obj-make-ctx-at-point))))
 
 
 (defun occ-default-collection (&optional noerror)
+  "Return the default collector entry, building its tsks when needed.
+When the collector has no spec disable OCC and signal unless NOERROR is
+non-nil."
   (let ((key (occ-collector-default-key)))
     (unless (occ-collector-roots key)
       (if (occ-collector-spec key)
@@ -774,29 +871,36 @@ pointing to it."
 
 
 (cl-defmethod occ-do-reset-tsks ((collection null))
+  "Reset nothing for the null COLLECTION and return nil."
   (ignore collection)
   nil)
 
 (cl-defmethod occ-do-reset-tsks ((collection occ-list-collection))
+  "Clear the cached task list of the list COLLECTION."
   (setf (occ-list-collection-list collection) nil))
 
 (cl-defmethod occ-do-reset-tsks ((collection occ-tree-collection))
+  "Clear the cached list and tree of the tree COLLECTION."
   ;; (occ-message "tree %s" (occ-tree-collection-list collection))
   (setf (occ-list-collection-list collection) nil)
   (setf (occ-tree-collection-tree collection) nil))
 
 
 (cl-defmethod occ-obj-tsk-collection ((tsk occ-obj-tsk))
+  "Return the collection of the task TSK via occ-tsk-collection."
   (occ-tsk-collection (occ-obj-tsk tsk)))
 
 (cl-defmethod occ-obj-collection ((tsk occ-obj-tsk))
+  "Return the collection that the task TSK belongs to."
   (occ-tsk-collection (occ-obj-tsk tsk)))
 
 (cl-defmethod occ-obj-collection ((obj symbol))
+  "Return the collection registered under the collector key OBJ."
   (let ((key obj))
     (occ-collector-get key)))
 
 (cl-defmethod occ-obj-collection ((obj occ-obj-collection))
+  "Return the collection OBJ itself."
   obj)
 
 ;; BUG (occ-obj-collect-tsks tree) method not called (occ-obj-collect-tsks list)
@@ -805,12 +909,15 @@ pointing to it."
 (cl-defmethod occ-obj-collect-tsks (collection
                                     &optional
                                     force)
+  "Signal an error; COLLECTION must be a tree or list collection."
   (ignore collection)
   (ignore force)
   (occ-error "first argument should be of type (or occ-tree-collection occ-list-collection)"))
 
 (cl-defmethod occ-obj-collect-tsks ((collection occ-list-collection)
                                     force)
+  "Return the cached tasks of the list COLLECTION.
+Rebuilds when the cache is empty or FORCE is non-nil."
   (unless (and (not force)
                (occ-list-collection-list collection))
     (setf (occ-list-collection-list collection) (occ-obj-build-tsks collection)))
@@ -820,6 +927,8 @@ pointing to it."
 (cl-defmethod occ-obj-collect-tsks ((collection occ-tree-collection)
                                     &optional
                                     force)
+  "Return the cached tasks of the tree COLLECTION.
+Rebuilds when the cache is empty or FORCE is non-nil."
   (unless (and (not force)
                (occ-tree-collection-tree collection))
     (setf (occ-tree-collection-tree collection) (occ-obj-build-tsks collection)))
@@ -829,6 +938,7 @@ pointing to it."
 (cl-defmethod occ-obj-tsks (collection
                             &optional
                             force)
+  "Signal an error; COLLECTION must be a tree or list collection."
   (ignore collection)
   (ignore force)
   (occ-error "first argument should be of type (or occ-tree-collection occ-list-collection)"))
@@ -837,20 +947,24 @@ pointing to it."
 (cl-defmethod occ-obj-tsks ((collection occ-tree-collection)
                             &optional
                             force)
+  "Return the tasks of the tree COLLECTION via occ-obj-collect-tsks."
   (occ-obj-collect-tsks collection force))
 
 (cl-defmethod occ-obj-tsks ((collection occ-list-collection)
                             force)
+  "Return the tasks of the list COLLECTION via occ-obj-collect-tsks."
   (occ-obj-collect-tsks collection force))
 
 
 (cl-defmethod occ-obj-collection-tsks ((collection occ-tree-collection))
+  "Return the tree COLLECTION tasks, building them and firing the change hook when unset."
   (unless (occ-tree-collection-tree collection)
     (occ-obj-tsks collection nil)
     (run-hooks '*occ-collection-change-hook*))
   (occ-tree-collection-tree collection))
 
 (cl-defmethod occ-obj-collection-tsks ((collection occ-list-collection))
+  "Return the list COLLECTION tasks, building them and firing the change hook when unset."
   (unless (occ-list-collection-list collection)
     (occ-obj-tsks collection nil)
     (run-hooks '*occ-collection-change-hook*))
@@ -860,6 +974,7 @@ pointing to it."
 (cl-defmethod occ-obj-collect-files ((collection occ-tree-collection)
                                      &optional
                                      force)
+  "Return the files of the tree COLLECTION, derived from its tasks when unset."
   (ignore force)
   (unless (occ-tree-collection-files collection)
     ;; (occ-obj-collect-tsks collection nil)
@@ -879,6 +994,7 @@ pointing to it."
 (cl-defmethod occ-obj-collect-files ((collection occ-list-collection)
                                      &optional
                                      force)
+  "Return the files of the list COLLECTION, defaulting to its roots."
   (ignore force)
   (unless (and (null force)
                (occ-list-collection-files collection))
@@ -889,6 +1005,7 @@ pointing to it."
 (cl-defmethod occ-obj-files (&optional
                              collection
                              force)
+  "Return the files of COLLECTION, defaulting to the default collection."
   (occ-obj-collect-files (or collection
                              (occ-default-collection))
                          force))
@@ -926,6 +1043,7 @@ pointing to it."
                             &key
                             builder
                             obtrusive)
+  "Return the flat task list of the tree COLLECTION, cached in its list slot."
   (ignore builder)
   (ignore obtrusive)
   (unless (occ-tree-collection-list collection)
@@ -946,6 +1064,7 @@ pointing to it."
                             &key
                             builder
                             obtrusive)
+  "Return the tasks of the list COLLECTION."
   (ignore builder)
   (ignore obtrusive)
   (let ((tsks (occ-obj-collection-tsks collection)))
@@ -1033,42 +1152,53 @@ pointing to it."
   nil)
 
 (cl-defmethod occ-obj-length ((collection symbol))
+  "Return the number of tasks in the collection named by the symbol COLLECTION."
   (length (occ-obj-list (occ-obj-collection collection))))
 
 (cl-defmethod occ-obj-length ((collection occ-collection))
+  "Return the number of tasks in the collection COLLECTION."
   (length (occ-obj-list (occ-obj-collection collection))))
 
 
 (cl-defmethod occ-obj-select-obj ((source null))
+  "Return nil for the null SOURCE, selecting nothing."
   (ignore source)
   nil)
 
 (cl-defmethod occ-ob-select-obj ((source occ-hsrc))
+  "Return the object held by the helm source SOURCE."
   (occ-hsrc-obj source))
 
 (cl-defmethod occ-obj-obj ((source occ-hsrc))
+  "Return the object held by the helm source SOURCE."
   (occ-hsrc-obj source))
 
 
 (cl-defmethod occ-obj-rank ((obj null))
+  "Return nil for the null OBJ, which has no rank."
   (ignore obj)
   nil)
 
 (cl-defmethod occ-ob-rank ((obj occ-obj-collection))
+  "Return the rank of the collection OBJ."
   (occ-obj-collection-rank obj))
 
 (cl-defmethod occ-obj-rank ((obj occ-hsrc))
+  "Return the rank stored in the helm source OBJ."
   (occ-hsrc-rank obj))
 
 
 (cl-defmethod occ-obj-level ((obj null))
+  "Return nil for the null OBJ, which has no level."
   (ignore obj)
   nil)
 
 (cl-defmethod occ-ob-rank ((obj occ-obj-collection))
+  "Return the level of the collection OBJ."
   (occ-obj-collection-level obj))
 
 (cl-defmethod occ-obj-level ((obj occ-hsrc))
+  "Return the level stored in the helm source OBJ."
   (occ-hsrc-level obj))
 
 

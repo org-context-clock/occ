@@ -74,6 +74,7 @@
 ;;     (helm-maybe-exit-minibuffer)))
 
 (defun occ-helm-next-line (&optional ARG)
+  "Move the helm selection forward ARG lines in the helm buffer."
   (interactive "p")
   (with-helm-alive-p
     (helm--next-or-previous-line 'next arg)))
@@ -84,6 +85,8 @@
     (let (helm-scroll-amount)
       (helm-move-selection-common :where 'page :direction 'next))))
 (defun occ-helm-next-visible-mark (&optional prev)
+  "Move the helm selection to the next visible mark overlay.
+With PREV non-nil move to the previous visible mark instead."
   (interactive)
   (with-helm-alive-p
     (with-helm-window
@@ -94,12 +97,24 @@
                     prev)))
       (helm-mark-current-line))))
 
-(defun occ-helm-previous-line (&optional ARG))
-(defun occ-helm-previous-page ())
-(defun occ-helm-previous-visible-mark (&optional prev))
+(defun occ-helm-previous-line (&optional ARG)
+  "Placeholder for moving the helm selection ARG lines backward.
+The body is currently empty so it does nothing yet."
+  nil)
+(defun occ-helm-previous-page ()
+  "Placeholder for moving the helm selection back one page.
+The body is currently empty so it does nothing yet."
+  nil)
+(defun occ-helm-previous-visible-mark (&optional prev)
+  "Placeholder for moving to the previous visible mark overlay.
+The body is currently empty and PREV is unused."
+  nil)
 
 
 (defun occ-helm-maybe-exit-minibuffer ()
+  "Exit helm only when the current selection is a selectable task.
+Bound to RET in occ-helm-map. Otherwise warn that the selection
+is read only and keep the helm session open."
   ;; https://www.reddit.com/r/emacs/comments/376won/select_helm_candidate_by_using_mouse_click/
   ;; helm-execute-persistent-action
   (interactive)
@@ -144,7 +159,9 @@
 
 (defvar occ-helm-before-init-hook nil)
 (defvar occ-helm-after-init-hook nil)
-(defun occ-helm-cleanup ())
+(defun occ-helm-cleanup ()
+  "Cleanup function of the OCC helm source; body is currently empty."
+  nil)
 ;; checkout (defclass helm-source-ffiles (helm-source-sync) - in helm-files.el
 ;; C-h C-f helm-source-ffiles
 ;; C-h C-f helm-source
@@ -188,11 +205,15 @@
    ;; (action :initform 'helm-find-files-actions)
    (before-init-hook :initform 'occ-helm-before-init-hook)
    (after-init-hook :initform 'occ-helm-after-init-hook)
-   (group :initform 'occ-helm)))
+   (group :initform 'occ-helm))
+  "Class of helm sync source objects customized for the OCC selection UI.
+Subclass of helm-source-sync preconfigured with the occ-helm-map
+keymap and the OCC init and cleanup hooks and mode line label.")
 
 ;; (fmakunbound 'occ-helm-null-candidate)
 
 (cl-defmethod occ-helm-null-candidate ((obj occ-ctx))
+  "Return nil as the null candidate for the occ-ctx OBJ specialization."
   (ignore obj)
   nil)
 
@@ -208,6 +229,7 @@
 
 (defun occ-helm-dummy-source (prompt
                               action)
+  "Build a helm dummy source titled PROMPT whose single action is ACTION."
   (helm-build-dummy-source prompt
     :action (helm-make-actions prompt
                                action)))
@@ -216,6 +238,9 @@
                                              (collections list)
                                              &optional
                                              actions)
+  "Build a helm candidate source for the occ-obj-ctx OBJ specialization.
+Calls the helper occ-helm-build-candidates which is not defined
+anywhere yet."
   ;; BUG: occ-helm-build-candidates not defined anywhere
   (occ-helm-build-candidates :source (occ-obj-list-with obj
                                                         collections)
@@ -224,6 +249,9 @@
 
 (cl-defmethod occ-obj-helm-fun-action-function-call-source ((prompt     string)
                                                             (candidates list))
+  "Build a helm sync source titled PROMPT listing CANDIDATES.
+The shared action for every candidate is produced by
+occ-lambda-call-cand."
   (helm-build-sync-source prompt
     :candidates candidates
     :action     (list (cons "Run action"
@@ -231,11 +259,16 @@
 
 (cl-defmethod occ-obj-helm-build-dummy-source ((prompt string)
                                                (fun    compiled-function))
+  "Build a helm dummy source titled PROMPT running function FUN.
+FUN must be a compiled-function object."
   (occ-helm-dummy-source prompt
                          fun))
 
 (cl-defmethod occ-obj-helm-build-dummy-source ((prompt string)
                                                (fun    symbol))
+  "Build a helm dummy source titled PROMPT running the symbol FUN.
+The source is wrapped by occ-build-hsrc-source at rank 0 with
+level optional."
   (let ((source (occ-helm-dummy-source prompt
                                        fun)))
     (occ-build-hsrc-source source
@@ -252,6 +285,11 @@
                                                        filtered-count
                                                        &key
                                                        prompt)
+  "Build the helm source prompt for the occ-ctx OBJ specialization.
+When PROMPT is a cons whose car is :overrride use that override
+prompt verbatim. Otherwise compose OBJ-CLASS-NAME and the
+UNFILTERED-COUNT and FILTERED-COUNT numbers with the collection
+description into the standard select matching prompt."
   (ignore obj)
   (let ((override        (and prompt
                               (consp prompt)
@@ -276,6 +314,10 @@
 
 
 (cl-defmethod occ-obj-build-helm-map ((combined-dyn-filter occ-combined-dyn-filter))
+  "Build the helm keymap for the occ-combined-dyn-filter specialization.
+M-up and M-down tighten and loosen the rank threshold. M-return
+resets it. s-up and s-down switch to the next and previous filter
+sets. s-z runs a placeholder filter manager."
   (let ((filter-manage-fn  #'(lambda ()
                                (interactive)
                                (with-helm-buffer
@@ -309,6 +351,13 @@
                                                          ap-transf
                                                          timeout
                                                          prompt)
+  "Build the real helm source for the occ-ctx OBJ specialization.
+Candidates for COLLECTION come from the display filter closure
+of COMBINED-DYN-FILTER. The action and persistent action come
+from AP-NORMAL and the action transformer from AP-TRANSF. The
+history is org-refile-history and the keymap comes from
+occ-obj-build-helm-map. Return nil when no filtered candidates
+remain."
   (let* ((timeout               (or timeout occ-idle-timeout)))
     ;; (candidates-unfiltered (occ-obj-list-with obj collection :builder builder)) ;; (occ-collections-default) -- occ-obj-list-with is in occ-obj-accessor.el
     ;; TODO: make a separate function for it.
@@ -346,6 +395,10 @@
               :history                        'org-refile-history)))))))
 
 (cl-defmethod occ-obj-helmify ((combined-dyn-filter occ-combined-dyn-filter))
+  "Wrap COMBINED-DYN-FILTER closures for use inside a helm session.
+Command closures become helm commands that also call
+helm-refresh. Candidate closures map their results through
+occ-obj-candidate. Returns a new occ-combined-dyn-filter."
   (cl-flet ((occ-obj-build-helm-command-closure-fn (closure-fn)
               #'(lambda ()
                   (interactive)
@@ -427,11 +480,16 @@ select candidate from it."
 
 
 (defun occ-helm-build-dummy-sources ()
+  "Build the dummy sources for fast child and anonymous task creation.
+Each dummy source runs one of the occ-do-fast-create-child and
+occ-do-create-anonymous-child actions."
   (list (occ-obj-helm-build-dummy-source "Create fast child task may use template" #'occ-do-fast-create-child)
         (occ-obj-helm-build-dummy-source "Create Anonymous task"                   #'occ-do-create-anonymous-child)))
         ;; (occ-obj-helm-build-dummy-source "Create Anonymous (fast as unnamed)"      #'occ-do-fast-create-anonymous-child)
 
 (defun occ-helm-build-extra-actions-tsk-source ()
+  "Build the optional source holding extra anonymous task actions.
+Returns nil when the current buffer is in occ-ignore-buffer-names."
   (unless (member (buffer-name (current-buffer))
                   occ-ignore-buffer-names)
     (let ((source (occ-obj-helm-fun-action-function-call-source "Other Task Actions"
@@ -444,6 +502,10 @@ select candidate from it."
                                    :level :optional)))))
 
 (defun occ-helm-build-extra-actions-ctx-buffer-source ()
+  "Build the optional source holding extra context buffer actions.
+The single action adds the current buffer name to
+occ-ignore-buffer-names. Returns nil when the current buffer is
+already ignored."
   (unless (member (buffer-name (current-buffer))
                   occ-ignore-buffer-names)
     (let ((source (occ-obj-helm-fun-action-function-call-source "Other Actions"
@@ -468,6 +530,9 @@ select candidate from it."
                                                       auto-select-if-only
                                                       timeout
                                                       prompt)
+  "Build one helm source per collection for the occ-ctx OBJ.
+Maps occ-obj-helm-build-collection-source over COLLECTIONS with
+the given keyword arguments."
   ;; (occ-debug "occ-obj-helm-build-collections-sources: ap-normal: %s" ap-normal)
 
   ;; BUG: return list of occ-hsrc-candidates/occ-hsrc-sources/NIL also
@@ -495,6 +560,9 @@ select candidate from it."
                                           auto-select-if-only
                                           timeout
                                           prompt)
+  "Build the full helm source list for the occ-ctx OBJ specialization.
+Composes the per collection sources of COLLECTIONS with the
+dummy sources and the extra action sources."
   (ignore timeout)
   (ignore filters)
   (ignore builder)
@@ -519,6 +587,9 @@ select candidate from it."
 (cl-defmethod occ-obj-get-first-helm-actions-for-obj ((obj occ-obj)
                                                       (apn occ-ap-normal)
                                                       (apt null))
+  "Return the first helm action for OBJ from APN when APT is null.
+The value is the rest of the first entry of the resolved action
+list."
   (let ((act (cl-first (occ-obj-ap-helm-get-actions obj
                                                     apn
                                                     apt))))
@@ -527,6 +598,9 @@ select candidate from it."
 (cl-defmethod occ-obj-get-first-helm-actions-for-obj ((obj occ-obj)
                                                       (apn occ-ap-normal)
                                                       (apt occ-ap-transf))
+  "Return the first helm action for OBJ from the APN and APT packs.
+The value is the rest of the first entry of the action list
+resolved through both packs."
   (let ((act (cl-first (occ-obj-ap-helm-get-actions obj
                                                     apn
                                                     apt))))
@@ -557,12 +631,18 @@ select candidate from it."
       (occ-warn "occ-obj-helm-act-on-candidate: wrong source"))))
 
 (cl-defmethod occ-candidate-main-p ((source occ-hsrc))
+  "Return non-nil when the occ-hsrc specialization SOURCE is main.
+A main candidate has a rank above 10 and a level other than
+optional and passes occ-hsrc-candidate-p."
   (and (> (occ-obj-rank source) 10)
        (not (eq (occ-obj-level source) :optional))
        ;; (not (occ-hsrc-null-p source))
        (occ-hsrc-candidate-p source)))
 
 (cl-defmethod occ-source-main-p ((source occ-hsrc))
+  "Return non-nil when the occ-hsrc specialization SOURCE is main.
+A main source has a rank above 10 and a level other than optional
+and passes occ-hsrc-source-p."
   (and (> (occ-obj-rank source) 10)
        (not (eq (occ-obj-level source) :optional))
        ;; (not (occ-hsrc-null-p source))
@@ -570,6 +650,9 @@ select candidate from it."
 
 (cl-defmethod occ-candidate-compare ((s1 occ-hsrc-candidate)
                                      (s2 occ-hsrc-candidate))
+  "Compare occ-hsrc-candidate specializations S1 and S2 for sorting.
+Return non-nil when S1 outranks S2 and S1 also has the preferred
+non-optional level."
   ;; prefer non-optional level
   (let ((s1-level (if (eq (occ-obj-level s1) :optional) 0 1))
         (s2-level (if (eq (occ-obj-level s2) :optional) 0 1)))
@@ -586,6 +669,10 @@ select candidate from it."
                                             auto-select-if-only
                                             timeout
                                             prompt)
+  "Act on the helm sources built for the occ-ctx OBJ specialization.
+When a preferred main candidate source exists run its first helm
+action directly on it. Otherwise run the helm session in the
+buffer named by occ-obj-helm-select-buffer over all sources."
   (ignore timeout)
   (let ((cand-sources (occ-obj-helm-build-sources obj
                                                   collections ;; (occ-collections-default)
@@ -662,6 +749,11 @@ select candidate from it."
                                 auto-select-if-only
                                 timeout
                                 prompt)
+  "Run the helm action session for the occ-ctx OBJ specialization.
+Resolves AP-NORMAL and AP-TRANSF into callables and when
+RETURN-TRANSFORM is non-nil swaps both packs for their return
+transforming variants. Dispatches to occ-obj-helm-act-on-multiple
+over COLLECTIONS."
   (when collections
     ;; (occ-debug "occ-obj-helm-act1: ap-normal: %s" ap-normal)
     ;; (occ-debug "occ-obj-helm-act1: ap-transf: %s" ap-transf)

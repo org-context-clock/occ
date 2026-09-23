@@ -120,6 +120,7 @@
 
 
 (defun occ-heading-content-only ()
+  "Return the content text of the current heading without drawers."
   (when (org-at-heading-p)
     (save-excursion
       (save-restriction
@@ -140,6 +141,7 @@
 
 ;; utils
 (defun occ-util-keyword2sym (key)
+  "Return the symbol named by KEY as a plain symbol from a keyword."
   (key2sym key))
 
 (defun occ-util-plist-mapcar (fun plist)
@@ -148,6 +150,7 @@
           (seq-partition plist 2)))
 
 (defun occ-util-plist-value-mapcar (fun plist)
+  "Return PLIST with FUN applied to each of its values via mapcan."
   (mapcan #'identity
           (occ-util-plist-mapcar #'(lambda (c))
                                 (list (cl-first c)
@@ -155,6 +158,7 @@
                             plist)))
 
 (defun occ-tsk-plist-from-org (plist)
+  "Convert org PLIST of properties into an OCC task plist."
   (let ((ret-plist (mapcan #'identity
                            (occ-util-plist-mapcar #'(lambda (c)
                                                       (list (cl-first c)
@@ -176,6 +180,7 @@
 
 ;; utils
 (defun occ-get-tsk-category (heading plist)
+  "Return the category for HEADING from a tag or PLIST or TODO default."
   (if (stringp heading)
       (or (when (string-match "<\\([a-zA-Z][a-zA-Z0-9]+\\)>" heading)
             (match-string 1
@@ -189,38 +194,47 @@
   "Task constructor")
 
 (cl-defmethod occ-obj-tsk-builder ((collection occ-tree-collection))
+  "Return the tree task constructor for a tree COLLECTION."
   (ignore collection)
   #'make-occ-tree-tsk)
 
 (cl-defmethod occ-obj-tsk-builder ((collection occ-list-collection))
+  "Return the list task constructor for a list COLLECTION."
   (ignore collection)
   #'make-occ-list-tsk)
 
 (cl-defmethod occ-obj-tsk-builder ((collection occ-obj-collection))
+  "Return the base task constructor for an occ-obj COLLECTION."
   (ignore collection)
   #'make-occ-tsk)
 
 (cl-defmethod occ-obj-tsk-builder ((tsk occ-tree-tsk))
+  "Return the tree task constructor for a tree TSK object."
   (ignore tsk)
   #'make-occ-tree-tsk)
 
 (cl-defmethod occ-obj-tsk-builder ((tsk occ-list-tsk))
+  "Return the list task constructor for a list TSK object."
   (ignore tsk)
   #'make-occ-list-tsk)
 
 (cl-defmethod occ-obj-tsk-builder ((tsk occ-obj-tsk))
+  "Return the base task constructor for an occ-obj TSK."
   (ignore tsk)
   #'make-occ-tsk)
 
 (cl-defmethod occ-obj-tsk-builder ((obj null))
+  "Return the base task constructor for a null OBJ."
   (ignore obj)
   #'make-occ-tsk)
 
 (cl-defmethod occ-obj-tsk-builder ((builder compiled-function))
+  "Signal an error for a compiled-function BUILDER."
   (occ-error "Error %s" builder)
   builder)
 
 (cl-defmethod occ-obj-tsk-builder ((builder symbol))
+  "Signal an error for a symbol BUILDER."
   (occ-error "Error %s" builder)
   builder)
 
@@ -235,6 +249,9 @@
 
 (defun occ-make-tsk-at-point (collection
                               file)
+  "Build a task snapshot from the org heading at point for COLLECTION.
+FILE selects whether the task is treated as file-backed; [NONTSK]
+entries are rejected."
   ;; (occ-debug "occ-make-tsk-at-point: Builder %s" builder)
   (let ((builder (occ-obj-tsk-builder collection))
         (heading-with-string-prop (if (org-before-first-heading-p)
@@ -300,20 +317,24 @@
 
 (cl-defmethod occ-obj-make-tsk-at-point ((collection occ-obj-collection)
                                          file)
+  "Make-tsk-at-point specialization on occ-obj COLLECTION and FILE."
   (occ-make-tsk-at-point (occ-obj-collection collection)
                          file))
 (cl-defmethod occ-obj-make-tsk-at-point ((tsk occ-obj-tsk)
                                          file)
+  "Make-tsk-at-point specialization on occ-obj TSK and FILE."
   (occ-obj-make-tsk-at-point (occ-obj-collection tsk)
                              file))
 
 
 (cl-defmethod occ-obj-tsk-builder-at-point ((collection occ-obj-collection))
+  "Return a builder lambda making a task at point for COLLECTION."
   #'(lambda (file)
       (occ-obj-make-tsk-at-point (occ-obj-collection collection)
                                  file)))
 
 (cl-defmethod occ-obj-tsk-builder-at-point ((collection null))
+  "Return a builder lambda making a task at point for a null COLLECTION."
   #'(lambda (file)
       (occ-obj-make-tsk-at-point (occ-default-collection)
                                  file)))
@@ -323,6 +344,7 @@
                                 &optional
                                 collection
                                 subtree-level)
+  "Make-tsk specialization on a number OBJ position within COLLECTION."
   ;; (occ-debug "point %s" obj)
   (let ((collection (if collection      ;for when collection were not passed, like in (defun occ-current-tsk (&optional occ-other-allowed) ...)
                         (occ-obj-collection collection)
@@ -339,6 +361,7 @@
                                 &optional
                                 collection
                                 subtree-level)
+  "Make-tsk specialization on a marker OBJ resolved in its buffer."
   ;; (occ-debug "point %s" obj)
   (when (and (marker-buffer obj)
              (numberp (marker-position obj)))
@@ -353,6 +376,7 @@
                                 &optional
                                 collection
                                 subtree-level)
+  "Make-tsk specialization on null OBJ using point-marker."
   (ignore obj)
   (occ-debug "current pos %s" (point-marker))
   (occ-obj-make-tsk (point-marker)
@@ -363,6 +387,7 @@
                                 &optional
                                 collection
                                 subtree-level)
+  "Make-tsk specialization on occ-tsk OBJ, returning it unchanged."
   obj)
 
 
@@ -370,6 +395,7 @@
                                      (collection occ-obj-collection)
                                      &optional
                                      subtree-level)
+  "Make-tsk-with specialization on null OBJ and a COLLECTION."
   (occ-obj-make-tsk obj
                     collection
                     subtree-level))
@@ -377,6 +403,7 @@
                                      (collection occ-obj-collection)
                                      &optional
                                      subtree-level)
+  "Make-tsk-with specialization on a number OBJ and a COLLECTION."
   (occ-obj-make-tsk obj
                     collection
                     subtree-level))
@@ -384,6 +411,7 @@
                                      (collection occ-obj-collection)
                                      &optional
                                      subtree-level)
+  "Make-tsk-with specialization on a marker OBJ and a COLLECTION."
   (occ-obj-make-tsk obj
                     collection
                     subtree-level))
@@ -392,6 +420,7 @@
                                      (tsk occ-obj-tsk)
                                      &optional
                                      subtree-level)
+  "Make-tsk-with specialization on null OBJ and an occ-obj TSK."
   (occ-obj-make-tsk obj
                     (occ-obj-collection (occ-obj-tsk tsk))
                     (or subtree-level
@@ -400,6 +429,7 @@
                                      (tsk occ-obj-tsk)
                                      &optional
                                      subtree-level)
+  "Make-tsk-with specialization on a number OBJ and an occ-obj TSK."
   (occ-obj-make-tsk obj
                     (occ-obj-collection tsk)
                     subtree-level))
@@ -407,6 +437,7 @@
                                      (tsk occ-obj-tsk)
                                      &optional
                                      subtree-level)
+  "Make-tsk-with specialization on a marker OBJ and an occ-obj TSK."
   (occ-obj-make-tsk obj
                     (occ-obj-collection (occ-obj-tsk tsk))
                     subtree-level))
@@ -415,23 +446,30 @@
                                      anything
                                      &optional
                                      subtree-level)
+  "Make-tsk-with specialization on occ-tsk OBJ returning it unchanged."
   obj)
 
 
 (defvar occ-ctx-hash (make-hash-table :test #'equal :size 100 :rehash-size 20))
 (defun occ-ctx-puthash (plist ctx)
+  "Store CTX under PLIST in occ-ctx-hash and return CTX."
   (puthash plist ctx occ-ctx-hash))
 (defun occ-ctx-gethash (plist)
+  "Return the interned context stored under PLIST or nil."
   (gethash plist occ-ctx-hash))
 (defun occ-ctx-remhash (plist)
+  "Remove the context stored under PLIST from occ-ctx-hash."
   (remhash plist occ-ctx-hash))
 (defun occ-ctx-clrhash ()
+  "Clear the occ-ctx-hash context cache."
   (clrhash occ-ctx-hash))
 (defun occ-ctx-hashlen ()
+ "Return the number of interned contexts in occ-ctx-hash."
  (hash-table-count occ-ctx-hash))
 
 
 (cl-defmethod occ-obj-make-stat (&key average stddev variance)
+  "Make a fresh occ-stat from the keyword AVERAGE STDDEV and VARIANCE."
   (make-occ-stat :average  average
                  :stddev   stddev
                  :variance variance))
@@ -441,6 +479,9 @@
   "occ-obj-make-ctx")
 
 (cl-defmethod occ-obj-make-ctx-at-point (&optional mrk)
+  "Return the context for MRK and intern it in occ-ctx-hash.
+The buffer is resolved via org-base-buffer with the window only a
+fallback."
   (let* ((mrk   (or mrk
                     (point-marker)))
          (buff  (marker-buffer mrk))
@@ -464,18 +505,22 @@
     (occ-ctx-gethash plist)))
 
 (cl-defmethod occ-obj-make-ctx ((obj buffer))
+  "Make-ctx specialization on a buffer OBJ."
   (let ((mrk (make-marker)))
     (set-marker mrk 0 obj)
     (occ-obj-make-ctx-at-point mrk)))
 
 (cl-defmethod occ-obj-make-ctx ((obj marker))
+  "Make-ctx specialization on a marker OBJ."
   (occ-obj-make-ctx-at-point obj))
 
 (cl-defmethod occ-obj-make-ctx ((obj null))
+  "Make-ctx specialization on null OBJ using point-marker."
   (ignore obj)
   (occ-obj-make-ctx-at-point (point-marker)))
 
 (cl-defmethod occ-obj-make-ctx ((obj occ-ctx))
+  "Make-ctx specialization on occ-ctx OBJ returning it unchanged."
   obj)
 
 
@@ -484,15 +529,18 @@
 
 (cl-defmethod occ-obj-make-ctsk-with ((tsk occ-tsk)
                                       (ctx occ-ctx))
+  "Make a fresh occ-ctsk pairing occ-tsk TSK with occ-ctx CTX."
   ;; use occ-obj-build-ctsk-with
   (make-occ-ctsk :name nil
                  :tsk  tsk
                  :ctx  ctx))
 
 (cl-defmethod occ-obj-make-ctsk ((obj occ-ctsk))
+  "Make-ctsk specialization on occ-ctsk OBJ returning it unchanged."
   obj)
 
 (cl-defmethod occ-obj-make-ctsk ((obj occ-ctxual-tsk))
+  "Make a fresh occ-ctsk from the task and context of OBJ."
   ;; use occ-obj-build-ctsk-with
   (let ((tsk (occ-obj-tsk obj))
         (ctx (occ-obj-ctx obj)))
@@ -502,13 +550,16 @@
 
 (cl-defmethod occ-obj-build-ctsk-with ((tsk occ-tsk) ;ctor
                                        (ctx occ-ctx))
+  "Build or coerce an occ-ctsk pairing TSK with CTX."
   (occ-obj-make-ctsk-with tsk
                           ctx))
 
 (cl-defmethod occ-obj-build-ctsk ((obj occ-ctxual-tsk))
+  "Build-ctsk specialization on occ-ctxual-tsk OBJ."
   (occ-obj-make-ctsk obj))
 
 (cl-defmethod occ-obj-build-ctsk ((obj occ-ctsk))
+  "Build-ctsk specialization on occ-ctsk OBJ returning it unchanged."
   obj)
 
 
@@ -522,6 +573,7 @@
                                             (ctx occ-ctx)
                                             &optional
                                             rank)
+  "Make a fresh occ-ctxual-tsk pairing TSK with CTX while ignoring RANK."
   ;; use occ-obj-build-ctxual-tsk-with
   (make-occ-ctxual-tsk :name nil
                        :tsk  tsk
@@ -530,17 +582,20 @@
 
 (cl-defmethod occ-obj-build-ctxual-tsk-with ((tsk occ-tsk) ;ctor
                                              (ctx occ-ctx))
+  "Build or coerce an occ-ctxual-tsk pairing TSK with CTX."
   (occ-obj-make-ctxual-tsk-with tsk
                                 ctx))
 
 (cl-defmethod occ-obj-build-ctxual-tsk-with ((tsk occ-ctxual-tsk) ;ctor
                                              (ctx occ-ctx))
+  "Build-ctxual-tsk-with specialization on occ-ctxual-tsk TSK and CTX."
   (ignore tsk)
   (ignore ctx)
   (debug))
 
 (cl-defmethod occ-obj-build-ctxual-tsk-with ((tsk null) ;ctor
                                              (ctx occ-ctx))
+  "Build-ctxual-tsk-with specialization on null TSK and CTX returning nil."
   (ignore tsk)
   (ignore ctx)
   nil)
@@ -548,6 +603,7 @@
 (cl-defmethod occ-obj-make-ctxual-tsk ((obj occ-ctsk)
                                        &optional
                                        rank)
+  "Make a fresh occ-ctxual-tsk from the task and context of occ-ctsk OBJ."
   (let ((tsk (occ-obj-tsk obj))
         (ctx (occ-obj-ctx obj)))
     (make-occ-ctxual-tsk :name nil
@@ -558,29 +614,35 @@
 (cl-defmethod occ-obj-make-ctxual-tsk ((obj occ-ctxual-tsk)
                                        &optional
                                        rank)
+  "Make-ctxual-tsk specialization on occ-ctxual-tsk OBJ returning OBJ."
   (ignore rank)
   obj)
 
 (cl-defmethod occ-obj-build-ctxual-tsk ((obj occ-ctsk)
                                         &optional
                                         rank)
+  "Build-ctxual-tsk specialization on occ-ctsk OBJ passing RANK."
   (occ-obj-make-ctxual-tsk obj
                            rank))
 
 (cl-defmethod occ-obj-build-ctxual-tsk ((obj occ-ctxual-tsk)
                                         &optional
                                         rank)
+  "Build-ctxual-tsk specialization on occ-ctxual-tsk OBJ returning OBJ."
   (ignore rank)
   obj)
 
 
 (cl-defmethod occ-obj-build-obj-with ((obj occ-tsk)
                                       (ctx occ-ctx))
+  "Build-obj-with specialization on occ-tsk OBJ and occ-ctx CTX."
   (occ-obj-build-ctxual-tsk-with obj
                                  ctx))
 
 (cl-defmethod occ-obj-build-obj-with ((obj occ-tsk)
                                       (ctx null))
+  "Build-obj-with specialization on occ-tsk OBJ and null CTX.
+The context is taken from point."
   (ignore ctx)
   (occ-obj-build-obj-with obj
                             (occ-obj-make-ctx-at-point)))
@@ -594,6 +656,8 @@
                                        (limit integer)
                                        (rank  integer)
                                        (level symbol))
+  "Make a fresh occ-tree-collection named by KEY from FILES.
+DESC SPEC DEPTH LIMIT RANK and LEVEL configure the collection."
   (make-occ-tree-collection :desc  desc
                             :name  (symbol-name key) ;; "tsk collection tree"
                             :spec  spec
@@ -611,6 +675,8 @@
                                        (limit integer)
                                        (rank  integer)
                                        (level symbol))
+  "Make a fresh occ-list-collection named by KEY from FILES.
+DESC SPEC DEPTH LIMIT RANK and LEVEL configure the collection."
   (make-occ-list-collection :desc  desc
                             :name  (symbol-name key) ;; "tsk collection list"
                             :spec  spec
@@ -630,6 +696,7 @@
                                         (limit integer)
                                         (rank  integer)
                                         (level symbol))
+  "Build or coerce a tree collection named by KEY from FILES."
   (occ-obj-make-collection desc
                            key
                            spec
@@ -647,6 +714,7 @@
                                         (limit integer)
                                         (rank  integer)
                                         (level symbol))
+  "Build or coerce a list collection named by KEY from FILES."
   (occ-obj-make-collection desc
                            key
                            spec
@@ -659,6 +727,7 @@
 
 (defun occ-obj-make-return (label
                             value)
+  "Make a fresh occ-return tagged with LABEL carrying VALUE."
   (make-occ-return :label label
                    :value value))
 
@@ -748,6 +817,7 @@
                                    decrement-closure-fn
                                    reset-closure-fn
                                    prev)
+  "Make a fresh dynamic filter named NAME from the closure keywords."
   (make-occ-dyn-filter :name name
                        :init-closure-fn init-closure-fn
                        :seq-closure-fn seq-closure-fn
@@ -768,6 +838,7 @@
                                     decrement-closure-fn
                                     reset-closure-fn
                                     prev)
+  "Build or coerce a dynamic filter named NAME from the closure keywords."
   (occ-obj-make-dyn-filter name
                            :init-closure-fn init-closure-fn
                            :seq-closure-fn seq-closure-fn
@@ -791,6 +862,7 @@
                                             increment-closure-fn
                                             decrement-closure-fn
                                             reset-closure-fn)
+  "Make a fresh combined dynamic filter named NAME from closures."
   (make-occ-combined-dyn-filter :name name
                                 :init-closure-fn init-closure-fn
                                 :seq-closure-fn seq-closure-fn
@@ -815,6 +887,7 @@
                                              increment-closure-fn
                                              decrement-closure-fn
                                              reset-closure-fn)
+  "Build or coerce a combined dynamic filter named NAME from closures."
   (occ-obj-make-combined-dyn-filter name
                                     :curr-closure-fn curr-closure-fn
                                     :prev-closure-fn prev-closure-fn
@@ -830,50 +903,62 @@
 
 ;; ctors
 (cl-defmethod occ-obj-make-ap-normal ((ap-obj list))
+  "Make-ap-normal specialization on a list AP-OBJ as tree-keybranch."
   (make-occ-ap-normal :tree-keybranch ap-obj))
 
 (cl-defmethod occ-obj-make-ap-normal ((ap-obj occ-ap-normal))
+  "Make-ap-normal specialization on occ-ap-normal AP-OBJ returning it."
   ap-obj)
 
 (cl-defmethod occ-obj-make-ap-normal ((ap-obj (head :tree-keybranch)))
+  "Make-ap-normal specialization on a head tree-keybranch AP-OBJ."
   (let ((tree-keybranch (cl-rest ap-obj)))
     (make-occ-ap-normal :tree-keybranch tree-keybranch)))
 
 (cl-defmethod occ-obj-make-ap-normal ((ap-obj (head :callables)))
+  "Make-ap-normal specialization on a head callables AP-OBJ."
   (let ((callables (cl-rest ap-obj)))
     (make-occ-ap-normal :callables (occ-obj-callables callables nil))))
 
 (cl-defmethod occ-obj-make-ap-normal ((ap-obj (head :keywords)))
+  "Make-ap-normal specialization on a head keywords AP-OBJ."
   (let* ((keywords  (cl-rest ap-obj))
          (callables (occ-helm-callables-get keywords)))
    (make-occ-ap-normal :callables callables)))
 
 
 (cl-defmethod occ-obj-make-ap-transf ((ap-obj list))
+  "Make-ap-transf specialization on a list AP-OBJ as tree-keybranch."
   (make-occ-ap-transf :tree-keybranch ap-obj))
 
 (cl-defmethod occ-obj-make-ap-transf ((ap-obj occ-ap-normal))
+  "Make-ap-transf specialization on occ-ap-normal AP-OBJ converting it."
   (let ((callables (occ-ap-normal-callables ap-obj)))
     (occ-assert callables t "ap-obj should have callable")
     (make-occ-ap-transf :callables (occ-obj-callables callables nil))))
 
 (cl-defmethod occ-obj-make-ap-transf ((ap-obj occ-ap-transf))
+  "Make-ap-transf specialization on occ-ap-transf AP-OBJ returning it."
   ap-obj)
 
 (cl-defmethod occ-obj-make-ap-transf ((ap-obj (head :tree-keybranch)))
+  "Make-ap-transf specialization on a head tree-keybranch AP-OBJ."
   (let ((tree-keybranch (cl-rest ap-obj)))
     (make-occ-ap-transf :tree-keybranch tree-keybranch)))
 
 (cl-defmethod occ-obj-make-ap-transf ((ap-obj (head :callables)))
+  "Make-ap-transf specialization on a head callables AP-OBJ."
   (let ((callables (cl-rest ap-obj)))
     (make-occ-ap-transf :callables callables)))
 
 (cl-defmethod occ-obj-make-ap-transf ((ap-obj (head :keywords)))
+  "Make-ap-transf specialization on a head keywords AP-OBJ."
   (let* ((keywords   (cl-rest ap-obj))
          (callables (occ-helm-callables-get keywords)))
     (make-occ-ap-transf :callables callables)))
 
 (cl-defmethod occ-obj-make-ap-transf ((ap-obj (head :transform)))
+  "Make-ap-transf specialization on a head transform AP-OBJ."
   (let ((transform (cl-rest ap-obj)))
     (make-occ-ap-transf :transform transform)))
 
@@ -882,36 +967,42 @@
 (cl-defmethod occ-obj-build-ap-normal ((ap-obj list)
                                        &optional
                                        optional-obj)
+  "Build-ap-normal specialization on a list AP-OBJ as tree-keybranch."
   (ignore optional-obj)
   (make-occ-ap-normal :tree-keybranch ap-obj))
 
 (cl-defmethod occ-obj-build-ap-normal ((ap-obj (head :tree-keybranch))
                                        &optional
                                        optional-obj)
+  "Build-ap-normal specialization on a head tree-keybranch AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-normal ap-obj))
 
 (cl-defmethod occ-obj-build-ap-normal ((ap-obj (head :callables))
                                        &optional
                                        optional-obj)
+  "Build-ap-normal specialization on a head callables AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-normal ap-obj))
 
 (cl-defmethod occ-obj-build-ap-normal ((ap-obj (head :keywords))
                                        &optional
                                        optional-obj)
+  "Build-ap-normal specialization on a head keywords AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-normal ap-obj))
 
 (cl-defmethod occ-obj-build-ap-normal ((ap-obj occ-ap-normal)
                                        &optional
                                        optional-obj)
+  "Build-ap-normal specialization on occ-ap-normal AP-OBJ returning it."
   (ignore optional-obj)
   ap-obj)
 
 (cl-defmethod occ-obj-build-ap-normal ((ap-obj null)
                                        &optional
                                        optional-obj)
+  "Build-ap-normal specialization on null AP-OBJ using OPTIONAL-OBJ."
   (ignore ap-obj)
   (occ-obj-make-ap-normal optional-obj))
 
@@ -919,48 +1010,56 @@
 (cl-defmethod occ-obj-build-ap-transf ((ap-obj list)
                                        &optional
                                        optional-obj)
+  "Build-ap-transf specialization on a list AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-transf ap-obj))
 
 (cl-defmethod occ-obj-build-ap-transf ((ap-obj (head :tree-keybranch))
                                        &optional
                                        optional-obj)
+  "Build-ap-transf specialization on a head tree-keybranch AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-transf ap-obj))
 
 (cl-defmethod occ-obj-build-ap-transf ((ap-obj (head :callables))
                                        &optional
                                        optional-obj)
+  "Build-ap-transf specialization on a head callables AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-transf ap-obj))
 
 (cl-defmethod occ-obj-build-ap-transf ((ap-obj (head :keywords))
                                        &optional
                                        optional-obj)
+  "Build-ap-transf specialization on a head keywords AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-transf ap-obj))
 
 (cl-defmethod occ-obj-build-ap-transf ((ap-obj (head :transform))
                                        &optional
                                        optional-obj)
+  "Build-ap-transf specialization on a head transform AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-transf ap-obj))
 
 (cl-defmethod occ-obj-build-ap-transf ((ap-obj occ-ap-normal)
                                        &optional
                                        optional-obj)
+  "Build-ap-transf specialization on occ-ap-normal AP-OBJ."
   (ignore optional-obj)
   (occ-obj-make-ap-transf ap-obj))
 
 (cl-defmethod occ-obj-build-ap-transf ((ap-obj occ-ap-transf)
                                        &optional
                                        optional-obj)
+  "Build-ap-transf specialization on occ-ap-transf AP-OBJ returning it."
   (ignore optional-obj)
   ap-obj)
 
 (cl-defmethod occ-obj-build-ap-transf ((ap-obj null)
                                        &optional
                                        optional-obj)
+  "Build-ap-transf specialization on null AP-OBJ using OPTIONAL-OBJ."
   (ignore ap-obj)
   (if optional-obj
         (occ-obj-build-ap-transf optional-obj)))
@@ -990,6 +1089,7 @@
 (cl-defmethod occ-obj-build-return-lambda ((callable occ-callable-normal)
                                            &optional
                                            label)
+  "Build a return lambda wrapping occ-callable-normal CALLABLE with LABEL."
   (let ((newcallable #'(lambda (candidate)
                          (let ((fun (occ-callable-fun callable)))
                            (let* ((value (funcall fun candidate))
@@ -1009,11 +1109,14 @@
 (cl-defmethod occ-obj-build-return-lambda ((callable occ-callable-generator)
                                            &optional
                                            label)
+  "Signal an error; generators cannot build a return lambda."
   (ignore label)
   (occ-error "Can not use occ-callable-transf %s" callable))
 
 
 (cl-defun occ-build-hsrc-null (candidate &key rank level)
+  "Build an occ-hsrc-null from CANDIDATE with RANK and LEVEL.
+CANDIDATE is ignored and stored as nil."
   (ignore candidate)
   (let ((rank  (or rank 0))
         (level (or level :optional)))
@@ -1022,6 +1125,7 @@
                         :level level)))
 
 (cl-defun occ-build-hsrc-candidate (candidate &key rank level)
+  "Build an occ-hsrc-candidate wrapping CANDIDATE with RANK and LEVEL."
   (let ((rank  (or rank 0))
         (level (or level :optional)))
     (make-occ-hsrc-candidate :obj candidate
@@ -1029,6 +1133,7 @@
                              :level level)))
 
 (cl-defun occ-build-hsrc-source (source &key rank level)
+  "Build an occ-hsrc-source wrapping SOURCE with RANK and LEVEL."
   (let ((rank  (or rank 0))
         (level (or level :optional)))
     (make-occ-hsrc-source :obj source
@@ -1038,18 +1143,21 @@
 
 (let ((instance))
   (defun occ-get-user-agent ()
+    "Return the singleton user agent creating it on first use."
     (unless instance
       (setq instance (make-occ-user-agent)))
     instance))
 
 (let ((instance))
   (defun occ-get-org-agent ()
+    "Return the singleton org agent creating it on first use."
     (unless instance
       (setq instance (make-occ-org-agent)))
     instance))
 
 (let ((instance))
   (defun occ-get-emacs-agent ()
+    "Return the singleton emacs agent creating it on first use."
     (unless instance
       (setq instance (make-occ-emacs-agent)))
     instance))
@@ -1064,6 +1172,7 @@
 
 
 (cl-defun occ-make-ranktbl (&key name)
+  "Make a fresh occ-ranktbl named NAME defaulting to ranktbl."
   (make-occ-ranktbl :name (or name "ranktbl")))
 
 ;;; occ-obj-ctor.el ends here

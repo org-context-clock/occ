@@ -47,6 +47,11 @@
 
 
 (defun occ-filter-config-initialize ()
+  "Reset occ-obj-static-filters and register the built-in filter set.
+Registers :incremental which keeps ranks >= a pivot walking the
+distinct rank values from the middle.  Registers :positive keeping
+ranks > 0 and :non-negative keeping ranks > -1.  Registers :negative
+keeping ranks < 0 and :identity keeping every candidate."
   (setq occ-obj-static-filters nil)
   (occ-obj-build-static-filter :incremental
                                "Incremental"
@@ -107,14 +112,21 @@
 
 
 (defun occ-list-filters ()
+  "Return the occ-list-filters spec nil then :non-negative.
+Superseded by the later definitions of occ-list-filters."
   '(nil
     :non-negative))
 
 (defun occ-list-filters ()
+  "Return the occ-list-filters spec nil then :identity.
+Superseded by the final definition of occ-list-filters below."
   '(nil
     :identity))
 (defun occ-list-filters ()
   ;; '(:non-negative)
+  "Return the effective occ-list-filters spec for listing tasks.
+The spec is nil then :incremental then :identity.  This final
+definition overrides the two earlier ones in this file."
   (list nil
         :incremental
         ;; :negative
@@ -125,6 +137,10 @@
 ;;         :mutual-deviation
 ;;         (list :positive #'occ-obj-member-tsk-rank)))
 (defun occ-match-filters ()
+  "Return the default clock-in filter spec list.
+The leading t sets the filter direction for the remaining specs:
+:incremental then :positive with rank function occ-obj-rank then
+:non-negative then :identity."
   (list t
         :incremental
         ;; :mutual-deviation

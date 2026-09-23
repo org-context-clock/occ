@@ -67,13 +67,18 @@
 
 
 (defun occ-obj-list-select-ap-normal-keys ()
+  "Return the value of occ-list-select-ap-normal-keys."
   occ-list-select-ap-normal-keys)
 (defun occ-obj-list-select-ap-transf-keys ()
+  "Return the value of occ-list-select-ap-transf-keys."
   occ-list-select-ap-transf-keys)
 
 
 ;; DEPENDENCY remove it.
 (defun dirname-of-file (file &optional final-slash)
+  "Return the directory part of FILE.
+With non-nil FINAL-SLASH the trailing slash is kept otherwise it is
+removed."
   ;; (ido-no-final-slash
   (if final-slash
       (expand-file-name (file-name-directory file))
@@ -87,19 +92,25 @@
 
 
 (defun downcase-sym (sym)
+  "Return the interned downcased name of symbol SYM."
   (let ((symname (downcase (symbol-name sym))))
     (or (intern-soft symname)
         (intern symname))))
 (defun upcase-sym (sym)
+  "Return the interned upcased name of symbol SYM."
   (let ((symname (upcase (symbol-name sym))))
     (or (intern-soft symname)
         (intern symname))))
 (defun sym2key (sym)
+  "Return the keyword with a leading colon made from symbol SYM.
+Returns SYM unchanged when it already is a keyword."
   (if (keywordp sym)
       sym
     (or (intern-soft (concat ":" (symbol-name sym)))
         (intern (concat ":" (symbol-name sym))))))
 (defun key2sym (sym)
+  "Return the symbol made by dropping the colon from keyword SYM.
+Returns SYM unchanged when it is not a keyword."
   (if (keywordp sym)
       (or (intern-soft (substring (symbol-name sym) 1))
           (intern (substring (symbol-name sym) 1)))
@@ -107,6 +118,7 @@
 
 
 (defun occ-valid-marker (marker)
+  "Return MARKER when it has a live buffer and nil otherwise."
   (when (and marker
              (marker-buffer marker))
     marker))
@@ -129,6 +141,10 @@
                                         &optional
                                         resume
                                         start-time)
+  "Clock in to CLOCK with org persistence handling disabled.
+Passes optional RESUME and START-TIME to org-clock-clock-in while
+binding org-clock-persist and org-clock-auto-clock-resolution to nil
+and sets org-clock-loaded on return."
   ;; lotus-org-with-safe-modification
   (let ((org-log-note-clock-out nil))
     (progn
@@ -153,6 +169,9 @@
                             hist
                             def
                             inherit-input-method)
+  "Read one item with PROMPT from COLLECTION via completing-read.
+Delegates to the function bound to occ-completing-read-function and
+passes all arguments through unchanged."
   (let ((helm-always-two-windows nil))
     (occ-debug-uncond "occ-completing-read: prompt %s collection %s"
                       prompt collection)
@@ -167,12 +186,16 @@
 
 
 (defun occ-util-select-from-sym-list (prompt symlist)
+  "Read a symbol from SYMLIST via completing-read with PROMPT.
+Returns the interned symbol for the chosen name."
   (let ((symstr (completing-read prompt
                                  symlist)))
     (intern symstr)))
 
 
 (defun occ-util-combine (&rest elem-lists)
+  "Return the cartesian product of the lists in ELEM-LISTS.
+Each result element is a list holding one item from every ELEM-LIST."
   (if (cdr elem-lists)
       (mapcan #'(lambda (ef)
                   (mapcar #'(lambda (e)
@@ -185,6 +208,8 @@
 
 
 (defun occ-insert-node-before-element (node element list)
+  "Insert NODE before ELEMENT in LIST and return the list.
+Signals an occ-error when ELEMENT is not found in LIST."
   ;; https://groups.google.com/forum/#!topic/comp.lang.lisp/83g9zkq_CQY
   (let ((pos (cl-position element list)))
     (if pos
@@ -197,6 +222,8 @@
             list))
       (occ-error "not able to find element: %s" (occ-obj-format element)))))
 (defun occ-insert-node-after-element (node element list)
+  "Insert NODE after ELEMENT in LIST and return the list.
+Signals an occ-error when ELEMENT is not found in LIST."
   ;; https://groups.google.com/forum/#!topic/comp.lang.lisp/83g9zkq_CQY
   (let ((pos (cl-position element list)))
     (if pos
@@ -210,12 +237,17 @@
 
 
 (defun occ-helm-buffer-p (buffer)
+  "Return non-nil when BUFFER is a helm buffer.
+Tests the buffer name against the ^*helm regexp."
   (string-match "^*helm"
                 (buffer-name buffer)))
 
 
 ;;;###autoload
 (defun occ-after-save-hook-fun ()
+  "Reset the default collection when a saved org file belongs to it.
+Runs as an after-save-hook; does nothing when the saved file is not one
+of the occ collection files."
   (let ((file (buffer-file-name)))
     (when (and file
                (eq major-mode 'org-mode))
@@ -232,6 +264,9 @@
 
 
 (defun occ-warn-on-buffer-kill ()
+  "Decide whether killing the current buffer is allowed.
+Prompts with y-or-n-p when called interactively on a buffer visiting an
+occ collection file and otherwise returns t."
   (let ((curr-buff (current-buffer)))
     (if (memq curr-buff
               (mapcar #'find-buffer-visiting
@@ -241,6 +276,9 @@
       t)))
 
 (defun occ-do-setup-buffer ()
+  "Prepare the current buffer for occ use.
+Switches to org-mode when needed and adds occ-warn-on-buffer-kill as a
+buffer local kill buffer query hook."
   ;; BUG: do necessary steps for occ-buffers
   (unless (eq major-mode 'org-mode)
     (org-mode))
@@ -253,6 +291,9 @@
                                nowarn
                                rawfile
                                wildcards)
+  "Return the buffer visiting FILE without running org-clock-load.
+Binds org-clock-persist to nil so loading the file via org-mode-hook
+does not trigger org-clock-load."
   (let ((org-clock-persist nil))
     ;; To avoid (org-clock-load) via org-mode-hook
     (find-file-noselect file
@@ -278,6 +319,9 @@
     (apply 'format "#%02x%02x%02x" (nreverse list))))
 
 (defun occ-obj-add-face-properties (text class &rest properties)
+  "Return a copy of TEXT with PROPERTIES added to its face property.
+Only characters whose char-syntax equals CLASS are changed when CLASS
+is non-nil."
   ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Changing-Properties.html
   ;; Create a copy of the text string
   (let ((modified-str (copy-sequence text)))
@@ -298,6 +342,9 @@
 
 ;;;###autoload
 (defun occ-run-with-deafult-tsk-collection (fn)
+  "Run FN now or register it on the collection change hook.
+Calls FN immediately when the default collection is available and
+otherwise adds FN to *occ-collection-change-hook*."
   (if (and (occ-collector-get (occ-collector-default-key))
            (occ-default-collection))
       (when t
@@ -341,6 +388,9 @@
 
 
 (defun occ-back-to-heading ()
+  "Move point back to the current org heading when one exists.
+Does nothing before the first heading and signals occ-error when the
+movement fails."
   (condition-case e
       (unless (org-before-first-heading-p)
         ;; it is a file
@@ -353,9 +403,13 @@
 ;;                           "--PROPERTY--")
 
 (defun occ-line-to-skeleton (line)
+  "Return a skeleton element form built from LINE."
   `( > ,(trim-string line)  \n))
 (defvar occ-skeleton-file nil)
 (defun occ-buffer-content-to-skeleton (&optional force)
+  "Return skeleton element forms for the lines of occ-skeleton-file.
+Prompts for the file when FORCE is non-nil or occ-skeleton-file is unset
+and skips the comment header lines of the file."
   (unless (and (not force)
                occ-skeleton-file)
     (setq occ-skeleton-file
@@ -372,11 +426,15 @@
            (mapcar #'occ-line-to-skeleton
                    lines))))
 (defun occ-make-skeleton (&optional force)
+  "Define the occ-skeleton template from occ-skeleton-file content.
+With non-nil FORCE prompt again for the skeleton file."
   (interactive "P")
   (eval `(define-skeleton occ-skeleton
            "Test"
            ,@(occ-buffer-content-to-skeleton force))))
 (defun occ-run-skeleton (&optional str arg force)
+  "Run the skeleton built from occ-skeleton-file content.
+Passes STR and ARG and FORCE to skeleton-proxy-new."
   (interactive "P\nP")
   (atomic-change-group
     (skeleton-proxy-new (occ-buffer-content-to-skeleton force)
@@ -387,10 +445,15 @@
 (cl-defmethod occ-do-add-capture ((obj marker)
                                   &key
                                   win-config)
+  "Add a capture for marker OBJ preserving WIN-CONFIG.
+Delegates to occ-do-capture-add with the WIN-CONFIG keyword."
   (occ-do-capture-add obj
                       :win-config win-config))
 
 (cl-defmethod occ-do-add-capture ((obj null))
+  "Add a capture by selecting a task with occ-obj-list-select.
+Uses the current window configuration and captures at the marker of the
+selected context tsk."
   (let* ((win-config (current-window-configuration))
          (ctx-tsk    (occ-obj-list-select (occ-obj-make-ctx-at-point)
                                           (occ-collections-all)
@@ -402,6 +465,7 @@
                          :win-config win-config))))
 
 (defun occ-add-capture ()
+  "Prompt for a task and add an org capture template for it."
   (interactive)
   (occ-do-add-capture nil))
 

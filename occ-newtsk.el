@@ -44,7 +44,9 @@
   '(("TODO")
     ("MEETING")))
 
-(defun occ-select-template ())
+(defun occ-select-template ()
+  "Placeholder for template selection; the body is currently empty."
+  nil)
 
 ;; (org-capture+-build-helm-template-sources)
 
