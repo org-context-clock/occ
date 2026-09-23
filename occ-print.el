@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
+;; occ-print.el is the printing and formatting layer for OCC objects.
 ;;
+;; `occ-obj-fontify-like-in-org-mode' renders headings for a marker or
+;; `occ-tsk' (level stars, file bullet) and backs the candidate display
+;; accessors `occ-obj-build-format-string' and `occ-obj-build-format-file'.
+;; `occ-obj-format' has methods for markers, `occ-tsk', `occ-ctx',
+;; `occ-ctxual-tsk' and `occ-return', with optional title casing, rank
+;; prefixes and tag alignment (`occ-obj-format-tsk-tag-alignment');
+;; cl-print-object methods give compact <CTX>/<CTSK>/<RANKTBL>/<TSK-TREE>
+;; prints.  `occ-obj-display' and `occ-obj-uniquify-file' are unimplemented.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

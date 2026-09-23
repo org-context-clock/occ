@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
+;; occ-macros.el collects the shared macros and code-generation helpers
+;; of OCC (support layer).  Notables: `occ-testing' (debug-gated
+;; evaluation), `occ-mac-with-org-marker' (run at an org heading),
+;; `occ-try-until', `occ-aggregate-rank' (aggregate per-value rank
+;; scores), `occ-gen-binary-option-commands' and `occ-gen-numeric-commands'
+;; (generate enable/disable/toggle/value command sets),
+;; `occ-generate-plist-functions', `occ-defcommand',
+;; `occ-run-unobtrusively' (while-no-input wrapper),
+;; `condition-case-control' and `occ-load-noerror-mustsuffix'; plus the
+;; string/symbol helpers `occ-mkstr' and `occ-symb'.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

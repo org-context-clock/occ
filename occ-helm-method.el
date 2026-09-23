@@ -20,7 +20,19 @@
 
 ;;; Commentary:
 
+;; occ-helm-method.el implements the helm sources of the OCC selection UI:
+;; collection-to-source building, keymaps, and the timed helm session.
 ;;
+;; It defines the `occ-helm-source-sync' class (a helm-source-sync
+;; subclass), the `occ-helm-map' keymap whose RET exits only on selectable
+;; tasks (`occ-helm-maybe-exit-minibuffer') and whose S-RET runs child
+;; clock-in (`occ-helm-run-child-clock-in'), and `occ-obj-build-helm-map'
+;; with M-<up>/<down>, M-<return> and s-<up>/<down> rank filter bindings.
+;; `occ-obj-helm-build-collection-source' builds one helm source per
+;; collection (null, auto-selected single candidate, or real source) with
+;; actions and transformers from the ap-normal/ap-transf packs.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

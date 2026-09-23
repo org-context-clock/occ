@@ -19,6 +19,29 @@
 
 ;;; Commentary:
 
+;; occ-obj-ctor.el contains the constructors of the OCC object model,
+;; following the OCC convention that `occ-obj-make-*' allocates fresh
+;; objects while `occ-obj-build-*' reuses or coerces existing ones.
+;;
+;; It builds task snapshots from org buffers (`occ-make-tsk-at-point',
+;; `occ-obj-make-tsk-at-point', `occ-obj-make-tsk(-with)', the
+;; `occ-obj-tsk-builder' and `occ-obj-tsk-builder-at-point' builders that
+;; pick the list or tree builder from the collection spec, and
+;; `occ-obj-org-entry-tsk-p' which rejects `[NONTSK]' entries), interned
+;; contexts (`occ-obj-make-ctx-at-point', `occ-obj-make-ctx' with the
+;; `occ-ctx-hash' cache), task-context pairs (`occ-obj-make-ctsk-with',
+;; `occ-obj-make-ctxual-tsk-with' and their `build' forms), collections
+;; (`occ-obj-make-collection', `occ-obj-build-collection'), callables,
+;; filters and action packs (`occ-obj-make-callable-normal',
+;; `occ-obj-make-callable-generator', `occ-obj-make-static-filter',
+;; `occ-obj-make-dyn-filter', `occ-obj-make-ap-normal',
+;; `occ-obj-make-ap-transf'), the `occ-return-*' label variables,
+;; `occ-obj-build-return-lambda', `occ-build-hsrc-*' source builders and
+;; the agent getters `occ-get-user-agent' / `occ-get-org-agent' /
+;; `occ-get-emacs-agent'.  Object model layer.
+;;
+;; Reference notes on cl-generic type specializers:
+;;
 ;; https://www.gnu.org/software/emacs/manual/html_node/eieio/Quick-Start.html#Quick-Start
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Generic-Functions.html
 ;; The type specializer, (arg type), can specify one of the system types in the

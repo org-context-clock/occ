@@ -19,7 +19,26 @@
 
 ;;; Commentary:
 
+;; occ-obj-accessor.el defines the polymorphic accessors of the OCC
+;; object model.
 ;;
+;; Almost everything is `cl-defmethod' code over the model structs:
+;; generic unwrappers so callers never dig into the wrappers by hand
+;; (`occ-obj-tsk', `occ-obj-ctx', `occ-obj-marker', `occ-obj-buffer',
+;; `occ-obj-file', `occ-obj-collection', `occ-obj-candidate', `occ-name',
+;; `occ-obj-rank', `occ-obj-level', `occ-obj-class-name'), rank and
+;; display slots (`occ-obj-ranktbl', `occ-obj-ranktbl-with',
+;; `occ-obj-format-string', `occ-obj-format-file', `occ-obj-avgrank',
+;; `occ-obj-varirank'), callables and action packs (`occ-obj-callable-*',
+;; `occ-obj-ap-*'), and collection access with task caching
+;; (`occ-obj-collect-tsks', `occ-obj-tsks', `occ-obj-collection-tsks',
+;; `occ-obj-collect-files', `occ-obj-files', `occ-obj-list',
+;; `occ-obj-list-with', `occ-obj-length', `occ-default-collection',
+;; `occ-do-reset-tsks').  A few task level actions such as
+;; `occ-do-checkout', `occ-do-describe-obj' and `occ-do-call-with-obj'
+;; are also defined here.  Object model layer.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

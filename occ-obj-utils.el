@@ -20,7 +20,19 @@
 
 ;;; Commentary:
 
+;; occ-obj-utils.el holds small utilities of the OCC object model layer,
+;; mostly around the `occ-return' selection result protocol.
 ;;
+;; `occ-obj-return-tranform' rewrites an `occ-ap-normal' action pack so
+;; that every action returns an `occ-return' tagged value (for
+;; `occ-ap-transf' it adapts the transformer instead), while
+;; `occ-obj-return-in-labels-p', `occ-obj-return-get-value' and
+;; `occ-obj-return-get-label' inspect `occ-return' objects.  It also
+;; defines the collection spec helpers `occ-specs' and `occ-valid-spec-p'
+;; (only `:tree' and `:list' are valid specs).  Object model layer, core
+;; plumbing.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

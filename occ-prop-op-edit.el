@@ -20,7 +20,22 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-prop-op-edit.el implements the edit operation layer of the OCC
+;; property protocol: interactive editing of a task's properties.
+;;
+;; occ-obj-select-operation asks which operation to apply to a
+;; multi-valued property (from occ-obj-operations-for-prop), defaulting
+;; to `put'; occ-do-op-prop-edit fills in a missing operation or value by
+;; prompting the user (occ-obj-get on occ-user-agent) and applies it
+;; through occ-do-operation with occ-obj-operation-value; and
+;; occ-do-op-props-edit opens the timed property window editor
+;; occ-do-properties-window-editor from occ-property-editor.el to edit
+;; all properties for a forced clock-in.
+;;
+;; Layer: public operation layer above occ-prop-base.el; consumed by
+;; occ-prop-gen-edit-actions.el when generating helm edit actions.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

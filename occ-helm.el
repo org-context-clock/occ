@@ -20,7 +20,20 @@
 
 ;;; Commentary:
 
+;; occ-helm.el holds the plumbing of the helm-based selection UI: the
+;; global registry of helm callables, the helm action keyword tree, and
+;; the org-capture+ template selector for new-task capture.
 ;;
+;; It declares the `occ-helm-callables' registry (`occ-helm-callable-add',
+;; `occ-helm-callables-get') and the keyword tree `occ-helm-actions-tree'
+;; (`occ-add-helm-actions', `occ-get-keywords-list-from-tree'), both
+;; populated by occ-helm-actions-config-initialize; the generic
+;; `occ-obj-get-helm-actions' resolves a tree branch into callables via
+;; the `occ-obj-get-callables' methods on `occ-obj' and `occ-obj-tsk'.
+;; `occ-obj-capture+-helm-select-template' selects an org-capture+ heading
+;; template; occ-capture.el uses it when creating new tasks.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

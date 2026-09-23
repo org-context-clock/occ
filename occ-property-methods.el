@@ -20,6 +20,31 @@
 
 ;;; Commentary:
 
+;; occ-property-methods.el implements the property protocol for each
+;; concrete property: it is the implementation layer of the OCC property
+;; protocol, tangled from occ-property-methods.org.
+;;
+;; For each property symbol (currfile, root, git-branch, timebeing,
+;; status, key, current-clock, subtree, deadline, scheduled) it supplies
+;; cl-defmethod specializations on (eql PROPS) of the impl generics:
+;; occ-obj-impl-occ-prop-p, occ-obj-impl-prop=, occ-obj-impl-rank,
+;; occ-obj-impl-get (capturing from occ-ctx or prompting the
+;; occ-user-agent), occ-obj-impl-list-p, occ-obj-impl-to-org,
+;; occ-obj-impl-from-org, occ-obj-impl-propfmt, occ-obj-impl-require-p,
+;; occ-obj-impl-default, occ-obj-impl-inheritable-p,
+;; occ-do-impl-operation and occ-do-impl-checkout.
+;;
+;; Highlights: currfile and root rank by file match and directory
+;; containment and check out with find-file; git-branch stores
+;; "vc-root::branch" values and checks out via magit-checkout; timebeing
+;; scores the remaining time against clock-sum; status ranks done and
+;; HOLD tasks; key carries an arbitrary rank capped at 100;
+;; current-clock ranks the task being clocked; subtree is an ido subtree
+;; file picker; deadline and scheduled mirror status.  The _template_
+;; blocks in occ-testing at the end show how to define a new property.
+;;
+;; See doc/occ-design.org for the full design.
+
 ;;; Code:
 
 ;; * Provide this file

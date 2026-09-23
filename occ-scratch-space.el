@@ -18,9 +18,16 @@
 ;; you should have received a copy of the gnu general public license
 ;; along with this program.  if not, see <http://www.gnu.org/licenses/>.
 
-;;; commentary:
+;;; Commentary:
 
+;; occ-scratch-space.el is a personal scratchpad, kept out of the main
+;; sources: its body is almost entirely disabled `when nil' experiments --
+;; borrowed Sacha Chua org-capture/refile/helm helpers
+;; (my/org-capture-prefill-template, my/org-refile-get-location and
+;; friends), cl-generic method-combination trials and cl-defstruct trials
+;; gated by `occ-testing'.  Nothing here is required elsewhere in OCC.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; code:
 

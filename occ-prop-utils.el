@@ -20,7 +20,21 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-prop-utils.el holds small helpers for the OCC property protocol.
+;;
+;; It defines occ-obj-format-prop (printable form of a property value,
+;; currently returning the value unchanged), the rank hierarchy hooks
+;; occ-property-rank-hierarchy and occ-obj-set-rank-hierarchy (a stub),
+;; and the stub occ-prop-util-readprop-list-from-user, which signals
+;; "Implement it".
+;;
+;; NOTE: the file also redeclares the generic occ-obj-has-p, which is
+;; likewise declared in occ-prop-base.el.
+;;
+;; Layer: support/utility layer of the property protocol, required by
+;; occ-prop-intf.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

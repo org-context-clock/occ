@@ -20,7 +20,21 @@
 
 ;;; Commentary:
 
-;; Contains methods callable from helm selection menu for OCC-OBJ-TSK etc.
+;; occ-obj-method.el defines the methods callable from the helm selection
+;; menu for `occ-obj-tsk' and friends.
+;;
+;; It implements the menu actions themselves: `occ-do-checkout',
+;; `occ-do-clock-out' (with `occ-run-do-clock-out'), `occ-do-close',
+;; `occ-do-force-clockin' and `occ-do-print-rank', plus debug helpers
+;; (`occ-do-call-with-obj', `occ-do-set-debug-obj', `occ-get-debug-obj',
+;; `occ-describe-debug-obj') and the human readable description machinery
+;; (`occ-obj-describe-string', `occ-obj-rank-desc-str', `occ-dformat',
+;; `occ-obj-fmt-tree-p', `occ-do-describe-obj', `occ-do-display-obj').
+;; `occ-do-properties-editor-combined' offers combined edit / checkout /
+;; clock operations for a contextual task through a timed helm session.
+;; Selection UI layer, at the object model level.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

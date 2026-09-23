@@ -20,7 +20,21 @@
 
 ;;; Commentary:
 
+;; occ-clock.el implements the OCC clock engine dispatch layer.
+;; cl-defmethod specializations of occ-do-clock-in dispatch on null,
+;; marker, occ-tsk, occ-ctsk, occ-ctxual-tsk and occ-ctx, ending in
+;; org-clock-clock-in via occ-straight-org-clock-clock-in.  The
+;; occ-ctx method is the selector: it runs occ-obj-select (timed
+;; helm) with occ-match-filters and, on no selection, falls back to
+;; the property window editor
+;; (occ-obj-safe-ignore-quit-properties-window-editor).  The
+;; occ-ctxual-tsk method records *occ-clocked-ctxual-tsk-ctx-history*
+;; and runs occ-do-clock-in-hooks with the old and new markers.
+;; Guards occ-obj-clockable-p / occ-obj-ignore-p reject dead,
+;; minibuffer and ignored buffers, and the occ-do-try-clock-in and
+;; occ-do-try-fast-clock-in variants refuse non-associable tasks.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

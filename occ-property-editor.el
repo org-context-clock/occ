@@ -19,7 +19,33 @@
 
 ;;; Commentary:
 
+;; occ-property-editor.el implements the property editor of the OCC
+;; property protocol: a timed, non-destructive buffer editor for the org
+;; properties of a task, used for manual editing and as the clock-in
+;; fallback when no task matches the context.
 ;;
+;; occ-do-select-propetry completes over occ-obj-properties-to-edit plus
+;; the fixed keys edit/done; org-flag-property-drawer and its
+;; org-*-at-marker variants open or close the :PROPERTIES: drawer around
+;; a task marker, which occ-do-open-property-block uses to show it.
+;;
+;; occ-do-properties-editor loops over the selected properties and
+;; applies occ-do-op-prop-edit inside a cloned org buffer
+;; (occ-do-properties-editor-in-cloned-buffer), so the user's real
+;; buffer stays untouched; occ-do-properties-window-editor wraps that in
+;; a timed window via lotus-with-timed-new-win and handles the
+;; done/edit/timeout responses, with occ-ctx and null variants selecting
+;; a task first via occ-obj-select.
+;;
+;; occ-do-safe-properties-window-editor adds minibuffer and other-frame
+;; safety guards, and occ-obj-safe-ignore-quit-properties-window-editor
+;; is the idle-safe entry used by the clock-in engine, whose return
+;; decides whether an unnamed task should be created.
+;;
+;; Layer: property editor layer of OCC, above the property protocol
+;; files (it requires occ-prop).
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

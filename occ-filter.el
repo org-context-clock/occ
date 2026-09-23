@@ -20,7 +20,16 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-filter.el is the umbrella load file of the OCC filter subsystem:
+;; besides providing the feature it only requires the three filter
+;; modules, `occ-filter-base' (static and dynamic rank-threshold filter
+;; machinery), `occ-filter-op' (additional rank-threshold set operations,
+;; currently vestigial) and `occ-filter-config' (registered static filter
+;; specs and the default filter lists).  Filters are interactive
+;; rank-threshold mechanisms over ranked candidates, not boolean task
+;; predicates.  Layer: filtering & ranking.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
+;; occ-intf.el is the interface half of the OCC property protocol split.
+;; It defines the stable `occ-obj-intf-*' cl-defgenerics that upper layers
+;; call: `occ-obj-intf-rank', `occ-obj-intf-get' (specialized on `occ-ctx'
+;; for environment capture and on `occ-user-agent' for prompting),
+;; `occ-obj-intf-prop=', `occ-obj-intf-has-p', `occ-obj-intf-to-org',
+;; `occ-obj-intf-from-org', `occ-obj-intf-list-p', `occ-obj-intf-values',
+;; `occ-obj-intf-checkout-p', `occ-do-intf-checkout',
+;; `occ-do-intf-operation' and friends, each a thin delegator to its
+;; `occ-obj-impl-*' twin.
+
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

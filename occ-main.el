@@ -19,7 +19,14 @@
 
 ;;; Commentary:
 
+;; occ-main.el is the OCC entry-layer aggregator.  It currently only
+;; provides the `occ-main' feature and requires the main API modules
+;; (occ-obj-method, occ-util-common, occ-unnamed, occ-prop, occ-version)
+;; plus the lotus utility libraries, fixing their load order; no functions
+;; are defined here.  The TODO block records open questions about helm
+;; source arguments for the selection UI (support layer).
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

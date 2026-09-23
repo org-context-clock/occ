@@ -21,7 +21,15 @@
 
 ;;; Commentary:
 
+;; occ-util-method.el provides the helm selection driver methods on
+;; `occ-obj-ctx' used by the user-command layer: `occ-do-run-list-select'
+;; (flat list selection with `occ-list-filters'), `occ-do-run-match-select'
+;; (rank-threshold matching with `occ-match-filters'),
+;; `occ-do-run-list-debug-select' (select a task, then pick an action-plan
+;; callable to run on it) and `occ-do-run-list-launch' (select, then choose
+;; and run an action); all are timed `occ-obj-select' invocations.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

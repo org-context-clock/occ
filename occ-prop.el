@@ -20,7 +20,21 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-prop.el is the top-level bundle of the OCC property protocol: it
+;; has no code of its own beyond `provide', just the ordered `require's
+;; that load the whole property stack.
+;;
+;; It pulls in the core protocol file occ-prop-base.el, the public
+;; operation layer (occ-prop-op-edit.el, occ-prop-op-checkout.el,
+;; occ-prop-op-misc.el) and the generated helm action layer
+;; (occ-prop-gen-edit-actions.el, occ-prop-gen-checkout-actions.el,
+;; occ-prop-gen-misc-actions.el), so that requiring `occ-prop' suffices
+;; for editing properties, checking them out into the environment and
+;; generating per-property helm actions.
+;;
+;; Layer: entry point of the property protocol files occ-prop-*.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

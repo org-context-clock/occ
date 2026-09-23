@@ -20,7 +20,25 @@
 
 ;;; Commentary:
 
+;; occ-filter-base.el implements the filter machinery of the filtering &
+;; ranking layer.  Filters are interactive rank-threshold mechanisms, not
+;; boolean task predicates: registered `occ-static-filter' specs are kept
+;; in `occ-obj-static-filters' (`occ-obj-static-filter-add',
+;; `occ-obj-static-filter-get', `occ-obj-static-filters-get') and are
+;; compiled by `occ-obj-static-to-dyn-filter' into per-session
+;; `occ-obj-dyn-filter' closure bundles (init/seq/selectable/display/
+;; increment/decrement/reset) chained through `prev'.  The recursive
+;; builder `occ-obj-build-dyn-filters-recursive' turns a filter spec list
+;; into a chain and `occ-obj-combined-dyn-filter' wraps it with a prev/next
+;; stack so the user can switch filter sets live.  Pivot movement helpers
+;; are `occ-obj-filter-comparator', `occ-obj-filter-incrementor' and
+;; `occ-obj-filter-decrementor'; ranks default to `occ-obj-rank' (select)
+;; and `occ-obj-rank-max-decendent' (display), and passing tasks are
+;; flagged with `occ-obj-tsk-selectable'.  Context-cached statistics
+;; (`occ-obj-ctx-stat', `occ-obj-average', `occ-obj-stddev',
+;; `occ-obj-variance') round out the file.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

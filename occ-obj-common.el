@@ -19,7 +19,24 @@
 
 ;;; Commentary:
 
+;; occ-obj-common.el defines the common property access API shared by all
+;; OCC object model objects.
 ;;
+;; It provides plist helpers (`occ-plist-get', the `occ-plist-set' macro,
+;; `occ-list-get-evens', `occ-plist-get-keys') and the central property
+;; reading generics `occ-obj-get-property' / `occ-obj-get-properties'
+;; (with `-internal' variants): a value comes from a struct slot when the
+;; property names one, otherwise from the object's org-property plist
+;; (looked up both as-is and upcased).  Methods dispatch on `occ-obj',
+;; `occ-obj-tsk', `occ-obj-ctx-tsk' and `occ-obj-ctx', and
+;; `occ-obj-set-property' does the inverse, storing into slots or the
+;; plist.  Reflection helpers (`occ-obj-class-slots',
+;; `occ-obj-defined-slots', `occ-obj-cl-method-matched-arg',
+;; `occ-obj-cl-method-sig-matched-arg') use occ-cl-utils to match
+;; properties against cl-generic method specializers.  Object model
+;; layer, base plumbing for the property protocol.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

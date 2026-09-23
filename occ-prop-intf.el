@@ -20,8 +20,26 @@
 
 ;;; Commentary:
 
-;; This file should only has interface and default interface methods which is
-;; implemented by occ-property-methods.org
+;; This file should only have the interface and default interface methods
+;; which are implemented by occ-property-methods.org: it is the interface
+;; layer of the OCC property protocol, meant to hold the stable, public
+;; property generics that the rest of OCC calls, while the concrete
+;; per-property methods live in the implementation layer
+;; (occ-property-methods.el, tangled from occ-property-methods.org).
+;;
+;; The intended split, as listed in the outline at the bottom of this
+;; file, is: read a property value from the user (occ-user-agent), read
+;; it from the context (occ-ctx, live environment capture), read it from
+;; a task, write a property value to a task, error on writing to the
+;; read-only context, treat writing to the user as printing, and
+;; checkout a task property value into the environment.
+;;
+;; As written, the file currently only provides itself and requires
+;; occ-macros, occ-util-common, occ-obj, occ-prop-utils and
+;; occ-normalize-ineqs; the property generics it refers to are declared
+;; in occ-prop-base.el and occ-intf.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

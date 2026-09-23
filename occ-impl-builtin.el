@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-impl-builtin.el provides the builtin defaults of the impl layer.
+;; It implements `occ-obj-impl-require-p' for the add/put/remove/delete
+;; and checkout operations (an edit/checkout is required iff the value is
+;; absent or present), `occ-obj-impl-values' for add/remove/put/delete
+;; (deriving values from the context), and the org backend
+;; `occ-do-impl-operation' methods on `marker' (get/add/put/remove/
+;; delete/member via the occ-org-entry-* helpers) and on `occ-obj-tsk'
+;; (in-memory property edits).  `occ-property-method-skeleton' and
+;; `occ-property-method-gen' stamp out the method set for a new property.
+
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

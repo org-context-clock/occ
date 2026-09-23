@@ -20,7 +20,21 @@
 
 ;;; Commentary:
 
+;; occ-tree-tsk.el builds hierarchical (tree) task collections in OCC.
 ;;
+;; `occ-tree-tsk-build' recursively maps the subheadings of an org file
+;; into `occ-tree-tsk' snapshots, splicing in extra tasks from the
+;; `:SUBTREEFILE' property and filling the `subtree', `children-count'
+;; and `descendant-weight' slots; `occ-tree-trim' then prunes the result
+;; down to a collection's `limit'.  Tree walking uses the generic walkers
+;; from occ-tree.el, specialized for task trees by `occ-tree-tsk-subtree'
+;; and re-exported as `occ-mapcar-tree-tsks', `occ-mapc-tree-tsks' and
+;; `occ-remove-if-not-tree-tsks'; `occ-org-map-subheading' iterates
+;; subheadings.  `occ-obj-drived-tsk-builder' and `occ-obj-build-tsks'
+;; wire the tree builder into the collection API.  Object model layer,
+;; collection building.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
+;; occ-clock-report.el provides a thin OCC wrapper around the
+;; vendored org-clock-report package for inserting clock reports.
+;; Its single function occ-clock-plain-report-tree inserts a plain
+;; clock report tree at MARKER via org-clock-plain-report-tree, using
+;; "*" headline characters and inserting both content and notes, with
+;; the report block chosen interactively by
+;; occ-util-select-from-sym-list over the standard org clock ranges
+;; (today, thisweek, thismonth, thisyear, lastweek, lastmonth,
+;; lastyear, untilnow, interactive).  It is used by the Report action
+;; in occ-obj-simple.el.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

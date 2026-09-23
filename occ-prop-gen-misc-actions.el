@@ -20,7 +20,20 @@
 
 ;;; Commentary:
 
+;; occ-prop-gen-misc-actions.el generates the misc helm actions of the
+;; OCC property protocol at runtime; it is the "Misc" generator
+;; registered in occ-helm-actions-config.el.
 ;;
+;; occ-obj-gen-misc is defined for null, occ-obj-ctx-tsk and occ-obj-ctx
+;; objects: for a contextual task it returns a single "Continue"
+;; occ-callable-normal built by occ-obj-build-callable-normal, otherwise
+;; nil.  The commented-out variant in the source also generated a
+;; "Checkout" callable for the contextual task.
+;;
+;; Layer: generated action layer; sibling of occ-prop-gen-edit-actions.el
+;; and occ-prop-gen-checkout-actions.el, built on occ-prop-base.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

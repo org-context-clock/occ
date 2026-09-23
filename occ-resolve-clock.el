@@ -20,7 +20,20 @@
 
 ;;; Commentary:
 
+;; occ-resolve-clock.el is currently an interface-registration stub
+;; tying OCC into the vendored org-clock-resolve-advanced package
+;; through its org-rl-intf interface.  occ-rl-register-resolve-clock
+;; and occ-rl-unregister-resolve-clock manage the 'occ backend in
+;; org-rl-intf-register / org-rl-intf-unregister, supplying the
+;; placeholder functions occ-rl-clock-p, occ-rl-clock-clock-in,
+;; occ-rl-clock-out, occ-rl-clock-clock-out,
+;; occ-rl-select-other-clock and
+;; occ-rl-capture+-helm-templates-alist, whose bodies just ignore
+;; their arguments; no actual clock-resolve behavior is implemented
+;; yet.  The commands occ-register-resolve-clock and
+;; occ-unregister-resolve-clock in occ-commands.el call these.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

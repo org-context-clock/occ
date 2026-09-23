@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
+;; occ-commands.el defines the interactive user commands of OCC.
 ;;
+;; Implemented commands cover helm selection (`occ-run',
+;; `occ-helm-match-select', `occ-helm-list-select',
+;; `occ-helm-list-debug-select', `occ-helm-list-launch'), the property
+;; editor `occ-property-edit', `occ-clock-out', quiet mode
+;; (`occ-keep-quiet'/`occ-keep-quiet-for'), spec management
+;; (`occ-obj-make-spec', `occ-add-to-spec') and `occ-insinuate'/
+;; `occ-uninsinuate' setup.  Day-workflow commands such as `occ-start-day'
+;; are stubs that only signal `occ-error' ("Implement it.").
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

@@ -19,7 +19,18 @@
 
 ;;; Commentary:
 
+;; occ-tree.el provides generic tree traversal primitives for plist based
+;; trees, used by the OCC task tree builders.
 ;;
+;; `tree-mapcar-nodes' and `tree-mapc-nodes' map a function over every
+;; node of a tree whose children are found with a caller supplied
+;; SUBTREEFN, and `tree-remove-if-not-nodes' prunes subtrees whose nodes
+;; fail a predicate; all three follow the `:subtree' key convention of
+;; org-element style trees.  It defines no OCC symbols itself;
+;; occ-tree-tsk.el specializes these walkers for task trees.  Object
+;; model layer, core plumbing.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

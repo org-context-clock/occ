@@ -20,7 +20,16 @@
 
 ;;; Commentary:
 
+;; occ-newtsk.el is an unfinished new-task creation helper.
 ;;
+;; It is mostly a stub: `occ-tsk-templates-alist' holds only placeholder
+;; ("TODO") and ("MEETING") entries, and `occ-select-template' is defined
+;; with an empty body.  The working machinery lives elsewhere: templates
+;; are registered by occ-helm-actions-config-initialize and selected with
+;; `occ-obj-capture+-helm-select-template' (occ-helm.el) by the capture
+;; code in occ-capture.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

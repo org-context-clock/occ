@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
+;; occ-statistics.el provides small variadic statistics helpers used
+;; by the OCC rank filter layer.  It defines occ-stats-max,
+;; occ-stats-min, occ-stats-range, occ-stats-aggregate,
+;; occ-stats-mean, occ-stats-average, occ-stats-median,
+;; occ-stats-mode (multi-modal, most frequent values first),
+;; occ-stats-variance and occ-stats-stddev; occ-filter-op.el and
+;; occ-filter-base.el use the average, variance and stddev helpers to
+;; fill occ-stat objects.  An ert test occ-test-stats-mode exercises
+;; occ-stats-mode; note that ert and ert-x are required
+;; unconditionally at load time.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

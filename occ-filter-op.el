@@ -20,7 +20,19 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-filter-op.el provides additional rank-threshold set operations on
+;; candidate sequences for the filtering & ranking layer: the methods
+;; `occ-obj-filter-positive', `occ-obj-filter-nonnegative',
+;; `occ-obj-filter-identity', `occ-obj-filter-min' and `occ-obj-filter-max'
+;; (bounded by `occ-filter-min' and `occ-filter-max'), plus
+;; `occ-obj-filter-mutual-deviation', which keeps tasks ranked at or above
+;; the rank average.  These `occ-obj-filter-*' methods are currently not
+;; called anywhere; the live filtering path instead compiles the static
+;; filter specs of `occ-filter-config.el' into dynamic filters (see
+;; `occ-filter-base.el'), so this file is kept as vestigial support for
+;; direct, non-interactive threshold filtering.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

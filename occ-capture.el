@@ -20,7 +20,23 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-capture.el implements OCC's low-level capture buffer layer
+;; (distinct from the task capture in occ-obj-simple.el).  It
+;; maintains the *Occ Capture* buffer with occ-capture-mode, a minor
+;; mode for quick capture: "*" inserts an org-capture+ template
+;; picked by occ-obj-capture+-helm-select-template
+;; (occ-capture-star), C-c C-c finalizes, C-c C-k kills, C-c C-w
+;; refiles and C-c C-r replaces the template (the latter two are
+;; stubs), dispatched through occ-capture-cmd on
+;; occ-capture-cmd-local-plist.  Store backends
+;; occ-capture-store-entry, occ-capture-store-plain and
+;; occ-capture-store-note splice the captured text into the target
+;; org entry, with occ-capture-finalize dispatching on the type.
+;; occ-add-capture-buffer and occ-do-capture-add open the buffer in a
+;; timed window, recording the finalize/kill closures via
+;; occ-build-functions.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

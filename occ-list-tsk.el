@@ -20,7 +20,17 @@
 
 ;;; Commentary:
 
+;; occ-list-tsk.el builds flat (list) task collections in OCC.
 ;;
+;; `occ-list-tsk-build' maps `org-map-entries' over an org file (or the
+;; current buffer) to produce a flat list of task snapshots, using the
+;; collection's `occ-obj-tsk-builder-at-point' builder;
+;; `occ-obj-drived-tsk-builder' and `occ-obj-build-tsks' implement the
+;; collection API for the roots of an `occ-list-collection'.  It is the
+;; list counterpart of occ-tree-tsk.el.  Object model layer, collection
+;; building.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

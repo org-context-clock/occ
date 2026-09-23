@@ -20,7 +20,24 @@
 
 ;;; Commentary:
 
+;; occ-rank.el computes and caches context-dependent task ranks for the
+;; filtering & ranking layer.  Ranks are cached per (task, context) in an
+;; `occ-ranktbl' and filled lazily by the `-with' generics:
+;; `occ-obj-prop-rank-with' (per-property rank),
+;; `occ-obj-rank-inheritable-with' and `occ-obj-rank-nonheritable-with'
+;; (sums over the inheritable / non-inheritable property sets),
+;; `occ-obj-rank-acquired-with' and `occ-obj-rank-with' (acquired rank
+;; plus inherited ancestor rank, damped by `occ-tsk-descendant-weight')
+;; and `occ-obj-rank-max-decendent-with' (the subtree maximum, the default
+;; display rank).  Inheritable matches propagate up the task tree via
+;; `occ-obj-ancestor-rank-with' and the `occ-obj-tsk-do-ancestor-with' /
+;; `occ-obj-tsk-do-descendant-with' walkers.  Every rank has reset and
+;; `setf' counterparts (`occ-obj-reset-prop-rank-with' and friends) so
+;; property writes invalidate the caches, and `occ-obj-calculate-avgrank'
+;; / `occ-obj-calculate-varirank' give rank statistics over a context or
+;; collection.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

@@ -20,7 +20,17 @@
 
 ;;; Commentary:
 
+;; occ-cl-utils.el provides reflection helpers over cl-generic and
+;; cl-struct internals.  cl-struct classes are not first class, so it
+;; reaches into `cl--struct-get-class', `cl--struct-class-slots' and the
+;; `cl-structure-class' parents slot to recover an instance's class and
+;; ancestry (`occ-cl-class', `occ-cl-inst-class-names'), and into generic
+;; method storage (`occ-cl-method-param-signs') to read method signatures;
+;; the pcase matchers `occ-cl-method-param-values' and
+;; `occ-cl-collect-on-classes' power the runtime property introspection of
+;; occ-prop-base.el (occ-obj-properties-to-edit and friends).
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

@@ -20,7 +20,28 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-prop-gen-checkout-actions.el generates the checkout helm actions
+;; of the OCC property protocol at runtime.
+;;
+;; occ-obj-gen-checkout-prompt formats prompts like "Checkout property
+;; currfile: <value> of <task>" via occ-obj-pvalue and occ-obj-propfmt,
+;; occ-obj-gen-checkout-fun builds the callback (calling
+;; occ-do-op-prop-checkout), occ-obj-gen-checkout assembles both into an
+;; occ-callable-normal, and occ-obj-gen-checkout-if-required filters
+;; through occ-obj-require-p on the context.
+;;
+;; The bulk generators occ-obj-gen-checkouts-if-required,
+;; occ-obj-gen-each-prop-checkouts with
+;; occ-obj-gen-each-prop-fast-checkouts, and occ-obj-gen-simple-checkouts
+;; expand this over occ-obj-properties-to-checkout and, for list
+;; properties, over one element per occ-obj-vdirectors director,
+;; yielding the "Fast Checkouts" and "Simple Checkout" helm action
+;; generators registered in occ-helm-actions-config.el.
+;;
+;; Layer: generated action layer on top of occ-prop-op-checkout.el and
+;; occ-prop-base.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

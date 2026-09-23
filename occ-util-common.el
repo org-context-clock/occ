@@ -19,7 +19,16 @@
 
 ;;; Commentary:
 
+;; occ-util-common.el is the general-purpose utility module shared by all
+;; OCC layers: the clock-in wrapper `occ-straight-org-clock-clock-in'
+;; (org-clock-clock-in with persistence disabled), `occ-completing-read',
+;; collection upkeep hooks (`occ-after-save-hook-fun',
+;; `occ-run-with-deafult-tsk-collection'), symbol/list helpers
+;; (`downcase-sym', `sym2key', `occ-util-combine'), closure adapters
+;; (`occ-clouser-call-obj-on-cand', `occ-lambda-call-obj') and the capture
+;; entry points `occ-add-capture' / `occ-do-add-capture'.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

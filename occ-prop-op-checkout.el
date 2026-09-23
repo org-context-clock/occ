@@ -20,7 +20,21 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-prop-op-checkout.el implements the checkout operation layer of the
+;; OCC property protocol: making the environment match a task before a
+;; forced clock-in.
+;;
+;; occ-do-op-prop-checkout checks out a single property by delegating to
+;; occ-do-checkout with a value director, and occ-do-op-props-checkout
+;; iterates over the checkout-capable properties reported by
+;; occ-obj-properties-to-checkout, selecting one element for list
+;; properties via implement-select-one over occ-obj-vdirectors.
+;;
+;; Layer: public operation layer above occ-prop-base.el; consumed by
+;; occ-prop-gen-checkout-actions.el when generating helm checkout
+;; actions.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

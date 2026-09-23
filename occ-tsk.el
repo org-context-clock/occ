@@ -20,7 +20,16 @@
 
 ;;; Commentary:
 
+;; occ-tsk.el declares the generic `occ-obj-build-tsks' that builds the
+;; task set of an OCC collection.
 ;;
+;; It only defines that `cl-defgeneric', dispatching on the collection
+;; type, and requires its two implementations: `occ-list-tsk' (flat list
+;; collections) and `occ-tree-tsk' (hierarchical tree collections).  This
+;; seam keeps collection scanning, caching and trimming polymorphic over
+;; the collection kind.  Object model layer, collection building.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

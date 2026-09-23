@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-impl.el is the implementation half of the OCC property protocol
+;; split.  It defines the `occ-obj-impl-*' cl-defgenerics with general
+;; default methods: `occ-obj-impl-rank' (0), `occ-obj-impl-prop=' (equal),
+;; `occ-obj-impl-matches', `occ-obj-impl-has-p', `occ-obj-impl-list-p'
+;; (nil), `occ-obj-impl-to-org' / `occ-obj-impl-from-org' (identity),
+;; `occ-obj-impl-values', `occ-obj-impl-get', `occ-obj-impl-require-p',
+;; `occ-do-impl-operation' and `occ-do-impl-checkout'.  Per-property
+;; `(eql prop)' methods live in occ-property-methods.el; :around methods
+;; catch missing user-agent reads and force property drawers on writes.
+
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

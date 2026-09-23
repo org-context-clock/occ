@@ -20,7 +20,23 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-normalize-ineqs.el derives per-property rank priorities by solving
+;; user-declared priority inequalities with GNU calc.  Inequalities are
+;; collected per property in `occ-property-priority-inequalities' via
+;; `occ-do-add-ineq-internal' (the public generic `occ-do-add-ineq' lives
+;; in occ-prop-base.el), parsed with `occ-obj-math-read-expr' and washed
+;; by `occ-obj-ineq-wash' (`nil' and `this' stand for the declared
+;; property), converted into equations with generated slack constants
+;; (`occ-obj-ineq2eq') and solved with calc
+;; (`occ-obj-normalize-ineqs-map').  Free constants are instantiated from
+;; `occ-config-ineq-const-value' (default `random 99') and
+;; `occ-do-set-prop-priorities' stores the resulting property/value pairs
+;; in `occ-property-priorities', read back by `occ-obj-priority-internal'
+;; through the `occ-obj-priority' generic when ranking.
+;; `occ-obj-topo-sort-ineqs-expr' orders the inequality graph for
+;; circularity checks.  Layer: filtering & ranking.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

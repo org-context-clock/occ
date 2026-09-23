@@ -19,7 +19,18 @@
 
 ;;; Commentary:
 
-;; https://economictimes.indiatimes.com/small-biz/hr-leadership/leadership/getting-more-done-why-task-management-is-the-key-to-managing-time/articleshow/70814450.cms
+;; occ.el is the OCC (Org Context Clock) entry-point module (entry and
+;; collector layer).  It owns the global collector registry
+;; `*occ-collector*' and its API (`occ-collector-get-create',
+;; `occ-collector-keys'), collection spec management
+;; (`occ-set-collection-spec', `occ-reset-collection-object'), and the
+;; initialization/insinuation pair `occ-initialize' / `occ-uninitialize',
+;; which wires the buffer-switch and org-mode hooks, installs default rank
+;; priorities (`occ-do-priority-initialize'), and reload/version helpers.
+;;
+;; Motivation: https://economictimes.indiatimes.com/small-biz/hr-leadership/leadership/getting-more-done-why-task-management-is-the-key-to-managing-time/articleshow/70814450.cms
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

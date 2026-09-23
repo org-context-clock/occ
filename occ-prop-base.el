@@ -20,6 +20,34 @@
 
 ;;; Commentary:
 
+;; occ-prop-base.el implements the core of the OCC property protocol: the
+;; middle layer between the interface generics (occ-prop-intf.el,
+;; occ-intf.el) and the per-property implementations in
+;; occ-property-methods.el.
+;;
+;; It defines the runtime property-set introspection
+;; (occ-obj-properties-to-edit, occ-obj-properties-for-ranking,
+;; occ-obj-properties-to-calculate-rank, occ-obj-properties-to-checkout,
+;; occ-obj-operations-for-prop), which reflects over the (eql PROPS)
+;; specializers of the impl generics via occ-cl-method-param-values and
+;; occ-cl-collect-on-classes and strips template placeholders with
+;; occ-internal-remove-template-symbol.
+;;
+;; It also wires rank priorities from the inequality declarations of
+;; occ-normalize-ineqs.el (occ-do-add-ineq, occ-obj-ineq,
+;; occ-obj-priority, occ-obj-priority-rank), classifies operations
+;; (occ-obj-list-p, occ-obj-op-list-p, occ-obj-op-delete-p,
+;; occ-obj-op-write-p), dispatches occ-do-operation (signalling that
+;; occ-ctx is read-only), and provides the value plumbing occ-obj-get,
+;; occ-obj-to-org, occ-obj-from-org, occ-obj-prop=, occ-obj-match,
+;; occ-obj-operation-value, occ-obj-values, occ-obj-vdirectors,
+;; occ-obj-pvalue, occ-obj-has-p, occ-obj-require-p, occ-obj-checkout-p
+;; and occ-do-checkout.
+;;
+;; Reference notes below are excerpts from the EIEIO and cl-generic
+;; manuals, kept as background for the method dispatch used throughout
+;; this file:
+;;
 ;; https://www.gnu.org/software/emacs/manual/html_node/eieio/Quick-Start.html#Quick-Start
 ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Generic-Functions.html
 

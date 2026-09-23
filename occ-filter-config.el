@@ -20,7 +20,21 @@
 
 ;;; Commentary:
 
+;; occ-filter-config.el registers the built-in static filter specs of the
+;; filtering & ranking layer.  `occ-filter-config-initialize' resets
+;; `occ-obj-static-filters' and registers the `occ-static-filter' entries
+;; with `occ-obj-build-static-filter': `:incremental' keeps ranks >= a
+;; pivot walking the distinct rank values (starting at the middle),
+;; `:positive' keeps rank > 0, `:non-negative' keeps rank > -1 (i.e.
+;; non-negative integer ranks), `:negative' keeps rank < 0 and
+;; `:identity' keeps everything.  The file also defines the default
+;; filter lists `occ-match-filters' (the default clock-in set),
+;; `occ-list-filters' (defined three times; the last definition wins) and
+;; `occ-never-filters' (mainly for non-tasks).  Filter specs are keywords
+;; or conses of keyword and an optional rank function, otherwise
+;; `occ-obj-rank' is used.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

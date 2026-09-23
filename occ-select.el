@@ -20,8 +20,21 @@
 
 ;;; Commentary:
 
-;; Main machinery
-;; TODO: Document it well
+;; occ-select.el implements the interactive task selection of the
+;; selection layer: it runs a timed helm session over ranked, filtered
+;; candidates and returns the chosen task.  `occ-obj-list-select' (method
+;; on `occ-ctx') opens the buffer named by `occ-helm-select-buffer-name'
+;; (" *helm: occ select*"), drives `occ-obj-helm-act' through
+;; `helm-timed' (timeout defaults to `occ-idle-timeout') and, with
+;; `return-transform', wraps a nil selection in an `occ-return' quit
+;; result.  The generic `occ-obj-select' requires a candidate `builder'
+;; (e.g. `occ-obj-build-ctsk-with') and forwards to
+;; `occ-obj-list-select'; its `null' method builds a context at point
+;; first.  Action plans arrive as AP-NORMAL and AP-TRANSF, the helm
+;; action-transformer superseding the normal action set depending on the
+;; selected candidate.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

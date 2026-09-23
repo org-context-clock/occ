@@ -20,7 +20,19 @@
 
 ;;; Commentary:
 
+;; occ-predicate.el provides the boolean predicates of the support layer
+;; that the clock engine uses to decide about the current clocking.  The
+;; `occ-obj-marker=' generic compares markers, tasks and markers (equal
+;; or within one position, via `occ-obj-org-marker' and
+;; `occ-valid-marker'); `occ-obj-current-p' and `occ-obj-clocking-in-p'
+;; tell whether a task is the one currently clocked (`occ-current-tsk');
+;; `occ-obj-associable-p' and `occ-obj-associable-with-p' test whether a
+;; task associates with a context (rank > 0); `occ-obj-unnamed-p'
+;; recognizes unnamed tasks via `occ-clock-marker-unnamed-p'; and
+;; `occ-obj-current-associable-p' answers whether the currently clocked
+;; task still fits the current context.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

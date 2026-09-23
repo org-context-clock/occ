@@ -20,7 +20,29 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-prop-gen-edit-actions.el generates the edit helm actions of the
+;; OCC property protocol at runtime, from property and operation
+;; information rather than by hand.
+;;
+;; occ-obj-gen-edit-prompt formats prompts like "Add - property root:
+;; /dir in task", occ-obj-gen-edit-fun builds the callback (calling
+;; occ-do-op-prop-edit, or returning the parameter list when PARAM-ONLY
+;; is set), occ-obj-gen-edit assembles both into an
+;; occ-callable-normal, and occ-obj-gen-edit-if-required filters through
+;; occ-obj-require-p.
+;;
+;; The bulk generators occ-obj-gen-edits-if-required,
+;; occ-obj-gen-each-prop-edits with occ-obj-gen-each-prop-fast-edits,
+;; occ-obj-gen-simple-edits and occ-obj-gen-clock-operations expand this
+;; over occ-obj-properties-to-edit, occ-obj-operations-for-prop and
+;; occ-obj-values, yielding the "Fast Edits", "Simple Edit" and "Clock
+;; Operations" helm action generators registered in
+;; occ-helm-actions-config.el.
+;;
+;; Layer: generated action layer on top of occ-prop-op-edit.el and
+;; occ-prop-base.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

@@ -20,7 +20,15 @@
 
 ;;; Commentary:
 
+;; occ-test.el holds OCC's ert tests and self-verification helpers.  It
+;; loads ert, ert-x and el-mock, defines `ert-occ-test-occ-insinuated'
+;; (hook insinuation checks) and `ert-occ-test', and provides
+;; `occ-do-verify-objects', an interactive command walking the default
+;; collection to verify, per task (`occ-do-verify' on `occ-obj-tsk'), that
+;; cached occ property values match the org entry.  The remainder are
+;; disabled `when nil' experiment blocks.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

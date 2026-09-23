@@ -20,7 +20,19 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-helm-actions-config.el configures the helm action packs of the
+;; selection UI: callable registry, action tree, capture templates.
+;;
+;; Its entry point, `occ-helm-actions-config-initialize', registers
+;; org-capture+ heading templates for clockable (TODO, MILESTONE,
+;; MEETING) and unclockable (NOTE, INFO, EVENT) tasks, then resets and
+;; fills the `occ-helm-callables' registry with normal callables
+;; (`occ-obj-build-callable-normal': Ignore, Select, Clock-in, Checkout,
+;; ...) and generators (`occ-obj-build-callable-generator': Fast Edits,
+;; Simple Edit, Simple Checkout, Misc), and rebuilds the
+;; `occ-helm-actions-tree' action keyword tree with `occ-add-helm-actions'.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

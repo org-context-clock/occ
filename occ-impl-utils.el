@@ -19,7 +19,15 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-impl-utils.el provides the comparison helpers used by the
+;; per-property implementation methods: `occ-pu-safe-file-truename',
+;; `occ-pu-file=' (truename file equality), `occ-pu-file-in-dir-p'
+;; (directory containment) and `occ-pu-string=' (nil-safe string
+;; equality).  They back the semantic prop= comparisons of the currfile,
+;; root and git-branch properties in occ-property-methods.el (support
+;; layer).
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

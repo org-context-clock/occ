@@ -20,7 +20,12 @@
 
 ;;; Commentary:
 
+;; occ-version.el is the generated version stamp of OCC: `occ-release' and
+;; `occ-git-version' return hardcoded release/git version strings shown by
+;; `occ-get-version' in occ.el, and `occ-odt-data-dir' locates ODT export
+;; data.  Byte compilation is disabled in the local variables.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

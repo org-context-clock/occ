@@ -20,7 +20,20 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-prop-op-misc.el implements the misc operation layer of the OCC
+;; property protocol: a catch-all per-property operation for a forced
+;; clock-in, currently a stub.
+;;
+;; occ-do-op-prop-misc handles one property and occ-do-op-props-misc
+;; iterates over occ-obj-properties-to-misc, delegating each property to
+;; occ-do-checkout (both bodies are marked with BUG comments in the
+;; source, and occ-obj-properties-to-misc is not yet defined elsewhere).
+;;
+;; Layer: public operation layer above occ-prop-base.el, alongside
+;; occ-prop-op-edit.el and occ-prop-op-checkout.el; consumed by
+;; occ-prop-gen-misc-actions.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

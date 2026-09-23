@@ -20,7 +20,18 @@
 
 ;;; Commentary:
 
+;; occ-mode.el defines the global OCC minor mode `occ-mode' and its keymap.
 ;;
+;; It binds `occ-mode-main-keymap' with an " Occ" lighter in the
+;; `occ-mode-lighter' face, and is gated by `occ-mode-global-allowed'
+;; (`occ-mode-global-allow'/`occ-mode-global-disallow'): enabling runs
+;; `occ-insinuate', which applies the `occ-set-bindings' key bindings
+;; under the `occ-prefix-key' prefix command `occ-mode-keymap'; disabling
+;; runs `occ-uninsinuate'.  Bindings cover selection, day-workflow,
+;; clocking and spec commands (occ-run, occ-clock-out, occ-start-day,
+;; occ-reset-spec, ...).
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

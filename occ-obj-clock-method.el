@@ -19,7 +19,26 @@
 
 ;;; Commentary:
 
+;; occ-obj-clock-method.el implements the trigger and gating layer of
+;; the OCC clock engine, deciding when a proactive clock-in runs.  The
+;; change gate occ-do-clock-in-if-chg checks
+;; occ-obj-consider-for-clockin-in-p and occ-obj-try-to-clock-in-p
+;; (7 s since the last buffer selection) before the association gate
+;; occ-do-clock-in-if-not, which uses
+;; occ-obj-try-current-if-unassociated-p and
+;; occ-obj-try-until-associable-p to offer the property editor for the
+;; currently clocked task, then clocks in or creates an unnamed task.
+;; Entry points occ-do-clock-in-curr-ctx and
+;; occ-do-clock-in-curr-ctx-if-not are driven by timers:
+;; occ-switch-buffer-run-curr-ctx-timer-function schedules
+;; occ-do-clock-in-curr-ctx-if-not-timer-function through
+;; occ-do-try-clock-schedule-next-timeout with adaptive timeouts from
+;; occ-obj-try-clock-in-next-timeout.  It also holds ignored-buffer
+;; filtering (occ-obj-ignore-ctx-p, occ-ignore-buffer-names) and
+;; runtime org file discovery (occ-do-add-org-buffer,
+;; occ-add-org-file-timer).
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

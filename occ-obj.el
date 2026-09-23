@@ -19,7 +19,32 @@
 
 ;;; Commentary:
 
+;; occ-obj.el defines the core object model of Org Context Clock (OCC).
 ;;
+;; The file is pure data: a `cl-defstruct' hierarchy rooted at `occ-obj'
+;; (single slot `name'), plus the variable `occ-verbose'.  The task branch
+;; is `occ-obj-tsk' -> `occ-tsk' (a snapshot of one org heading: marker,
+;; file, clock-sum, level and count slots, org properties as an upcased
+;; plist, and its own `occ-ranktbl') with `occ-tree-tsk' (adds `subtree')
+;; and `occ-list-tsk' variants, and the task-in-context chain
+;; `occ-obj-ctx-tsk' -> `occ-ctsk' (tsk + ctx pair, unranked) ->
+;; `occ-ctxual-tsk' (its ranked form).  The context branch is
+;; `occ-obj-ctx' -> `occ-ctx' (where the user is now: buffer, file,
+;; per-task rank tables) and its child `occ-obj-collection' ->
+;; `occ-collection' -> `occ-list-collection' / `occ-tree-collection'.
+;; Support structs cover cached rank decomposition (`occ-ranktbl'),
+;; tagged selection results (`occ-return'), menu actions
+;; (`occ-callable-normal', `occ-callable-generator'), rank threshold
+;; filters (`occ-static-filter', `occ-obj-dyn-filter',
+;; `occ-combined-dyn-filter'), action packs (`occ-ap-normal',
+;; `occ-ap-transf'), helm source wrappers (`occ-hsrc-null',
+;; `occ-hsrc-candidate', `occ-hsrc-source') and value suppliers
+;; (`occ-user-agent', `occ-org-agent', `occ-emacs-agent').
+;;
+;; This file defines structs only; all behavior lives as `cl-defmethod's
+;; in the other occ-obj-*.el files.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

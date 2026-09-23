@@ -20,7 +20,25 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-prop-org.el implements the org-world side of the OCC property
+;; protocol: mapping property symbols to org drawer property names and
+;; reading and writing them in org entries.
+;;
+;; occ-obj-org-property-name builds the `occ-'-prefixed org property name
+;; for an OCC property symbol (guarded by occ-obj-occ-prop-p) and
+;; occ-obj-org-property-symb interns it as a symbol.
+;;
+;; The occ-org-entry-get, occ-org-entry-put, occ-org-entry-delete and
+;; occ-org-entry-*-multivalued-property wrappers adapt org-entry-get and
+;; friends to that naming under safe modification, and
+;; occ-do-readprop-org and occ-do-writeprop-org convert values between
+;; the org and occ worlds with occ-obj-from-org and occ-obj-to-org.
+;;
+;; Layer: org conversion layer of the property protocol, between
+;; occ-prop-base.el and the per-property converters in
+;; occ-property-methods.el.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

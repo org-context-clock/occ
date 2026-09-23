@@ -19,7 +19,22 @@
 
 ;;; Commentary:
 
+;; occ-unnamed.el implements the OCC unnamed task fallback, so the
+;; user is never left without a running clock when no task associates
+;; with the current context.  It wraps the vendored
+;; org-clock-unnamed-task package and manages the dedicated unnamed
+;; collector key *occ-collector-unnamed-key* via
+;; occ-build-unnamed-collection and occ-unnamed-collection;
+;; occ-unnamed-initialize is the setup entry point.  Key functions:
+;; occ-can-create-unnamed-tsk-p (allows creation only after
+;; *occ-swapen-unnamed-threashold-interval*, 2 minutes, of
+;; unassociation), unnamed detection by marker buffer
+;; (occ-clock-marker-unnamed-p, occ-clock-marker-unnamed-clock-p),
+;; occ-maybe-create-unnamed-tsk,
+;; occ-do-maybe-create-unnamed-ctxual-tsk and
+;; occ-do-maybe-create-clockedin-unnamed-ctxual-tsk.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

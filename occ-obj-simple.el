@@ -20,7 +20,25 @@
 
 ;;; Commentary:
 
+;; occ-obj-simple.el defines the simple single-task actions of the OCC
+;; object model: navigation, capture and task creation.
 ;;
+;; Key generics: `occ-do-goto' and `occ-do-set-to' (jump to a task's org
+;; entry), `occ-do-induct-child' / `occ-do-abondon-child' (attach or
+;; detach a child task in a tree or list collection), `occ-do-capture'
+;; (run an org-capture+ template against a task or marker, optionally
+;; editing properties first, then induct the new entry as a child and
+;; clock it in), `occ-do-create-child' with its fast / anonymous variants
+;; (`occ-do-fast-create-child', `occ-do-create-anonymous-child',
+;; `occ-do-fast-create-anonymous-child',
+;; `occ-do-fast-create-anonymous-child-in-collection',
+;; `occ-do-create-child-clock-in') and the subtree operations `occ-do-cut',
+;; `occ-do-paste', `occ-do-archive', `occ-do-delete', `occ-do-report'.
+;; Also sets `occ-idle-timeout' (7 s) and keeps capture template helpers
+;; (`sacha/org-capture-prefill-template').  Object model layer, task
+;; action side.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

@@ -20,7 +20,13 @@
 
 ;;; Commentary:
 
-;; 
+;; occ-assert.el is a one-definition support file of the support layer:
+;; it aliases `occ-assert' to `cl-assert' so the rest of OCC can assert
+;; invariants under an occ-prefixed name.  It is used throughout the
+;; codebase (constructor, accessor, filter, rank and inequality code) to
+;; validate structures and preconditions.
+;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 

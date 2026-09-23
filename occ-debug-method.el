@@ -20,7 +20,16 @@
 
 ;;; Commentary:
 
+;; occ-debug-method.el is OCC's logging support layer.  It defines the log
+;; level state (`occ-log-level', `occ-log-levels', `occ-log-current-levels')
+;; with `occ-set-log-level' / `occ-enable-debug' controls, the level-gated
+;; wrappers `occ-lwarn', `occ-debug-index', `occ-error', `occ-warn' and
+;; `occ-info' (the error levels also signal), and `occ-do-print-tsk' debug
+;; dump stubs.  occ-debug / occ-dmessage / occ-nodisplay / occ-debug-uncond
+;; are fmakunbound and redefined as nil macros, so trace calls compile to
+;; no-ops; occ-log-level still gates the message helpers.
 ;;
+;; See doc/occ-design.org for the full design.
 
 ;;; Code:
 
